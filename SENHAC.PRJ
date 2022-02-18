@@ -1,0 +1,48 @@
+SET CENTURY ON
+SET DATE TO "DD/MM/YYYY"
+mz=space(6)
+clear
+*@ 10,10 say "Digite a senha para entrada "
+*@ 10,col()+2 get mz picture "999999"
+*read
+*if alltrim(mz)#"9998"
+*   quit
+*endif
+clear
+@ 05,10 SAY "Revalidador de Senha" color "W+*/B"
+senha = SPACE(09)
+@ 10,10 SAY "SENHA         = "
+ACCEPT TO senha 
+*	READ
+
+* GERA CHECK DIGIT P/ SENHA
+
+cd_1 = MOD10(MID(senha,1,3))
+cd_2 = MOD11(MID(senha,4,3))
+cd_3 = MOD10(MID(senha,7,3))
+cd   = cd_1+cd_2+cd_3
+
+*
+
+* GERA SENHA ALEATORIA
+csenha = "000000"
+DO WHILE VAL(csenha) = 0
+	csenha = str(rand()*1000,3,0,"0")+"000"
+ENDDO
+*
+
+csenha = MID(csenha,1,3)+MOD10(MID(csenha,1,3))+"00"
+csenha = MID(csenha,1,4)+MOD11(MID(csenha,1,4))+"0"
+csenha = MID(csenha,1,5)+MOD10(MID(csenha,1,5))
+
+contra_senha = MID(csenha,1,3)+cd+MID(csenha,4,3)
+
+@ 12,10 SAY "CONTRA SENHA  =  "+contra_senha 
+@ 15,10 say "Tecle <ESC> p/ sair "
+SET CURSOR OFF
+DO WHILE LASTKEY() # 27
+	INKEY()
+ENDDO
+SET CURSOR ON
+QUIT
+

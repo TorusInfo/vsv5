@@ -1,0 +1,806 @@
+*****************
+procedure C_caixa                      && CAIXA DE EXTRAS
+*****************
+
+if REGISTRO_PRODUTO = 99
+
+        Mens_erro( " Tabela de GENERO no consta item 'PRODUTOS' insira-o" )
+
+	return
+
+endif
+
+CX_TEL = savescreen( 00, 00, 24, 79 )
+CX_COR = setcolor()
+CX_CUR = _set( "CURSOR" )
+if _select() = 50
+
+   CX_OP  = "A"
+	select "MOVIMEN"
+	if _file( "ULT_BOL.MEM" )
+
+		if flock( 15, "REDE")
+			restore from "ULT_BOL.MEM" additive
+			unlock in "REDE"
+		else	
+			Mens_rerro( "Erro de espera na rede, operao no efetuada",  3, "W+*/B" )
+			Limpa()
+			return
+		endif
+
+	else
+
+		PRIM_ITEM = lastrec() + 1
+		A_1 = 0
+		go top
+		do while .not. eof()
+	
+			B_1 = val( MOVIMEN->BOLETO_NUM )
+			if B_1 > A_1
+		
+				A_1 = B_1
+			
+			endif
+			skip
+					
+		enddo
+		PRIM_NUM = A_1
+		select "CAIXA"
+		set order to 0
+		go bottom
+		if bof() 
+
+			PRIM_CXNUM = 1
+
+		else
+
+			PRIM_CXNUM = RECNO()+1
+
+		endif
+		set order to 1
+		select "MOVIMEN"
+
+**  GRAVA ULT_BOL.MEM RECRIADO ***
+
+		if flock( 15, "REDE")
+			save to "ULT_BOL" all like "PRIM_*"
+			unlock in "REDE"
+		else	
+			Mens_rerro( "Erro de espera na rede, opero no efetuada",  3, "W+*/B" )
+			Limpa()
+			return
+		endif
+
+	endif
+**
+
+
+elseif TT = "O"
+
+   CX_OP  = "R"
+
+elseif TT = "D"
+
+   CX_OP  = "D"
+
+else
+
+   return
+
+endif
+CX_AREA = _select()
+SELECT 2
+USE "GENERO.TPO"
+select "CAIXA"
+clear typeahead
+set cursor ON
+set softseek OFF
+seek CX_OP                && PROCURA DATA E OPERACAO DA ABERTURA
+if found() .and. CX_OP = "A"
+
+   Mens_erro( "J  foi feita a abertura do caixa com " + ;
+               transform( CAIXA->VALOR, "###,###.##" )  )
+   inkey( 10 )
+
+else
+
+   do while lastkey() # 27
+
+      CX_HISTO = space(40)
+      CX_VALOR = 0
+      CX_FUNCI = "    "
+      if CX_OP = "A"
+
+         CX_TITU  = "ABERTURA DE CAIXA"         
+         CX_HISTO = "ABERTURA DE CAIXA"
+         keyboard 13
+
+      elseif CX_OP = "D"
+
+         CX_TITU = "DESPESAS E VALES DE FUNCIONARIOS"
+
+      elseif CX_OP = "R"
+
+         CX_TITU = "OUTROS RECEBIMENTOS" 
+
+      endif
+      Quadro( 10, 11, 15, 67, "N/BG,W+/R,N,N/BG", "N+/N" )
+      @ 11,12 say CX_TITU
+      @ 12,12 say "Histขrico   : " GET cx_histo PICTURE "@!"
+      @ 13,12 say "Valor       : " GET cx_valor PICTURE "##,###,###.##"
+      read
+      if CX_VALOR = 0
+
+         exit
+
+      else
+
+         select "FUNCION"
+			clear typeahead
+         do while .T.
+
+            @ 14,12 say "Funcion rio : " GET cx_funci PICTURE "@!"
+            read
+				if lastkey() = 27
+
+					exit
+
+				endif
+            seek CX_FUNCI
+            if .not. found()
+
+               Mens_erro( "Funcion rio no cadastrado" )
+               loop
+
+            ELSE
+
+               @ 14,32 say FUNCION->NOME
+					CX_FUNC_NOME = FUNCION->NOME
+					inkey( 01 )
+               select "CAIXA"
+               exit
+
+            endif 
+
+         enddo
+			if lastkey() # 27
+
+			** DETERMINA NUMERO DO BOLETO DE CAIXA **
+
+			if flock( 15, "REDE")
+				restore from "ULT_BOL.MEM" additive
+				PRIM_CXNUM   += 1
+				save to "ULT_BOL" all like "PRIM_*"
+				unlock in "REDE"
+			else	
+				Mens_rerro( "Erro de espera na rede, opero no efetuada",  3, "W+*/B" )
+				Limpa()
+				return
+			endif
+
+				flock( 15 )
+	         append blank
+				unlock
+				rlock( 15 )
+				replace CAIXA->NUMERO	 with str(PRIM_CXNUM - 1,6,0,"0")
+	         replace CAIXA->OPERACAO  with CX_OP   
+	         replace CAIXA->VALOR     with CX_VALOR
+	         replace CAIXA->HISTORICO with CX_HISTO
+	         replace CAIXA->CX_DATA   with _date() 
+	         replace CAIXA->CX_HORA   with _time() 
+	         replace CAIXA->CODFUNC   with CX_FUNCI
+				unlock
+
+							select "GENERO"
+							if CX_OP = "A"
+
+								go 1
+								rlock( 15 )
+								replace GENERO->AUT_VAL with GENERO->AUT_VAL + CX_VALOR
+								unlock
+								
+							else
+
+								go REGISTRO_PRODUTO
+								if GENERO->DADOS = "PRODUTOS"
+
+										if CX_OP = "R"
+
+											rlock( 15 )
+											replace GENERO->EST_VAL with ;
+													  GENERO->EST_VAL + CX_VALOR
+											replace GENERO->EST_FIT with ;
+													  GENERO->EST_FIT + 1
+											unlock		  
+
+										else
+
+											rlock( 15 )
+											replace GENERO->AUT_VAL with ;
+													  GENERO->AUT_VAL + CX_VALOR
+											replace GENERO->AUT_FIT with ;
+													  GENERO->AUT_FIT + 1
+											unlock		  
+
+										endif
+
+								endif
+
+							endif
+				if CX_OP # "A"
+
+					Imprime_caixa()
+
+				endif
+
+			endif
+
+      endif
+		if CX_OP = "A"
+
+			exit
+
+		endif
+
+   enddo 
+
+endif
+if CX_CUR = "ON"
+
+   set cursor ON
+
+else
+
+   set cursor OFF
+
+endif
+clear typeahead
+setcolor(CX_COR)
+set softseek ON
+restscreen(0,0,24,79,CX_TEL)
+release all like "CX"
+CLOSE "GENERO"
+select CX_AREA
+
+return
+*
+
+******************
+procedure Mensagem
+******************
+
+restore from "MENSAGEM" additive
+set cursor ON
+TLMEM = SAVESCREEN(03,26,17,69)
+Quadro( 03,26,16,67,"W+/R,W+/R","N/N" )
+set color to "W/R,W+/R,N,W/R"
+@ 04,42 say "MENSAGEM" color "W+/R"
+@ 05,26 say "ฬ"+replicate("อ",40)+"น" color "W+/R"
+@ 06,27 get MEN_L01 picture "@S40X"
+@ 07,27 get MEN_L02 picture "@S40X"
+@ 08,27 get MEN_L03 picture "@S40X"
+@ 09,27 get MEN_L04 picture "@S40X"
+@ 10,27 get MEN_L05 picture "@S40X"
+@ 11,27 get MEN_L06 picture "@S40X"
+@ 12,27 get MEN_L07 picture "@S40X"
+@ 13,27 get MEN_L08 picture "@S40X"
+@ 14,27 get MEN_L09 picture "@S40X"
+@ 15,27 get MEN_L10 picture "@S40X"
+read
+if flock( 15, "GREDE" )
+	save to "MENSAGEM" all like "MEN_L*"
+	unlock in "GREDE"
+else
+	Mens_rerro( " Erro de espera na rede, operao no efetuada",  3, "W+*/B" )
+endif
+set cursor OFF
+
+restscreen( 03, 26, 17, 69, TLMEM )
+return
+
+*****************
+procedure Encerra
+*****************
+
+CORANTERIOR = setcolor()
+ASDF = savescreen(16,02,21,15)
+Quadro( 16, 02, 20, 13, "W+/R,W+*/R", "N/N" )
+@ 17,04 say "  SAIR  "                       color "W+/R"
+@ 18,02 say "ฬ" + replicate( "อ", 10 ) + "น" color "W+/R"
+keyboard chr(4)
+@ 19,04 prompt "Sim"
+@ 19,09 prompt "No"
+menu to QWER
+if QWER = 1
+
+   set color to
+   set cursor ON
+	close all
+	SAIDA_NORMAL = .T.	
+   quit
+
+else
+
+   restscreen( 16, 02, 21, 15, ASDF )
+   set cursor OFF
+   setcolor( CORANTERIOR )
+   release QWER,ASDF
+
+endif   
+
+
+***********************
+procedure Imprime_caixa
+***********************
+
+if IMP_DEV = "BOLETO.PRN"
+	do while .t.
+		IMP_DEV1 = "B" + STR( _RAND()*1000000, 6 )
+		if _file(IMP_DEV1)
+			loop
+		else
+			set printer to IMP_DEV1
+			exit
+		endif
+	enddo
+else
+	set printer to IMP_DEV
+endif
+
+lprint NOM_LOC
+lprint
+lprint "LOJA : " + NUM_LOJA
+lprint
+lprint _time() + "h  -     " + dtoc( DIA_ATUAL ) + "   -   " + _raw(cdow( DIA_ATUAL ) )
+lprint
+lprint "BOLETO NUMERO ................... "+CAIXA->NUMERO
+lprint
+lprint CX_TITU
+lprint
+lprint CX_HISTO
+lprint
+lprint space( 20 ) + "VALOR : " nolinefeed
+lprint CX_VALOR picture "#,###,###.##"
+lprint 
+lprint CX_FUNCI + " - " + CX_FUNC_NOME
+for A = 1 to IMP_LIND
+
+	lprint 
+
+next
+set printer to
+if IMP_DEV = "BOLETO.PRN"
+
+	Boleto_tela(IMP_DEV1)
+
+endif
+
+*****************
+function Pergunta  
+*****************
+
+parameters MENSAGEM, COR_LINHA
+private    TECLA, ULT_LINHA, COR_LINHA, VOLTA, SC_CUR
+SC_CUR = _set( "CURSOR" ) == "ON"
+VOLTA = .F.
+if pcount() < 2
+
+	COR_LINHA = "W+/B"
+	
+endif
+ULT_LINHA = savescreen( 23, 01, 23, 78 )
+@ 23,01 say space( 78 ) color COR_LINHA
+@ 23,01 say MENSAGEM    color COR_LINHA
+clear typeahead
+set cursor ON
+TECLA = inkey( 0 )	
+set cursor SC_CUR
+if TECLA = 83 .or. TECLA = 115
+
+	VOLTA = .T.
+	
+endif	
+restscreen( 23, 01, 23, 78, ULT_LINHA )
+return VOLTA
+
+*************************
+procedure Mensagem_boleto 
+*************************
+
+private SC_TEL
+restore from "MENSAGEM.MEM" additive
+SC_TEL = savescreen( 12, 41, 21, 74 )
+@ 12,41 say "ษออออออออออออออออออออออออออออออป" color "W+/BG"
+@ 13,41 say "บ A mensagem deve aparecer nos บ" color "W+/BG" 
+@ 14,41 say "ฬออออออออออออออออออออออออออออออน" color "W+/BG" 
+@ 15,41 say "บ                              บ" color "W+/BG" 
+@ 16,41 say "บ  Boletos de retirada  :      บ" color "W+/BG" 
+@ 17,41 say "บ                              บ" color "W+/BG" 
+@ 18,41 say "บ  Boletos de devoluo :      บ" color "W+/BG" 
+@ 19,41 say "บ                              บ" color "W+/BG" 
+@ 20,41 say "ศออออออออออออออออออออออออออออออผ" color "W+/BG"  
+@ 21,43 fill to 21,74 color "N+/N"
+@ 13,73 fill to 20,74 color "N+/N" 
+@ 16,68 get MEN_LRET picture "!" color "W+/BG,W+/N,N,W+/BG";
+        valid ( MEN_LRET$"SN" ) 
+@ 18,68 get MEN_LDEV picture "!" color "W+/BG,W+/N,N,W+/BG";
+        valid ( MEN_LDEV$"SN" ) 
+read
+if flock( 15, "GREDE" )
+	save to "MENSAGEM.MEM" all like "MEN_L*"
+	unlock in "GREDE"
+else
+	Mens_rerro( " Erro de espera na rede, operao no efetuada",  3, "W+*/B" )
+endif
+restscreen( 12, 41, 21, 74, SC_TEL )
+
+return
+
+*********************
+procedure Nota_fiscal  
+*********************
+
+restore from "SYSFILE.MEM" additive
+Abrir_imp( NOM_TERM )
+
+if Pergunta( " O boleto deve sair como uma nota fiscal ? ( S/N ) " )
+
+	IMP_NF = "S"
+	
+else
+
+	IMP_NF = "N"
+		
+endif
+if flock( 15, "GREDE" )
+	save to "SYSFILE.MEM" all like "IMP_*"
+	unlock in "GREDE"
+else	
+	Mens_rerro( " Erro de espera na rede, operao no efetuada",  3, "W+*/B" )
+	inkey(0)
+endif
+return
+
+**********************
+procedure Valor_indice 
+**********************
+
+private SC_TEL
+restore from "VALIND.MEM" additive
+SC_TEL = savescreen( 12, 41, 21, 74 )
+@ 12,41 say "ษออออออออออออออออออออออออออออออป" color "W+/BG"
+@ 13,41 say "บ Data  e  Valor  do indexador บ" color "W+/BG" 
+@ 14,41 say "ฬออออออออออออออออออออออออออออออน" color "W+/BG" 
+@ 15,41 say "บ                              บ" color "W+/BG" 
+@ 16,41 say "บ Data   :                     บ" color "W+/BG" 
+@ 17,41 say "บ                              บ" color "W+/BG" 
+@ 18,41 say "บ Valor  :                     บ" color "W+/BG" 
+@ 19,41 say "บ                              บ" color "W+/BG" 
+@ 20,41 say "ศออออออออออออออออออออออออออออออผ" color "W+/BG"  
+@ 21,43 fill to 21,74 color "N+/N"
+@ 13,73 fill to 20,74 color "N+/N" 
+@ 16,55 get IND_DATA  picture "@E"         color "W+/BG,W+/N,N,W+/BG"
+@ 18,53 get IND_VALOR picture "###,###.##" valid ( IND_VALOR > 0 ) color "W+/BG,W+/N,N,W+/BG"
+read
+if lastkey() # 27
+
+	if flock( 15, "GREDE" )
+		save to "VALIND.MEM" all like "IND_*"
+		unlock in "GREDE"
+	else
+		Mens_rerro( " Erro de espera na rede, operao no efetuada",  3, "W+*/B" )
+	endif
+endif
+restore from "VALIND.MEM" additive
+restscreen( 12, 41, 21, 74, SC_TEL )
+return
+***********************************************************************
+
+********************** 
+procedure Impress_conf
+**********************
+
+savekey()
+private GUARDA_TELA, COR_ANTERIOR
+GUARDA_TELA = savescreen( 00,00,24,79 )
+COR_ANTERIOR = setcolor()
+set color to "W+/BG,W+/N,N,W+/BG" 
+
+restore from "SYSFILE.MEM" additive
+Abrir_Imp( NOM_TERM )
+
+SET KEY 27 TO OZ()
+@ 03,12 say "ษอออออออออออออออออออออออออออออออออป"
+@ 04,12 say "บ Comandos para impressoras/micro บ"
+@ 05,12 say "ฬอออออออออออออออออออออออออออออออออน"
+@ 06,12 say "บ Ativa    modo comprimido :      บ"
+@ 07,12 say "บ Desativa modo comprimido :      บ"
+@ 08,12 say "บ Ativa    modo expandido  :      บ"
+@ 09,12 say "บ Desativa modo expandido  :      บ"
+@ 10,12 say "บ Ejetar p gina apขs (S/N) :      บ"
+@ 11,12 say "บ Margem superior          :      บ"
+@ 12,12 say "บ Margem inferior          :      บ"
+@ 13,12 say "บ Margem esquerda          :      บ"
+@ 14,12 say "บ Linhas  do papel         :      บ"
+@ 15,12 say "บ Impressora de 80/132 col.:      บ"
+@ 16,12 say "บ Tipo da impressora (1/2) :      บ"
+@ 17,12 say "บ Tipo do micro (1/2/3)    :      บ"
+@ 18,12 say "บ Tipo do ENCERRA (1/2)    :      บ"
+@ 19,12 say "บ Tipo do Contrato (1/2)   :      บ"
+@ 20,12 say "บ Checa o CPF S(im)/N(o)  :      บ"
+@ 21,12 say "บ Avisa filme ja assistido :      บ"
+@ 22,12 say "บ Totaliza filme assistido :      บ"
+@ 23,12 say "ศอออออออออออออออออออออออออออออออออผ"
+@ 24,14 fill to 22,48 color "N+/N"
+@ 04,47 fill to 23,48 color "N+/N"
+@ 06,41 get IMP_COMP   picture "99"
+@ 07,41 get IMP_C_COMP picture "99"
+@ 08,41 get IMP_EXPA   picture "99"
+@ 09,41 get IMP_C_EXPA picture "99"
+@ 10,41 get IMP_EJETA  picture "!" valid ( IMP_EJETA$"SN" )
+@ 11,43 get IMP_TOP    picture "9"
+@ 12,43 get IMP_BOT    picture "9"
+@ 13,42 get IMP_LEFT   picture "99"
+@ 14,41 get IMP_LARG   picture "99"
+@ 15,41 get IMP_COL    picture "999" valid ( IMP_COL = 80 .or. IMP_COL = 132 )
+@ 16,41 get IMP_TIPO   picture "9" valid ( IMP_TIPO = 1 .or. IMP_TIPO = 2 )
+@ 17,41 get IMP_MICRO  picture "9" valid ( IMP_MICRO = 1 .or. IMP_MICRO = 2 .or. IMP_MICRO = 3 )
+@ 18,41 get IMP_FEC    picture "9" valid ( IMP_FEC = 1 .or. IMP_FEC = 2 )
+@ 19,41 get IMP_CONT   picture "9" valid ( IMP_CONT = 1 .or. IMP_CONT = 2 )
+@ 20,41 get IMP_CPF    picture "!" valid ( IMP_EJETA$"SN" )
+@ 21,41 get IMP_FILMEJ picture "!" valid ( IMP_EJETA$"SN" )
+@ 22,41 get IMP_FILMET picture "!" valid ( IMP_EJETA$"SN" )
+
+
+*@ 04,12 say "ษอออออออออออออออออออออออออออออออออป"
+*@ 05,12 say "บ Comandos para impressoras/micro บ"
+*@ 06,12 say "ฬอออออออออออออออออออออออออออออออออน"
+*@ 07,12 say "บ Ativa    modo comprimido :      บ"
+*@ 08,12 say "บ Desativa modo comprimido :      บ"
+*@ 09,12 say "บ Ativa    modo expandido  :      บ"
+*@ 10,12 say "บ Desativa modo expandido  :      บ"
+*@ 11,12 say "บ Ejetar p gina apขs (S/N) :      บ"
+*@ 12,12 say "บ Margem superior          :      บ"
+*@ 13,12 say "บ Margem inferior          :      บ"
+*@ 14,12 say "บ Margem esquerda          :      บ"
+*@ 15,12 say "บ Linhas  do papel         :      บ"
+*@ 16,12 say "บ Impressora de 80/132 col.:      บ"
+*@ 17,12 say "บ Tipo da impressora (1/2) :      บ"
+*@ 18,12 say "บ Tipo do micro (1/2/3)    :      บ"
+*@ 19,12 say "บ Tipo do ENCERRA (1/2)    :      บ"
+*@ 20,12 say "บ Tipo do Contrato (1/2)   :      บ"
+*@ 21,12 say "บ Checa o CPF S(im)/N(o)  :      บ"
+*@ 22,12 say "บ Avisa filme ja assistido :      บ"
+*@ 23,12 say "ศอออออออออออออออออออออออออออออออออผ"
+*@ 24,14 fill to 21,48 color "N+/N"
+*@ 05,47 fill to 20,48 color "N+/N"
+*@ 07,41 get IMP_COMP   picture "99"
+*@ 08,41 get IMP_C_COMP picture "99"
+*@ 09,41 get IMP_EXPA   picture "99"
+*@ 10,41 get IMP_C_EXPA picture "99"
+*@ 11,41 get IMP_EJETA  picture "!" valid ( IMP_EJETA$"SN" )
+*@ 12,43 get IMP_TOP    picture "9"
+*@ 13,43 get IMP_BOT    picture "9"
+*@ 14,42 get IMP_LEFT   picture "99"
+*@ 15,41 get IMP_LARG   picture "99"
+*@ 16,41 get IMP_COL    picture "999" valid ( IMP_COL = 80 .or. IMP_COL = 132 )
+*@ 17,41 get IMP_TIPO   picture "9" valid ( IMP_TIPO = 1 .or. IMP_TIPO = 2 )
+*@ 18,41 get IMP_MICRO  picture "9" valid ( IMP_MICRO = 1 .or. IMP_MICRO = 2 .or. IMP_MICRO = 3 )
+*@ 19,41 get IMP_FEC    picture "9" valid ( IMP_FEC = 1 .or. IMP_FEC = 2 )
+*@ 20,41 get IMP_CONT   picture "9" valid ( IMP_CONT = 1 .or. IMP_CONT = 2 )
+*@ 21,41 get IMP_CPF    picture "!" valid ( IMP_EJETA$"SN" )
+*@ 22,41 get IMP_FILMEJ picture "!" valid ( IMP_EJETA$"SN" )
+SET CURSOR ON
+read 
+SET CURSOR OFF
+
+if flock( 15, "GREDE" )
+	save to "SYSFILE.MEM" all like "IMP_*"
+	unlock in "GREDE"
+else
+	Mens_rerro( " Erro de espera na rede, operao no efetuada",  3, "W+*/B" )
+	inkey(0)
+endif
+
+IF imp_fec=2
+	if !_file("fto.dbf")
+		cria_fto()
+	endif
+ELSEIF imp_fec=1
+	if _file("fto.dbf")
+		run "del fto.dbf >nul"
+	endif
+ENDIF
+if imp_cont=2
+	run "copy cont2.rpc contrato.rpc >nul"
+elseif imp_cont=1
+	run "copy cont1.rpc contrato.rpc >nul"
+endif
+setcolor( COR_ANTERIOR )
+restscreen( 00,00,24,79,GUARDA_TELA )
+
+SET KEY 27 TO
+
+if IMP_MICRO = 1 && XT
+   MZT = 1
+elseif IMP_MICRO = 2 && AT
+   MZT = 12
+elseif IMP_MICRO = 3 && 386
+   MZT = 25
+ENDIF
+
+restkey()
+
+return
+
+***********************************************************************
+*
+FUNCTION OZ
+*
+KEYBOARD 3
+
+RETURN
+*
+
+*****************
+function cria_fto
+*****************
+
+if _file("ff.tpo")
+	RUN "COPY FF.TPO FTO.DBF >nul"
+else
+	imp_fec=1
+endif
+
+RETURN
+*
+
+
+*********************
+function Nivel_acesso
+*********************
+
+parameter REG_SEGUR
+private   AREA_ATUAL
+AREA_ATUAL = _select()
+select 50
+go REG_SEGUR
+if M->ACESSO < SEGURANCA
+
+   Mens_rerro( " Acesso negado - Tecle algo..." , 05, "W+*/B" )
+	select AREA_ATUAL
+	return
+
+endif
+select AREA_ATUAL
+return .T.
+
+******************
+function Testa_Fun
+******************
+
+parameter NREG
+private T_AREA, VOLTA, C_CUR, C_CON, R_COD, L23, AC_ANT
+T_AREA   = _select()
+C_CUR    = _set( "CURSOR"   ) == "ON"
+C_CON    = _set( "CONFIRM"  ) == "ON"
+R_COD    = space( 02 )
+L23      = savescreen( 23, 00, 23, 79 )
+AC_ANT   = M->ACESSO
+VOLTA    = .F.
+@ 23,01 	say space( 78 ) color "W/B"
+@ 23,01 	say "Digite o seu cขdigo de funcion rio " color "W+/B" ;
+			get R_COD picture "99";
+			color "W+/B,W+/N,N,W+/B"
+set confirm OFF
+set cursor  ON
+read
+set cursor  OFF
+if len( alltrim( R_COD ) ) # 0
+
+	select "FUNCION"
+	seek R_COD
+	if found() .and. R_COD = alltrim( FUNCION->F_CODIGO )
+
+		ACESSO = FUNCION->ACESSO
+		N_1 = alltrim( FUNCION->NOME )
+		S_1 = FUNCION->SENHA
+		SENHA1 = Senha()
+		select T_AREA
+		if SENHA1 # S_1
+
+			Mens_rerro(  " " + N_1 + ", sua senha est  errada", 30, "W+*/B" )
+
+      else
+
+         VOLTA = Nivel_acesso( NREG )
+
+      endif   
+
+   else
+
+		Mens_rerro( " Funcion rio no cadastrado", 30, "W+*/B" )
+
+	endif
+
+endif	
+set cursor   C_CUR
+set confirm  C_CON
+select T_AREA 
+restscreen( 23, 00, 23, 79, L23 )
+ACESSO = AC_ANT
+return VOLTA
+
+**************
+function Senha
+**************
+
+set cursor ON
+SENHA1 = ""
+@ 23,50 say "Digite sua senha " color "W+/B"
+for A = 1 to 4
+
+	poscur( 23, 69+A )
+	FF = inkey( 0 )
+	if FF # 8
+
+		@ 23,69+A say "*" color "W+/B"
+		SENHA1 = SENHA1 + chr( FF )
+
+	else
+
+		if A > 1
+
+			A = A - 1
+			@ 23,69+A say " " color "W+/B"
+			SENHA1 = _left( SENHA1, A - 1 )
+			A = A - 1
+
+		else
+
+			SENHA1 = ""
+			A = 0
+
+		endif
+
+	endif
+
+next
+set cursor OFF
+return SENHA1
+
+
+
+********************
+function Boleto_tela 
+********************
+
+parameters QUAL_FILE
+private BTELA, BOLETO, NLINHA, BA, BB, OPZ && , PART1, PART2, PART3, PART4
+* restore from "IMPRESS.TEL" additive
+QUAL_FILE = QUAL_FILE + ".PRN"
+BTELA     = savescreen( 00, 00, 24, 79 )
+restscreen( 01, 12, 16, 59, PART1 )
+restscreen( 17, 09, 24, 62, PART2 )
+restscreen( 18, 63, 23, 64, PART3 )
+restscreen( 18, 07, 23, 08, PART4 )
+release all like "PART?"
+BOLETO = memoread( QUAL_FILE )
+NLINHA = mlcount(  BOLETO )
+declare BA [  NLINHA ]
+for BB = 1 to NLINHA
+
+	BA [ BB ] = memoline( BOLETO, 40, BB )
+	
+next	
+OPZ = iif( NLINHA >= 15, 15, 0 )
+popup window   02, 16, 16, 55            ;
+      to       OPZ                       ;
+		options  BA                        ;
+		color    "N/W,N+/W,N/W,N/W"        ;
+		hilite   BA,"N/W"
+restscreen( 00, 00, 24, 79, BTELA )
+delete file QUAL_FILE
+
+return
+

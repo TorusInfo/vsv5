@@ -1,0 +1,742 @@
+PROCEDURE TELACLI_GET
+SET CURSOR OFF
+
+set key  -6 to Mostra_fitas_cli()   && F7    MOSTRA FITAS DO CLIENTE
+set key  -5 to Muda_cod_cli()       && F6    MUDA CODIGO
+set key -16 to Filmes_ja()
+set key 280 to Contrato_imprime()   && Alt O
+*set key 304 to Faz_carteira()       && Alt B
+set key 286 to Imprime_ficha()      && Alt A
+
+Mens_rerro( "F3-Pesq F4-Ant F5-Pos F6-Alt.Cod F7-Fitas F8-Limpa F9-Del F10-Grava SF7-Filmes","W+/B")
+
+IF .NOT. enter_alteracao
+
+	C_TIPOC   = "A"
+	DATA_CRED = _date()
+	ULT_FREQ  = _date()
+	CID_RES   = alltrim( CID_LOC ) + " - " + UF_LOC
+	if len( CID_RES ) > 26
+	
+		CID_RES = _left( CID_RES, 26 )
+		
+	else
+	
+		CID_RES = CID_RES + space( 26 - len( CID_RES ) )	
+
+	endif
+	CID_COM   = CID_RES
+
+ENDIF
+@ 03,10 GET cod_cli   	PICTURE "999999" ;
+		  VALID !PESQ_ENTER("X")
+@ 03,27 GET cpf_cli   	PICTURE "@R 999.999.999-99" ;
+                		   VALID testa_cpf(M->cpf_cli) .AND. !PESQ_ENTER("X")
+@ 05,10 GET nome      	PICTURE "@!"
+@ 06,07 GET nasc      	PICTURE "@E"
+@ 06,28 say data_cred   PICTURE "@E"
+
+@ 07,06 GET rg_cli    	PICTURE "@!"
+@ 07,24 GET uf_rg     	PICTURE "@!"
+*@ 07,33 GET nasc      	PICTURE "@E"
+@ 03,47 GET c_tipoc   	PICTURE "!"    valid    Pode_tipo()
+@ 03,57 get DESC_PESS 	picture "999"  function Desc_cli()
+@ 03,67 GET dia_pag   	PICTURE "99"
+@ 03,75 SAY VC_QTDE	 	PICTURE "###"			   color "W+/N"
+
+@ 05,52 say DEBITOS   	picture "##,###,###.##"	color "W+/N"
+@ 05,76 get VIDEOCLUBE 	picture "99"   function Desc_cli()
+@ 07,52 SAY RET_MES	 	PICTURE "#####"			COLOR "W+/N"
+@ 07,73 SAY RET_TOTAL 	PICTURE "#####"			COLOR "W+/N"
+
+@ 09,18 GET end_res   	PICTURE "@!"
+@ 09,58 GET bai_res   	PICTURE "@!"
+@ 11,18 GET cid_res   	PICTURE "@!"
+@ 11,48 GET cep_res     PICTURE "99999-999"
+@ 11,62 GET tel_res   	PICTURE "@!"
+
+@ 13,22 GET empresa   	PICTURE "@!"
+@ 13,62 GET prof 			PICTURE "@!"
+
+@ 15,18 GET end_com   	PICTURE "@!"
+@ 15,58 GET bai_com   	PICTURE "@!"
+@ 17,18 GET cid_com   	PICTURE "@!"
+@ 17,48 GET cep_com     PICTURE "99999-999"
+@ 17,62 GET tel_com   	PICTURE "@!"
+@ 19,14 GET cred_1    	PICTURE "@!"
+@ 21,14 GET cred_2    	PICTURE "@!"
+@ 19,48 GET cred_3    	PICTURE "@!"
+@ 21,48 GET cred_4    	PICTURE "@!"
+set cursor ON
+read
+set cursor OFF
+set key  -6 to                  && F7    MOSTRA FITAS DO TITULO
+set key  -5 to                  && F6    MUDA CODIGO
+set key -16 to
+set key 280 to
+set key 304 to
+set key 286 to
+
+return
+
+******************
+function Pode_tipo 
+******************
+
+if M->C_TIPOC == "I" .and. M->ACESSO < "9"
+
+	if M->C_TIPOC # CLIENTES->C_TIPOC
+
+		C_TIPOC = CLIENTES->C_TIPOC
+
+	endif
+
+endif
+return .T.
+
+*****************
+function Desc_cli
+*****************
+
+if M->ACESSO = "9"
+
+   return .T.
+
+endif
+
+return
+
+**********************
+procedure Telacli_save 
+**********************
+
+
+if empty( m->cpf_cli )
+
+	SSS = savescreen( 23, 01, 23, 78 )
+	@ 23,01 say space( 78 )
+	@ 23,01 say  "Vocˆ n„o pode cadastrar um cliente sem o CPF" 
+	_bell()
+	inkey( 50 )
+	restscreen( 23, 01, 23, 78, SSS )
+	ERRO_OCOR = .T.
+	return
+
+endif
+if imp_cpf="S" .and. .not. cpf( M->CPF_CLI )
+
+	SSS = savescreen( 23, 01, 23, 78 )
+	@ 23,01 say space( 78 )
+	@ 23,01 say  "Este CPF est  errado !" 
+	_bell()
+	inkey( 50 )
+	restscreen( 23, 01, 23, 78, SSS )
+	ERRO_OCOR = .T.
+
+endif
+if .not. ENTER_ALTERACAO
+
+
+*   regpronto = recno()
+*	set order to 3
+*	go bottom
+*	ultcli = clientes->cod_cli	
+*	go regpronto
+	select 2
+	use "CODCLIV"
+	go 2
+	rlock( 15 )
+	replace CODCLIV->COD_CLI with str((val(CODCLIV->COD_CLI)+1),6,0,"0")
+	unlock
+	go 1
+	if _left( CODCLIV->COD_CLI, 5 ) # "99999"
+
+		newcli = codcliv->cod_cli
+*		if ultcli > newcli
+*			newcli = ultcli
+*		endif
+		COD_NOVO = 	_right("0000"+;
+						alltrim( str( val( _left( newcli, 5 ) ) + 1 ) ), 5)
+
+
+		rlock( 15 )
+      replace CODCLIV->COD_CLI with COD_NOVO + mod11( COD_NOVO )
+		unlock
+		COD_CLI = CODCLIV->COD_CLI
+
+	else
+
+		go bottom
+		if recno() > 2
+		do while .t.
+
+			COD_CLI = CODCLIV->COD_CLI
+			select "CLIENTES"
+			seek cod_cli
+			go regpronto
+			select "CODCLIV"
+			if cod_cli = clientes->cod_cli
+
+				rlock( 15 )
+				delete
+				unlock
+				go bottom
+				if recno() <= 2
+					Mens_erro( "Faixa de c¢digo de cliente esgotada" )
+					ERRO_OCOR = .T.
+					exit
+				endif
+				loop
+
+			else
+
+				rlock( 15 )
+				delete
+				unlock
+				exit
+
+			endif
+
+		enddo
+		else
+
+			Mens_erro( "Faixa de c¢digo de cliente esgotada" )
+			ERRO_OCOR = .T.
+
+		endif
+
+	endif
+	close "CODCLIV"
+	MARCA = "*"
+
+else
+
+	COD_CLI = CLIENTES->COD_CLI
+
+endif
+select "CLIENTES"
+
+return
+
+**********************
+procedure Telacli_edit 
+**********************
+
+return
+
+************************
+procedure Telacli_delete 
+************************
+
+if CLIENTES->COD_CLI = "000000"
+
+	ERRO_OCOR = .T.
+	return
+
+endif
+select "FITAS"
+ORD_FIT = indexord()
+set order to 2
+seek CLIENTES->COD_CLI
+if found()
+
+	SSS = savescreen(23,01,23,78)
+	@ 23,01 	say space( 78 ) color "W/B"
+	@ 23,01 	say "Vocˆ n„o pode deletar um cliente com fita locada !";
+  					 color "W+/B"
+	_bell()
+	inkey(50)
+	set order to ORD_FIT
+	select "CLIENTES"
+	restscreen(23,01,23,78,SSS)
+	ERRO_OCOR = .T.
+	
+	return
+
+endif
+set order to ORD_FIT
+select "CLIENTES"
+select 2
+use "CODCLIV"
+flock( 15 )
+append blank
+unlock
+rlock( 15 )
+replace CODCLIV->COD_CLI with M->COD_CLI
+unlock
+go 2
+rlock( 15 )
+replace CODCLIV->COD_CLI with str((val( CODCLIV->COD_CLI) - 1 ),6,0,"0")
+unlock
+close
+select "CLIENTES"
+
+return
+
+*********************
+function Muda_cod_cli           && MUDA CODIGO DE CLIENTES
+*********************
+
+if ENTER_ALTERACAO .and. CLIENTES->COD_CLI # "000000"
+		
+
+	savekey()
+   clear typeahead
+	AREA = _select()
+	select "FITAS"
+	ORD_FITAS = indexord()
+	set order to 2
+	seek CLIENTES->COD_CLI
+	if found()
+
+		@ 23,01 say space( 78 ) color "W/B"
+		@ 23,01 SAY "N„o posso alterar um c¢digo de cliente com fitas ";
+						color "W+/B"
+		_bell()
+		_bell()
+		inkey( 40 )
+		Mens_rerro( "F3-Pesq F4-Ant F5-Pos F6-Alt.Cod F7-Fitas F8-Limpa F9-Del F10-Grava SF7-Filmes","W+/B")
+		set order to ORD_FITAS
+		select AREA
+		restkey()
+
+		return
+
+	endif
+   clear typeahead
+	CONF_TEL = savescreen(09,30,16,43)
+	Quadro( 09, 30, 15, 41, "W+/R,W+*/R,N,W+/R", "N+/N" )
+	@ 10,31 say "  ALTERAR"
+	@ 11,30 say "Ç" + replicate( "Ä", 10 ) + "¶"
+	@ 12,31 say " Confirma"
+	@ 13,30 say "Ç" + replicate( "Ä", 10 ) + "¶"
+	set confirm OFF
+	OP = 2
+	@ 14,32 prompt "Sim"
+	@ 14,37 prompt "N„o"
+	_bell()
+	menu to OP
+	set confirm ON
+   restscreen(09,30,16,43,CONF_TEL)
+   set color to ENTER_COR
+   if OP # 1	
+
+		restkey()
+      return
+
+   endif
+	select 2
+	use "CODCLIV"
+	flock( 15 )
+	append blank
+	unlock
+	rlock( 15 )
+	replace CODCLIV->COD_CLI with M->COD_CLI
+	unlock
+	go 1
+	if _left(CODCLIV->COD_CLI,5) # "99999"
+
+		COD_NOVO = 	_right("0000"+;
+						alltrim(str( val( _left( CODCLIV->COD_CLI,5)) + 1 ) ), 5 )
+		rlock( 15 )
+      replace CODCLIV->COD_CLI with COD_NOVO + mod11( COD_NOVO )
+		unlock
+		select "CLIENTES"
+		rlock( 15 )
+		replace CLIENTES->COD_CLI with CODCLIV->COD_CLI
+		unlock
+		COD_CLI = CLIENTES->COD_CLI
+
+	else
+
+		go bottom
+		if recno() > 2
+
+			select "CLIENTES"
+			rlock( 15 )
+			replace CLIENTES->COD_CLI with CODCLIV->COD_CLI
+			unlock
+			COD_CLI = CLIENTES->COD_CLI
+			rlock( 15 )
+			delete
+			unlock
+
+		else
+
+			Mens_erro( "Faixa de c¢digo de cliente esgotada" )
+			ERRO_OCOR = .T.
+
+		endif
+
+	endif
+	select "CLIENTES"
+	VAI_GET = gotoget()
+	keyboard 21 , 21 , 18
+
+endif
+restkey()
+
+return
+
+FUNCTION MOSTRA_FITAS_CLI		&& MOSTRA FITAS DO CLIENTE
+
+IF .NOT. enter_alteracao
+
+	RETURN
+
+ENDIF
+savekey()
+SELECT "FITAS"
+ord_fitas = INDEXORD()
+SET ORDER TO 2
+SEEK CLIENTES->COD_CLI
+IF .NOT. FOUND()
+
+	mens_erro( " Este cliente n„o est  com fitas " )
+	INKEY(2)
+
+ENDIF
+IF FOUND() .AND. CLIENTES->COD_CLI = FITAS->COD_CLI
+   SELECT "TITULOS"
+   ord_tit =INDEXORD()
+   SET ORDER TO 1
+   SELECT "FITAS"
+	SET RELATION TO FITAS->T_CODIGO INTO "TITULOS"
+*	set precedence to FIELDS
+   private CAMPOS [ 4 ], CABEC [ 4 ], MASCAR [ 4 ], EDICAO [ 4 ]
+
+	CAMPOS[1] = "FITAS->CODFITA"
+	CAMPOS[2] = "TITULOS->T_PORT"
+   CAMPOS[3] = "FITAS->DATA_RET"
+	CAMPOS[4] = "FITAS->DATA_PREV"
+
+	CABEC[1] = "CODIGO DA FITA"
+	CABEC[2] = "TITULO EM PORTUGUES"
+	CABEC[3] = "RETIRADA"
+	CABEC[4] = "DEVOLVER"
+
+	MASCAR[1] = "@R 99.9999.99.9-9"
+	MASCAR[2] = "@!"
+	MASCAR[3] = "@E"
+	MASCAR[4] = "@E"
+
+	SET CURSOR OFF
+
+	@ 23,01 SAY "Para se mover use as Setas - PgUp - PgDn - Home "+;
+					"- End - Ctrl PgUp - Ctrl PgDn " COLOR "W+/B"
+
+   SCCLI=SAVESCREEN(09,02,21,78)   
+	SET COLOR TO "N/N"
+	@ 21,04 CLEAR TO 21,78
+	@ 10,77 CLEAR TO 20,78
+	SET COLOR TO "N/BG,N/BG,N,N/BG"
+
+	BROWSE   WHILE    CLIENTES->COD_CLI = FITAS->COD_CLI;
+				WINDOW   09,02,20,76;
+				COLOR   "N/BG,W+/R,W+/BG,N/BG";
+				FRAME    DOUBLE;
+            FIELDS   campos;
+				PICTURE  mascar;
+				HEADING  CABEC;
+				EDIT     .F.;
+				NOAPPEND;
+				NODELETE
+
+	SET CURSOR ON
+	SET RELATION TO
+	SELECT "TITULOS"
+	SET ORDER TO ord_tit
+	SELECT "FITAS"
+   RESTSCREEN(09,02,21,78,SCCLI)   
+*	set precedence to VARIABLES
+ENDIF
+set color to ENTER_COR
+mens_rerro( "F3-Pesq F4-Ant F5-Pos F6-Alt.Cod F7-Fitas F8-Limpa F9-Del F10-Grava SF7-Filmes","W+/B")
+set order to ORD_FITAS
+select "CLIENTES"
+restkey()
+
+return
+
+******************
+function Testa_cpf 
+******************
+
+parameters XX
+if len( alltrim( XX ) ) = 0
+
+	return .T.
+
+elseif .not. cpf( XX ) .and. imp_cpf="S"
+
+	Mens_erro("Este CPF est  errado")
+	inkey( 50 )
+	Mens_erro("")
+
+   return .F.
+
+endif
+
+return .T.
+
+******************
+function Filmes_ja 
+******************
+
+if .not. ENTER_ALTERACAO
+
+	return
+
+endif
+if len( alltrim( CLIENTES->FILMES_JA ) ) = 0
+
+	private ULT_LINHA
+	ULT_LINHA = savescreen( 23,01,23,78 )
+	@ 23,01 say space( 78 ) color "W/B"
+	@ 23,01 say " Este cliente ainda n„o assistiu filmes " color "W+*/B"
+	_bell()
+	inkey( 50 )
+	restscreen( 23,01,23,78, ULT_LINHA )
+	return
+
+endif
+savekey()
+private MTIT [ 120 ], LOOP_1, PEDACO, ORD_TIT, NUM_LOOP, SC_TEL, OP_TIT,;
+        TESTE, MONTA_TIT
+SC_TEL = savescreen( 03, 01, 23, 78 )
+select 2
+use "GENERO.TPO"
+select "TITULOS"
+ORD_TIT = indexord()
+set order    to 1
+set relation to TITULOS->T_GENERO into "GENERO"
+NUM_LOOP = 0
+MONTA_TIT = CLIENTES->FILMES_J1 + CLIENTES->FILMES_J2 + CLIENTES->FILMES_JA
+for LOOP_1 = 1 to 720 step 6
+
+	PEDACO = mid( MONTA_TIT, LOOP_1, 6 )
+	if len( alltrim( PEDACO ) ) # 0
+	
+		seek PEDACO
+		if PEDACO = TITULOS->T_CODIGO
+		
+			NUM_LOOP += 1
+			MTIT [ NUM_LOOP ] = " " + TITULOS->T_PORT + " " + GENERO->DADOS + " "
+
+		endif
+
+	endif
+
+next
+asort( MTIT )
+set relation to
+close  "GENERO"
+select "TITULOS"
+set order to ORD_TIT
+select "CLIENTES"
+@ 04,06 clear to 18,64        color "W/R"
+@ 04,06       to 18,64 double color "W+/R"
+@ 19,08 fill  to 19,66        color "N+/N"
+@ 05,65 fill  to 19,66        color "N+/N"
+@ 23,01 say   space( 78 )     color "W/B"
+@ 23,01 say   " 120 £ltimos titulos assistidos pelo cliente"        color "W+/B"
+@ 05,07 say   " TITULO                                   GENERO "  color "W+/R"
+@ 06,06 say   "Ì" + replicate( "Í", 57 ) + "¹"                     color "W+/R"
+popup window  07, 07, 17, 63;
+		to      OP_TIT;
+		options MTIT ;
+		hilite  MTIT,"W+/R";
+		color   "W+/R,W+/N,W+/R,W+/R"
+clear typeahead
+@ 23,01 say space( 78 )     color "W/B"
+@ 23,01 say "Digite <I> para imprimir lista ou outra tecla para retornar ";
+        color "W+*/B"   
+TESTE = inkey( 0 )
+if TESTE == 73 .or. TESTE == 105
+
+	Imprime_lista()
+	
+endif	
+restscreen( 03, 01, 23, 78, SC_TEL )
+restkey()
+mens_rerro( "F3-Pesq F4-Ant F5-Pos F6-Alt.Cod F7-Fitas F8-Limpa F9-Del F10-Grava SF7-Filmes","W+/B")
+
+return
+
+**********************
+function Imprime_lista 
+**********************
+
+mens_erro("")
+mens_rerro( " Ligue a impressora e tecle algo ...", 0, "W+/B" )
+mens_rerro( " Aguarde a impress„o ... ","","W+*/B")
+if _type( IMP_REL ) # "U"
+
+	set printer to IMP_REL
+	
+else
+
+	set printer to "LPT1:"
+	
+endif
+lprint
+lprint dtoc( _date() ) + space( 12 ) + "Locadora : " + NOM_LOC
+lprint
+lprint space( 20 ) + "Lista dos 120 ultimos titulos assistidos"
+lprint space( 20 ) + "---------------------------------------"
+lprint 
+lprint space( 20 ) + "Cliente : " + CLIENTES->NOME
+lprint space( 20 ) + replicate( "-", 10 + len( alltrim( CLIENTES->NOME ) ) )
+lprint
+lprint
+lprint "     TITULO                                     GENERO         "
+lprint "     ----------------------------------------------------------"
+for AA = 1 to NUM_LOOP
+
+		if NUM_LOOP = 41 .or. NUM_LOOP = 81
+		
+			eject
+			
+		endif	
+		lprint "    " + MTIT [ AA ]
+
+next		
+lprint "     ----------------------------------------------------------"
+eject
+set printer to
+mens_rerro( "F3-Pesq F4-Ant F5-Pos F6-Alt.Cod F7-Fitas F8-Limpa F9-Del F10-Grava SF7-Filmes","W+/B")
+
+return
+
+*********************
+*function Faz_carteira   
+*********************
+
+*mens_erro("")
+*mens_rerro( " Ligue a impressora e tecle algo ...", 0, "W+/B" )
+*mens_rerro( " Aguarde a impress„o ... ","", "W+*/B")
+*savekey()
+*private ORD_CLI,  NUM_REG, A_V_216, A_V_1_72, A_V_1_8, A_V_1_6,;
+*        ENT_NEGR, SAI_NEGR
+*ORD_CLI = indexord()
+*NUM_REG = recno()
+*if .not. _file( "PADRAO.CLI" )
+*
+*   P_PAD = 1
+*   P_TAB = 8
+*   P_ESP = 6
+*   P_CAR = 2
+*
+*else
+*
+*   restore from "PADRAO.CLI" additive
+*
+*endif
+*select "CLIENTES"
+*set order to 3
+*seek "000000"
+*NOME_LOCADORA = CLIENTES->NOME
+*ENDE_LOCADORA = CLIENTES->END_RES
+*CIDA_LOCADORA = CLIENTES->CID_RES
+*FONE_LOCADORA = iif( empty( CLIENTES->TEL_RES ), space( 23 ),;
+*                     "Fone : " + CLIENTES->TEL_RES )
+*K1            = iif( P_PAD = 1 , 99 , 124 )  && tamanho do codigo em alta res.
+*set order to ORD_CLI
+*go NUM_REG
+*private MTCODI[1], MTBARR[1], MTNOME[1]
+*MTCODI[1] = CLIENTES->COD_CLI
+*MTBARR[1] = Cb_25( MTCODI[1] )
+*MTNOME[1] = space( _int( ( 31-len( alltrim( CLIENTES->NOME )))/2 ) ) +;
+*             alltrim( CLIENTES->NOME )
+*MTNOME[1] = MTNOME[1] + space( 31 - len( MTNOME[1] ) )
+*AV_1_216  = chr( 27 ) + "3" + chr( 01 )      &&  seta espacamento de   1/216 "
+*AV_1_72   = chr( 27 ) + "3" + chr( 03 )      &&  seta espacamento de   1/72  "
+*AV_1_8    = chr( 27 ) + "3" + chr( 27 )      &&  seta espacamento de   1/8   "
+*AV_1_6    = chr( 27 ) + "3" + chr( 36 )      &&  seta espacamento de   1/6   "
+*ENT_NEGR  = chr( 27 ) + "E"                  &&  ativa negrito
+*SAI_NEGR  = chr( 27 ) + "F"                  &&  desativa negrito
+*CONTA_CAR = 0
+*
+*restore from "SYSFILE.MEM" additive
+*Abrir_Imp( NOM_TERM )
+*
+*Liga_impressora()
+*Rot_imprime_cart()                   
+*Desliga_impressora()
+*restkey()
+*mens_rerro( "F3-Pesq F4-Ant F5-Pos F6-Alt.Cod F7-Fitas F8-Limpa F9-Del F10-Grava SF7-Filmes","W+/B")
+
+*return
+
+**********************
+function Imprime_ficha 
+**********************
+
+mens_erro("")
+mens_rerro( " Ligue a impressora e tecle algo ...", 0, "W+/B" )
+mens_rerro( " Aguarde a impress„o ... ","", "W+*/B")
+savekey()
+
+restore from "SYSFILE.MEM" additive
+Abrir_Imp( NOM_TERM )
+
+set printer to IMP_REL
+lprint replicate( "-", 77 )
+lprint NOM_LOC nolinefeed
+lprint space( 22 ) + "  Codigo = " +chr(27)+"E"+chr( 14 ) + CLIENTES->COD_CLI+chr(27)+"F"
+lprint replicate( "-", 77 )
+lprint "Tipo de cliente : " + CLIENTES->C_TIPOC nolinefeed
+lprint space( 22 ) + "Data da emissao da ficha : " nolinefeed
+lprint _date() picture "@E"
+lprint
+lprint "Cliente : " + CLIENTES->NOME + space( 15 ) + "CPF : " nolinefeed
+lprint CLIENTES->CPF_CLI picture "@R 999.999.999-99"
+lprint
+lprint "R.G.: "+CLIENTES->RG_CLI+" UF: "+UF_RG+SPACE(30) NOLINEFEED
+LPRINT "Data nasc.: " NOLINEFEED
+LPRINT CLIENTES->NASC PICTURE "@E"
+LPRINT REPLICATE("-",77)
+LPRINT SPACE(30)+"Endereco Residencial"
+LPRINT REPLICATE("-",77)
+LPRINT CLIENTES->END_RES+"    Bairro : "+CLIENTES->BAI_RES
+LPRINT "Cidade : "+CLIENTES->CID_RES+" CEP "+CLIENTES->CEP_RES NOLINEFEED
+LPRINT "      Fone : "+TEL_RES
+LPRINT REPLICATE("-",77)
+LPRINT SPACE(30)+"Endereco Comercial"
+LPRINT REPLICATE("-",77)
+LPRINT "Empresa "+CLIENTES->EMPRESA+" Prof.: "+CLIENTES->PROF
+LPRINT CLIENTES->END_COM+"    Bairro : "+CLIENTES->BAI_COM
+LPRINT "Cidade : "+CLIENTES->CID_COM+" CEP "+CLIENTES->CEP_COM NOLINEFEED
+LPRINT "      Fone : "+TEL_COM
+LPRINT REPLICATE("-",77)
+LPRINT SPACE(30)+"Pessoas Autorizadas"
+LPRINT REPLICATE("-",77)
+LPRINT CLIENTES->CRED_1+SPACE(10)+CLIENTES->CRED_2
+LPRINT CLIENTES->CRED_3+SPACE(10)+CLIENTES->CRED_4
+lprint
+lprint
+lprint
+lprint
+LPRINT SPACE(40)+"------------------------------"
+LPRINT SPACE(50)+"ASSINATURA"
+lprint replicate("-",77)
+lprint
+lprint
+set printer to
+restkey()
+mens_rerro( "F3-Pesq F4-Ant F5-Pos F6-Alt.Cod F7-Fitas F8-Limpa F9-Del F10-Grava SF7-Filmes","W+/B")
+
+return
+
+*************************
+function Contrato_imprime 
+*************************
+
+mens_erro("")
+mens_rerro( " Ligue a impressora e tecle algo ...", 0, "W+/B" )
+mens_rerro( " Aguarde a impress„o ... ","","W+*/B")
+imprime_contrato()
+mens_rerro( "F3-Pesq F4-Ant F5-Pos F6-Alt.Cod F7-Fitas F8-Limpa F9-Del F10-Grava SF7-Filmes","W+/B")
+
+return
+

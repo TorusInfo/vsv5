@@ -1,0 +1,349 @@
+*
+PROCEDURE TELARESE_GET
+*
+SET CURSOR OFF
+*RESTORE FROM "VALIND.MEM"
+*avekey()
+*set key -8 to
+
+*SELECT "TITULOS"
+*SET ORDER TO 2
+
+SELECT arq_nome
+
+SET RELATION T_CODIGO INTO "TITULOS"
+
+@ 23,01 SAY "F3-Pesquisa F4-Anterior F5-Posterior "+;
+            "F7-         F8-Limpa F9-Apagar F10-Gravar"  COLOR "W+/B"
+@ 6,27 GET D_RESERVA PICTURE "@E"
+@ 08,24 GET COD_CLI   PICTURE "@!"
+@ 08,35 SAY NOME color "RG+/B"
+@ 09,16 SAY TEL_RES PICTURE "@!" color "RG+/B"
+@ 09,50 SAY TEL_COM PICTURE "@!" color "RG+/B"
+@ 13,21 GET CODFITA  PICTURE "@R 99.9999.99.9-9"
+@ 13,52 SAY SEQUENCIAL color "RG+/B"
+@ 15,04 SAY TITULOS->T_ORIGINAL color "RG+/B"
+@ 17,04 SAY TITULOS->T_PORT color "RG+/B"
+	SET CURSOR ON
+	READ
+	SET CURSOR OFF
+
+set relation to 
+
+RETURN
+
+PROCEDURE TELARESE_SAVE
+
+*	IF .NOT.enter_alteracao
+		MENS_RERRO("CRIAR RESERVA NO MENU ANTERIOR",3)
+		erro_ocor = .T.
+*		RETURN
+*	ENDIF
+KEYBOARD -7
+RETURN
+*
+
+PROCEDURE TELARESE_EDIT
+
+*   T_CODIGO = SINOPSE->T_CODIGO
+*   T_PORT   = SINOPSE->T_PORT
+*   T_ORIGINAL = SINOPSE->T_ORIGINAL
+   
+*	CODFITA  = FITAS->CODFITA
+*	T_CODIGO = FITAS->T_CODIGO
+*	SELECT "TITULOS"
+*   ord_tit = INDEXORD()
+*	SET ORDER TO 1
+*   SEEK M->T_CODIGO
+*   IF .NOT.FOUND() 
+*      MENS_ERRO("TITULO NAO ENCONTRADO")
+*   ELSE
+*		IF MID(FITAS->CODFITA,9,1) = "1"
+*			rlock( 15 )
+*			REPLACE TITULOS->T_COPIAS WITH (TITULOS->T_COPIAS-1)
+*   		IF FITAS->LOJA = NUM_LOJA
+*				REPLACE TITULOS->N_COP_LOJA WITH (TITULOS->N_COP_LOJA-1)
+*			ENDIF
+*			unlock
+*		ENDIF
+*	ENDIF
+*   SET ORDER TO ord_tit
+*   SELECT "FITAS"
+RETURN
+
+PROCEDURE TELARESE_DELETE
+
+fita_pesq= RESERVA->CODFITA
+d_re = RESERVA->D_RESERVA
+codigo = space(6)
+re = space(1)
+d_re2 = space(10)
+ordres = indexord()
+p=0
+set order to 1
+skip
+if .not. eof()
+	if RESERVA->CODFITA == fita_pesq
+		if RESERVA->D_RESERVA > d_re
+			codigo = RESERVA->COD_CLI
+			re = "S"
+			d_re2 = dtoc(RESERVA->D_RESERVA)
+		endif
+	else
+		codigo = space(6)
+		re = space(1)
+		d_re2 = space(10)
+	endif
+endif
+skip -1
+SELECT "FITAS"
+ordfit = indexord()
+set order to 1
+seek fita_pesq
+if found()
+	if RESERVA->CODFITA==FITAS->CODFITA
+		trava()
+		replace FITAS->CLI_RESERV with codigo
+		replace FITAS->D_RESERVA with ctod(d_re2)
+		replace FITAS->RESERVA with re
+		dtrava()
+	ENDIF
+endif
+set order to ordfit
+SELECT "RESERVA"
+set order to ordres
+*IF ENTER_ALTERACAO
+
+*         MENS_ERRO("A sinopse ‚ apagada junto com o TÖTULO")
+*         erro_ocor = .T.
+*         RETURN
+
+*ENDIF
+*			IF FITAS->COD_CLI # "000000"
+*				sss = savescreen(23,01,23,78)
+*				@ 23,01 	SAY SPACE(78) COLOR "W/B"
+*				@ 23,01 	SAY "Vocˆ n„o pode deletar uma fita que esteja locada !";
+*	 						COLOR "W+/B"
+*				_bell()
+*				INKEY(50)
+*				restscreen(23,01,23,78,sss)
+*				erro_ocor = .T.
+*				RETURN
+*			ENDIF
+
+*			SELECT 2
+*			USE "GENERO.TPO"
+*			GO TITULOS->T_GENERO
+*			rlock( 15 )
+*			IF SUBSTR( FITAS->CODFITA, 9, 1) = "1"
+
+*				REPLACE 	GENERO->FITAS_TOT WITH ;
+*							(GENERO->FITAS_TOT-1)
+*			ENDIF
+*			unlock			
+*			CLOSE
+*			SELECT "FITAS"
+
+*	IF MID(FITAS->CODFITA,9,1) = "1"
+*		SELECT 2 
+*		USE "TITDELCO"
+*		SET INDEX TO "TITDELCO.K1" KEY _left(TITULO,6)
+*		flock( 15 )
+*		APPEND BLANK
+*		unlock
+*		rlock( 15 )
+*		REPLACE TITDELCO->TITULO WITH _left(FITAS->CODFITA,8)
+*		unlock
+*		CLOSE
+*	ENDIF
+*	SELECT "FITAS"
+
+RETURN
+*
+
+*
+*FUNCTION mostra_ret 
+*
+*IF .NOT. enter_alteracao
+*	RETURN
+*ENDIF
+
+*SET CURSOR OFF
+*savekey()
+*SELECT "CLIENTES"
+*ord_cli = INDEXORD()
+*SET ORDER TO 3
+
+*SEEK FITAS->CLI_1
+*IF FOUND()
+*	m_cli_1 = CLIENTES->NOME
+*	m_tel_1 = CLIENTES->TEL_RES
+*ELSE
+*	m_cli_1 = SPACE(31)
+*	m_tel_1 = SPACE(16)
+*ENDIF
+*SEEK FITAS->CLI_2
+*IF FOUND()
+*	m_cli_2 = CLIENTES->NOME
+*	m_tel_2 = CLIENTES->TEL_RES
+*ELSE
+*	m_cli_2 = SPACE(31)
+*	m_tel_2 = SPACE(16)
+*ENDIF
+*SEEK FITAS->CLI_3
+*IF FOUND()
+*	m_cli_3 = CLIENTES->NOME
+*	m_tel_3 = CLIENTES->TEL_RES
+*ELSE
+*	m_cli_3 = SPACE(31)
+*	m_tel_3 = SPACE(16)
+*ENDIF
+
+*SET ORDER TO ord_cli
+
+*SELECT "FITAS"
+
+*@ 17,14 SAY "Os  3  £ltimos  CLIENTES  que retiraram esta fita"  COLOR "W+/B"
+
+*@ 19,02	SAY FITAS->CLI_1			PICTURE "999999"	COLOR "W+/B"
+*@ 19,11	SAY m_cli_1					PICTURE "@!"		COLOR "W+/B"
+*IF FITAS->CLI_1 # "000000"
+*	@ 19,43 SAY FITAS->DAT_1		PICTURE "@E"		COLOR "W+/B"
+*ENDIF
+*IF LEN(ALLTRIM(m_tel_1)) > 0
+*@ 19,55  SAY "Fone : "				COLOR "W+/B"
+*ENDIF
+*@ 19,62  SAY m_tel_1					PICTURE "@!"		COLOR "W+/B"
+
+*@ 20,02	SAY FITAS->CLI_2			PICTURE "999999"	COLOR "W+/B"
+*@ 20,11	SAY m_cli_2					PICTURE "@!"		COLOR "W+/B"
+*IF FITAS->CLI_2 # "000000"
+*	@ 20,43 SAY FITAS->DAT_2		PICTURE "@E"		COLOR "W+/B"
+*ENDIF
+*IF LEN(ALLTRIM(m_tel_2)) > 0
+*@ 20,55  SAY "Fone : "				COLOR "W+/B"
+*ENDIF
+*@ 20,62  SAY m_tel_2					PICTURE "@!"		COLOR "W+/B"
+
+*@ 21,02	SAY FITAS->CLI_3			PICTURE "999999"	COLOR "W+/B"
+*@ 21,11	SAY m_cli_3					PICTURE "@!"		COLOR "W+/B"
+*IF FITAS->CLI_3 # "000000"
+*	@ 21,43 SAY FITAS->DAT_3		PICTURE "@E"		COLOR "W+/B"
+*ENDIF
+*IF LEN(ALLTRIM(m_tel_3)) > 0
+*@ 21,55  SAY "Fone : "				COLOR "W+/B"
+*ENDIF
+*@ 21,62  SAY m_tel_3					PICTURE "@!"		COLOR "W+/B"
+
+*CLEAR TYPEAHEAD
+*INKEY(0)
+
+*@ 17,14 SAY SPACE(50)	COLOR "W/B"
+
+*@ 19,02	SAY SPACE(06)  COLOR "W/B"
+*@ 19,11	SAY SPACE(31)	COLOR "W/B"
+*@ 19,43 	SAY SPACE(10)	COLOR "W/B"
+*@ 19,55  SAY SPACE(23)	COLOR "W/B"
+
+*@ 20,02	SAY SPACE(06)  COLOR "W/B"
+*@ 20,11	SAY SPACE(31)	COLOR "W/B"
+*@ 20,43 	SAY SPACE(10)	COLOR "W/B"
+*@ 20,55  SAY SPACE(23)	COLOR "W/B"
+
+*@ 21,02	SAY SPACE(06)  COLOR "W/B"
+*@ 21,11	SAY SPACE(31)	COLOR "W/B"
+*@ 21,43 	SAY SPACE(10)	COLOR "W/B"
+*@ 21,55  SAY SPACE(23)	COLOR "W/B"
+
+*SET CURSOR ON
+
+*restkey()
+*RETURN
+*
+
+*FUNCTION MOSTRA_FITAS1	&& MOSTRA FITAS DO TITULO
+
+*IF .NOT. enter_alteracao .AND. CT_GENERO # "PRODUTOS"
+*	RETURN
+*ENDIF
+*savekey()
+*SELECT "FITAS"
+*ord_fitas = INDEXORD()
+*SET ORDER TO 1
+*SEEK SINOPSE->T_CODIGO
+*IF .NOT. FOUND()
+*	Mens_erro( "N„o existem fitas deste TITULO" )
+*	INKEY(2)
+*ENDIF
+*IF FOUND() .AND. TITULOS->T_CODIGO = FITAS->T_CODIGO
+*   SELECT "CLIENTES"
+*   ord_cli =INDEXORD()
+*   SET ORDER TO 3
+*   SELECT "FITAS"
+*	SET RELATION TO FITAS->COD_CLI INTO "CLIENTES"
+*   private CAMPOS[9],CABECA[9],MASCAR[9]
+*	CAMPOS[4] = "FITAS->CODFITA"
+*	CAMPOS[5] = "FITAS->SEQUENCIAL"
+*	CAMPOS[6] = "FITAS->COD_CLI"
+*	CAMPOS[7] = "CLIENTES->NOME"
+*	CAMPOS[8] = "FITAS->LOJA"
+*	CAMPOS[9] = "FITAS->DATA_PREV"
+*	campos[1] = "SPACE(3)+FITAS->RESERVA+SPACE(3)"
+*	campos[2] = "FITAS->CLI_RESERV"
+*	campos[3] = "FITAS->D_RESERVA"
+*
+*	CABECA[4] = "CODIGO DA FITA"
+*	CABECA[5] = "N.SEQ"
+*	CABECA[6] = "CODIGO"
+*	CABECA[7] = "NOME DO CLIENTE"
+*	CABECA[8] = "LOJA"
+*	CABECA[9] = "DEVOLVER"
+*	cabeca[1] = "RESERVADA"
+*	cabeca[2] = "PARA"
+*	cabeca[3] = "  EM "
+
+*	MASCAR[4] = "@R 99.9999.99.9-9"
+*	MASCAR[5] = "#####"
+*	MASCAR[6] = "@R 999999"
+*	MASCAR[7] = "@!"
+*	MASCAR[8] = "999"
+*	MASCAR[9] = "@E"
+*	mascar[1] = "@!"
+*	mascar[2] = "@!"
+*	mascar[3] = "@E"
+*
+
+*	@ 23,01 SAY "Para se mover use as Setas - PgUp - PgDn - Home "+;
+*					"- End - Ctrl PgUp - Ctrl PgDn " COLOR "W+/B"
+*	sctit = SAVESCREEN(08,02,20,78)
+*	@ 20,04 fill to 20,78   color "N+/N"
+*	@ 09,77 fill to 19,78   color "N+/N"
+*	browse   while 	FITAS->T_CODIGO = TITULOS->T_CODIGO;
+*				window 	08,02,19,76;
+*				color   	"N/BG,W+/R,W+/BG,N/BG";
+*				frame    double;
+*           fields   CAMPOS;
+*				picture  MASCAR;
+*				heading  CABECA;
+*				edit 		.F.;
+*				noappend;
+*				nodelete
+*	SET CURSOR ON
+*	SET RELATION TO
+*	SELECT "CLIENTES"
+*	SET ORDER TO ord_cli
+*	SELECT "FITAS"
+*	restscreen(08,02,20,78,SCTIT)
+
+*ENDIF
+*SET COLOR TO enter_cor
+*@ 23,01 SAY "F3-Pesquisa F4-Anterior F5-Posterior "+;
+*            "F7-Fitas    F8-Limpa F9-       F10-Gravar"  COLOR "W+/B"
+
+*SET ORDER TO ord_fitas
+*SELECT "SINOPSE"
+*restkey()
+
+*RETURN
+*
+

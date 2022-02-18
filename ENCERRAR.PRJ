@@ -1,0 +1,219 @@
+*******************
+procedure Limpa_ret 
+*******************
+
+if .not. Pergunta( " Confirma o encerramento do dia ? ( S / N ) " )
+
+	return
+
+endif
+
+RESTORE FROM "SYSFILE.MEM" ADDITIVE
+Abrir_Imp( NOM_TERM )
+
+Mens_erro(" Fazendo o encerramento do dia " )
+select 2
+use "GENERO.TPO"
+NUM_ELEM = afields()
+private FONTE [ NUM_ELEM ], DESTINO [ NUM_ELEM ] 
+set precedence to fields
+afields( FONTE )
+set precedence to variables
+copy fields to memory
+select 21
+use "MES"
+afields( DESTINO )
+for L1 = 7 to NUM_ELEM
+
+*	? fieldcont( FONTE[L1], "M" ) 
+*	? fieldcont( DESTINO[L1], "MES" )
+	_store( fieldcont( FONTE[L1], "M" ) + fieldcont( DESTINO[L1], "MES" ),;
+			FONTE[L1] )
+*	?	fieldcont(	FONTE[L1] , "M" )
+*	inkey(0)
+
+next
+do while .not. eof()
+
+	rlock( 15 )
+	_replace( DESTINO, FONTE )
+	unlock
+	skip
+	select "GENERO"
+	skip
+	copy fields to memory
+	for L1 = 7 to NUM_ELEM
+
+*		? fieldcont( FONTE[L1], "M" ) 
+*		? fieldcont( DESTINO[L1], "MES" )
+		_store( fieldcont( FONTE[L1], "M" ) + fieldcont( DESTINO[L1], "MES" ),;
+				FONTE[L1] )
+*		?	fieldcont(	FONTE[L1] , "M" )
+*		inkey(0)
+
+	next
+	select "MES"
+
+enddo
+select "GENERO"
+afields( DESTINO )
+go 1
+copy fields to memory
+for L1 = 3 to NUM_ELEM
+
+	_store( 0, FONTE [ L1 ] )
+
+next
+rlock( 15 )
+_replace( DESTINO , FONTE )
+unlock
+skip
+do while .not. eof()
+
+	copy fields to memory
+	for L1 = 7 to NUM_ELEM
+
+		_store( 0, FONTE [ L1 ] )
+
+	next
+	rlock( 15 )
+	_replace( DESTINO , FONTE )
+	unlock
+	skip
+
+enddo
+select "FUNCION"
+flock( 15 )
+replace all FUNCION->MES_RET with FUNCION->MES_RET + FUNCION->LOC_RET
+replace all FUNCION->MES_EST with FUNCION->MES_EST + FUNCION->LOC_EST
+replace all FUNCION->MES_AUT with FUNCION->MES_AUT + FUNCION->LOC_AUT
+replace all FUNCION->MES_DEV with FUNCION->MES_DEV + FUNCION->LOC_DEV
+replace all FUNCION->LOC_RET with 0
+replace all FUNCION->LOC_EST with 0
+replace all FUNCION->LOC_AUT with 0
+replace all FUNCION->LOC_DEV with 0
+unlock
+select "CAIXA"
+close
+set exclusive ON
+* select 13
+* use "CAIXA"
+open( "CAIXA" )
+flock( 15 )
+zap
+unlock
+close "CAIXA"
+SET EXCLUSIVE OFF
+close "MES"
+close "GENERO"
+delete file "ULT_BOL.MEM"
+set exclusive OFF
+if imp_fec=2 .and. _file("fto.dbf")
+*   @ 23,01 say "cheguei"
+*   inkey(0)
+	set precedence to fields
+	mens_erro("Aguarde ... acertando a movimenta‡„o geral ")
+*	mdir=curdir()
+*  set exclusive on
+   close "MOVIMEN"
+   select 101
+   use "movimen.dbf"
+   select 100
+	use "fto.dbf"
+   select 101
+   locate for MOVIMEN->operacao="R"
+   do while .not. eof()
+      if MOVIMEN->operacao=="R"
+         select 100
+         append blank
+         trava()
+*         @ 23,01 say movimen->codfita
+*         inkey(0)
+         replace fto->codfita with movimen->codfita
+         replace fto->cod_cli with movimen->cod_cli
+         replace fto->data_mov with movimen->data_mov
+         replace fto->t_port with movimen->t_port
+         dtrava()
+      endif
+      select 101
+      skip &&continue
+   enddo
+*      flock( 15 )
+*	append from "movimen.dbf" fields codfita,cod_cli,data_mov,t_port for 
+*	coloca_titu()
+*	unlock
+*	close "fto"
+   select 100
+   close
+endif
+select 101 &&"MOVIMEN"
+close
+set exclusive ON
+select 7
+use "MOVIMEN"
+flock( 15 )
+zap
+@ 23,01 say space( 78 ) color "W/B"
+release DADOS
+close all
+SAIDA_NORMAL = .T.
+quit
+
+***********************
+procedure Limpa_ret_mes
+***********************
+
+if .not. Pergunta( " Confirma o encerramento do mes ? ( S / N ) " )
+
+	return
+
+endif
+Mens_erro(" Fazendo o encerramento do mes " )
+select 2
+use "MES"
+NUM_ELEM = afields()
+private FONTE [ NUM_ELEM ], DESTINO [ NUM_ELEM ] 
+set precedence to fields
+afields( FONTE )
+set precedence to variables
+copy fields to memory
+afields( DESTINO )
+do while .not. eof()
+
+	copy fields to memory
+	for L1 = 7 to NUM_ELEM
+
+		_store( 0, FONTE [ L1 ] )
+
+	next
+	rlock( 15 )
+	_replace( DESTINO , FONTE )
+	unlock
+	skip
+
+enddo
+close "MES"
+select "FUNCION"
+flock( 15 )
+replace all FUNCION->MES_RET with 0
+replace all FUNCION->MES_EST with 0
+replace all FUNCION->MES_AUT with 0
+replace all FUNCION->MES_DEV with 0
+release DADOS
+close all
+use "CLIENTES"
+flock( 15 )
+replace all CLIENTES->RET_MES with 0
+unlock
+use "TITULOS"
+flock( 15 )
+replace all TITULOS->RET_MES with 0
+close all
+_bell()
+@ 23,01 say space( 78 ) color "W/B"
+*Mens_erro(" Tarefa terminada, tecle algo para voltar ao Menu Inicial... " )
+clear typeahead
+*inkey( 30 )
+SAIDA_NORMAL = .T.
+quit
+return

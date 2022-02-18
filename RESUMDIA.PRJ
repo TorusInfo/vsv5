@@ -1,0 +1,203 @@
+*******************
+function Resumo_dia
+*******************
+
+commit
+restore from "DEBCLI.MEM" additive
+set deleted ON
+if .not. Testa_Fun( 123 )
+
+   return
+
+endif
+private AREA, C_CUR, C_CON, S_COR, SCD
+AREA   = _select()
+C_CUR  = _set( "CURSOR"   ) == "ON"
+C_CON  = _set( "CONFIRM"  ) == "ON"
+S_COR  = setcolor()
+SCD 	 = savescreen( 03, 05, 21, 69 )
+set cursor OFF
+@ 23,01 say space( 78 ) color "W/B"
+private 		RETFITA,;  && para as fitas   retiradas
+				ESTFITA,;  && para as fitas   estornadas
+				AUTFITA,;  && para as fitas   autenticadas
+				DEVFITA,;  && para as fitas   devolvidas
+				RETBOLE,;  && para os boletos de reitrada
+				ESTBOLE,;  && para os boletos de estornadas
+				AUTBOLE,;  && para os boletos de autenticacao
+				DEVBOLE,;  && para os boletos de devolucao
+				RETVALO,;  && para os valores de retirada
+				ESTVALO,;  && para os valores de estorno
+				AUTVALO,;  && para os valores de autenticacao
+				DEVVALO,;  && para os valores de devolucao
+				VENQPRO,;  && para as vendas  de produtos quantidades
+				VENVPRO,;  && para as vendas  de produtos valores
+				LOOP_1 ,;  && controle do LOOP
+				SC_TEL ,;  && guarda tela para devolver
+				RE_ABER,;  && valor da abertura do caixa
+				RE_DES ,;  && valor das despesas 
+				RE_DEB ,;  && valor dos recebimentos de debitos
+				RE_OUT ,;  && valor dos outros recebimentos
+				SOMA_VC,;  && quantidade de video cheques recebidos
+				RE_TOT ,;  && valor total co caixa
+				TESTE      && variavel para teste se imprime ou nao
+store 0 to 	RETFITA, ESTFITA, AUTFITA, DEVFITA,;
+			  	RETVALO, ESTVALO, AUTVALO, DEVVALO,;
+			  	RETBOLE, ESTBOLE, AUTBOLE, DEVBOLE,;
+				VENQPRO, VENVPRO, RE_ABER, RE_DES ,;
+				RE_DEB , RE_OUT , SOMA_VC, NUM_GEN
+select   	2
+use     	  "GENERO.TPO"
+count to 	NUM_GEN
+for LOOP_1 = 2 to NUM_GEN
+
+	go LOOP_1
+	if upper( alltrim( GENERO->DADOS ) ) # "PRODUTOS"
+	
+		RETFITA += GENERO->RET_FIT
+		ESTFITA += GENERO->EST_FIT
+		AUTFITA += GENERO->AUT_FIT
+		DEVFITA += GENERO->DEV_FIT		
+		RETVALO += GENERO->RET_VAL
+		ESTVALO += GENERO->EST_VAL
+		AUTVALO += GENERO->AUT_VAL
+		DEVVALO += GENERO->DEV_VAL
+		
+	elseif upper( alltrim( GENERO->DADOS ) ) == "PRODUTOS"
+
+		VENQPRO = GENERO->RET_FIT
+		VENVPRO = GENERO->RET_VAL		
+		RE_DES  = GENERO->AUT_VAL
+		RE_DEB  = GENERO->DEV_VAL
+		RE_OUT  = GENERO->EST_VAL
+
+	endif
+	
+next
+go 1
+RETBOLE = GENERO->RET_BOL
+ESTBOLE = GENERO->EST_BOL
+AUTBOLE = GENERO->AUT_BOL
+DEVBOLE = GENERO->DEV_BOL
+SOMA_VC = GENERO->FITAS_TOT
+RE_ABER = GENERO->AUT_VAL
+RE_TOT = VENVPRO + RETVALO + DEVVALO + RE_DEB + RE_OUT - RE_DES + RE_ABER
+SC_TEL = savescreen( 02, 05, 21, 69 )
+restscreen( 02, 05, 20, 67, TELAMOV )
+@ 21,07 fill to 21,69  color "N+/N"
+@ 03,68 fill to 20,69  color "N+/N"
+@ 03,36 say _date()										color "W+/R"
+@ 03,47 say upper( cdow( _date() ) )				color "W+/R"
+@ 03,58 say _time()	picture "##:##"				color "W+/R"
+@ 07,25 say RETFITA 	picture "##,###"				color "W+/R"
+@ 08,25 say AUTFITA 	picture "##,###"				color "W+/R"
+@ 09,25 say DEVFITA	picture "##,###"				color "W+/R"
+@ 10,25 say ESTFITA 	picture "##,###"				color "W+/R"
+@ 07,39 say RETBOLE 	picture "##,###"				color "W+/R"
+@ 08,39 say AUTBOLE	picture "##,###"				color "W+/R"
+@ 09,39 say DEVBOLE	picture "##,###"				color "W+/R"
+@ 10,39 say ESTBOLE 	picture "##,###"				color "W+/R"
+@ 07,51 say RETVALO 	picture "###,###,###.##"	color "W+/R"
+@ 08,51 say AUTVALO 	picture "###,###,###.##"	color "W+/R"
+@ 09,51 say DEVVALO	picture "###,###,###.##"	color "W+/R"
+@ 10,51 say ESTVALO	picture "###,###,###.##"	color "W+/R"
+@ 12,37 say RE_ABER 	picture "###,###,###.##"	color "W+/R"
+@ 13,17 say VENQPRO  picture "@R #,###"         color "W+/R"
+@ 13,37 say VENVPRO  picture "###,###,###.##"	color "W+/R"
+@ 14,37 say RETVALO 	picture "###,###,###.##"	color "W+/R"
+@ 15,37 say DEVVALO	picture "###,###,###.##"	color "W+/R"
+@ 16,37 say RE_DEB  	picture "###,###,###.##"	color "W+/R"
+@ 17,37 say RE_OUT  	picture "###,###,###.##"	color "W+/R"
+@ 18,37 say RE_DES  	picture "###,###,###.##"	color "W+/R"
+@ 18,58 say SOMA_VC  picture "##,###"				color "W+/R"
+@ 19,37 say RE_TOT  	picture "###,###,###.##"	color "W+/R"
+@ 23,01 say space( 78 ) color "W+/B"
+@ 23,01 say "Tecle algo para continuar   ou   <I>  para imprimir" COLOR "W+*/B"
+clear typeahead
+TESTE = inkey(0)
+if TESTE = 73 .or. TESTE = 105
+
+	Imp_Resumo()
+
+endif
+close "GENERO"
+@ 23,01 say space( 78 ) color "W+/B"
+restscreen( 02, 05, 21, 69, SC_TEL )
+set cursor   C_CUR
+set confirm  C_CON
+return
+
+********************
+PROCEDURE Imp_Resumo
+********************
+
+restore from "SYSFILE" additive
+Abrir_Imp( NOM_TERM )
+
+set printer to IMP_DEV
+lprint NOM_LOC
+lprint
+lprint "LOJA : " + NUM_LOJA
+lprint
+lprint "---------- RESUMO DE MOVIMENTO ---------"
+lprint
+lprint dtoc( _date() ) + " - " + _raw( cdow( _date() ) ) + ;
+       "   -   " + _time() + "hs"
+lprint
+lprint "OPERACAO      FITAS BOLETO       VALORES"
+lprint "----------------------------------------"
+lprint "RETIRADAS    " nolinefeed
+lprint RETFITA picture "##,###" nolinefeed
+lprint " " nolinefeed
+lprint RETBOLE picture "##,###" nolinefeed
+lprint " " nolinefeed
+lprint RETVALO picture "##,###,###.##"
+lprint "ESTORNADAS   " nolinefeed
+lprint ESTFITA picture "##,###" nolinefeed
+lprint " " nolinefeed
+lprint ESTBOLE picture "##,###" nolinefeed
+lprint " " nolinefeed
+lprint ESTVALO picture "##,###,###.##"
+lprint "AUTENTICADAS " nolinefeed
+lprint AUTFITA picture "##,###" nolinefeed
+lprint " " nolinefeed
+lprint AUTBOLE picture "##,###" nolinefeed
+lprint " " nolinefeed
+lprint AUTVALO picture "##,###,###.##"
+lprint "DEVOLVIDAS   " nolinefeed
+lprint DEVFITA picture "##,###" nolinefeed
+lprint " " nolinefeed
+lprint DEVBOLE picture "##,###" nolinefeed
+lprint " " nolinefeed
+lprint DEVVALO picture "##,###,###.##"
+lprint "----------------------------------------"
+lprint "ABERTURA DE CAIXA........ " nolinefeed
+lprint RE_ABER picture "###,###,###.##"
+lprint "VENDA DE " + transform( VENQPRO, "#,###" ) + " PRODUTOS.. " nolinefeed
+lprint VENVPRO picture "###,###,###.##"
+lprint "RECEBIDO NA RETIRADA..... " nolinefeed
+lprint RETVALO picture "###,###,###.##"
+lprint "RECEBIDO NA DEVOLUCAO.... " nolinefeed
+lprint DEVVALO picture "###,###,###.##"
+lprint "RECEBIMENTO DE DEBITOS... " nolinefeed
+lprint RE_DEB picture "###,###,###.##"
+lprint "OUTROS RECEBIMENTOS...... " nolinefeed
+lprint RE_OUT picture "###,###,###.##"
+lprint "VALES E DESPESAS......... " nolinefeed
+lprint RE_DES picture "###,###,###.##"
+lprint
+lprint "TOTAL.................... " nolinefeed
+lprint RE_TOT picture "###,###,###.##"
+lprint
+lprint "RECEBIDO EM V. CHEQUE.... " nolinefeed
+lprint SOMA_VC picture "###,###,###"
+for L1 = 1 to IMP_LIND
+
+	lprint
+
+next
+@ 23,01 say space( 78 ) color "W/B"
+set printer to
+return
+
+

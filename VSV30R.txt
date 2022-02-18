@@ -1,0 +1,51 @@
+
+Coisas a serem feitas no VSV4R.0
+
+1- Alterações no prog:
+
+-rodar em win 98/95 - ok
+-tabela de feriados - ok
+-acerto das telas (datas) ok
+-extrato de conta corrente do cliente p/ saber quais as datas de locação e/ou fitas/títulos
+-descontos na locação e produtos
+-bloquear os dbf
+-melhorar a documentação
+-tela de filmes - referência verificar tamanho da tela ok
+-data da inscrição cadastro de clientes ok
+-sinopse de filmes em terminal de clientes(rede)
+-pesquisa de títulos em inglês
+-impressão de código de barras - versão rede
+-impressora deskjet - relatórios ok
+-retirada a senha de revalidação semestral do programa ok
+-promoção por gênero
+-tempo de música aniversário - ok
+-na retirada se o cliente estiver com fitas - avisar
+-utilização de novo sistema de backup
+-explicação sobre o backup e sistema operacional
+
+2- Alterações no Suporte Técnico:
+-suporte de segunda a sexta - 08:00 as 18:00
+-cobrança de R$ 30,00 / mês s/ limite de tempo
+-inclui no suporte:
+   correção de erros advindos de utilização errônea do operador
+   correção, reparação de dados e recuperação de dados porventura perdidos
+   direito a *updates gratuitos
+   desconto de 90% em *upgrade
+   sem limite de tempo do suporte
+-cobrança de R$ 1,50 p/ minuto de atendimento caso não seja conveniado do
+sistema de suporte técnico, havendo necessidade de depósito prévio de R$ 50,00
+para iniciar-se o atendimento, sobre o qual valor será descontado os minutos utilizados
+
+-obs: não será cobrado tempo de suporte para revalidação (senha)
+-aconselhável o cliente estar ligado na internet para agilizar o suporte
+-novo telefone de contato - (19) 289-7409
+-novo e-mail de contato : torus@uol.com.br
+-nova HP de informações : www.torus.cjb.net
+
+
+
+*updates são alterações pequenas no programa
+**upgrades alterações grandes inclusive de sistemas operacionais
+
+
+

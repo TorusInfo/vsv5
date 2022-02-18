@@ -1,0 +1,164 @@
+private copia_origem, copia_destino
+if _file("copia.mem")
+   restore from "copia.mem" additive
+else
+   copia_origem="C"
+   copia_destino="A"
+   save to "copia.mem" all like "copia*"
+endif
+set exclusive on
+** set escape  OFF
+set cursor  OFF
+*set date    "DMY"
+set mark to "/"
+set deleted ON
+set color to "W+/B,GR+/B,N,W+/B"
+clear
+@ 00,00 TO 24,79 DOUBLE
+@ 02,00 SAY "Ì"+REPLICATE("Í",78)+"¹"
+@ 01,01 SAY "VSV 5.0 - Torusº  C¢pias de Seguran‡a dos arquivos desen      º ESC - Retorna"
+@ 00,16 SAY "Ë"
+@ 02,16 SAY "Ê"
+@ 00,63 SAY "Ë"
+@ 02,63 SAY "Ê"
+@ 22,00 SAY "Ì"+REPLICATE("Í",78)+"¹"
+if network()
+
+   @ 23,01 say " Aten‡„o...Tenha certeza que os outros terminais n„o estejam no programa" color "W+*/B"
+	_bell()
+	_bell()
+	_bell()
+	_bell()
+	_bell()
+	_bell()
+	_bell()
+	_bell()
+	_bell()
+	_bell()
+	_bell()
+	_bell()
+	_bell()
+	_bell()
+	_bell()
+	_bell()
+	_bell()
+	_bell()
+	_bell()
+	_bell()
+	_bell()
+	_bell()
+	_bell()
+	_bell()
+
+	inkey( 50 )
+   @ 23,01 say space( 78 ) color "W+/B"
+
+endif
+ULT_PG = savescreen (00,00,24,80)
+@ 10,10 say "Origem dos arquivos    :\desen50"
+@ 10,32 say copia_origem
+@ 12,10 say "Destino   :"
+@ 12,19 say copia_destino
+@ 10,32 get copia_origem
+@ 12,19 get copia_destino
+read
+if pergunta("Confirma c¢pia de seguran‡a S/N ")
+   restscreen( 00,00,24,80, ULT_PG )
+   run copia_origem+": >nul"
+   run "CD\desen50 >NUL"
+   @ 10,10 say "Aguarde... compactando arquivos no HD" color "W+*/B"
+   run "FECHA -u -es VSV50 *.* >NUL"
+   inkey(1)
+   restscreen( 00,00,24,80, ULT_PG )
+   @ 23,01 say "Insira um disco no drive "+copia_destino+" e tecle algo " color "W+*/B"
+   inkey(0)
+   clear
+   run "FECHA -&w -x*.zip "+copia_destino+":VSV50 *.*"
+   inkey(1)
+   clear
+   restscreen( 00,00,24,80, ULT_PG )
+*  @ 23,01 say "C¢pia terminada"
+*  inkey(0)
+   if pergunta("Quer testar a c¢pia de seguran‡a S/N ")
+		clear
+      run "abre -t "+copia_destino+":VSV50"
+      inkey(50)
+      clear
+      restscreen( 00,00,24,80, ULT_PG )
+      @ 23,01 say "Se resultou OK em todos os arquivos a c¢pia est  boa - tecle algo para sair"
+      inkey(0)
+   endif
+endif
+quit
+return
+
+*****************
+function Pergunta  
+*****************
+
+parameters MENSAGEM, COR_LINHA
+
+private TECLA, ULT_LINHA, COR_LINHA, VOLTA, SC_CUR
+SC_CUR = _set( "CURSOR" ) == "ON"
+VOLTA = .F.
+if pcount() < 2
+
+   COR_LINHA = "W+/B"
+	
+endif
+ULT_LINHA = savescreen( 23, 01, 23, 78 )
+@ 23,01 say space( 78 ) color COR_LINHA
+@ 23,01 say MENSAGEM    color COR_LINHA
+clear typeahead
+set cursor ON
+TECLA = inkey( 0 )	
+set cursor SC_CUR
+if TECLA = 83 .or. TECLA = 115
+
+	VOLTA = .T.
+	
+endif	
+restscreen( 23, 01, 23, 78, ULT_LINHA )
+return VOLTA
+
+*******************
+function Mens_rerro                     && MENSAGENS DE PROBLEMAS
+*******************
+
+parameters QUAL_ERRO, QUAL_TEMPO, QUAL_COR
+private    ULT_LINHA
+
+if _type( QUAL_ERRO ) == "C"
+
+	QUAL_COR  = iif( pcount() > 2 .and. _type( QUAL_COR ) == "C" ,;
+	                 QUAL_COR, "W+/B" )
+	ULT_LINHA = savescreen( 23, 01, 23, 78 )
+	@ 23,01 say space( 78 ) color QUAL_COR
+	@ 23,01 say QUAL_ERRO   color QUAL_COR
+	if len( QUAL_ERRO ) # 0
+
+		ERRO_OCOR = .T.
+
+	endif
+	if pcount() > 1 .and. _type( QUAL_TEMPO ) == "N"
+
+	   _bell()
+		clear typeahead
+		inkey( QUAL_TEMPO )
+		restscreen( 23, 01, 23, 78, ULT_LINHA )
+		return
+
+	endif
+	if pcount() > 1 .and. QUAL_TEMPO = " "
+	
+		tone( 2000, 25 )
+		tone( 1000, 25 )
+		tone( 2000, 25 )
+		restscreen( 23, 01, 23, 78, ULT_LINHA )
+		
+	endif	
+
+endif
+return
+*----------------------------------------------------------------------------
+

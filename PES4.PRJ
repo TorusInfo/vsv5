@@ -1,0 +1,1728 @@
+*****************
+procedure Pes_cli 
+*****************
+
+private CAMPOS [ 5 ], CABEC [ 5 ], MASCAR [ 5 ], EDICAO [ 5 ],;
+        AREA, S_CURS, mNome, mTela
+AREA   = _select()
+s_curs = _set( "CURSOR"   ) == "ON"
+set cursor ON
+select "CLIENTES"
+set order to 1
+@ 18,02 say "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»" color "N/W+"
+@ 19,02 say "ºAlt Z = Ficha Completa  F6 = Datas das Fitas  F7 = Ver Fitas  Home End    º" color "N/W+"
+@ 20,02 say "ºEnter = Seleciona       F8 = Boleto Simulado  Seta Cima/Baixo PgUp PgDown º" color "N/W+"
+@ 21,02 say "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼" color "N/W+"
+CAMPOS[1] = "CLIENTES->COD_CLI"
+CAMPOS[2] = "CLIENTES->CPF_CLI"
+CAMPOS[3] = "CLIENTES->NOME"
+CAMPOS[4] = "CLIENTES->FZC"
+CAMPOS[5] = "CLIENTES->FZ"
+CABEC [1] = "CODIGO "
+CABEC [2] = "CPF            "
+CABEC [3] = "NOME                             "
+CABEC [4] = "F"
+CABEC [5] = "QT"
+MASCAR[1] = "999999"
+MASCAR[2] = "@R 999.999.999-99"
+MASCAR[3] = "@!"
+MASCAR[4] = "@!"
+MASCAR[5] = "999"
+mNome = ""
+keyboard 01
+@ 23,02 say "Digite o nome do cliente : " color "W+/B"
+do while .T.
+
+	@ 23,29 say space( 31 ) color "W+/N"
+	poscur( 23,29 )
+	@ 23,29 say mNome       color "W+/N"
+	TT = inkey( 0 )
+	if TT = 27
+
+		exit
+
+	elseif ( TT > 31 .and. TT < 256 ) .and. len( mNome ) < 26
+
+		mNome = mNome + upper( chr( TT ) )
+		if nextkey() # 0
+			loop
+		endif
+		seek mNome
+
+	elseif TT = 8 .and. len( mNome ) > 0  && BackSpace
+
+		mNome = _left( mNome, len( mNome ) - 1 )
+		seek mNome
+
+	elseif TT = 24 .and. .not. eof() && Seta Baixo
+
+		skip
+
+	elseif TT = 05 .and. .not. bof() && Seta Cima
+
+		skip -1	
+
+	elseif TT = 01 && Home
+
+		go top
+
+	elseif TT = 06 && End
+
+		go bottom
+
+	elseif TT = 18 && PgUp
+
+		skip -9
+
+	elseif TT = 03 && PgDn
+
+		skip 9	
+
+   elseif TT = 300
+
+      mTela = savescreen( 00, 00, 24, 79 )
+      Zoom_cli()
+      if lastkey() = 13
+
+         loop
+
+      endif   
+      restscreen( 00, 00, 24, 79, mTela )
+
+   elseif TT = -5
+
+      mTela = savescreen( 00, 00, 24, 79 )
+      Data_simulada()
+      restscreen( 00, 00, 24, 79, mTela )
+
+   elseif TT = -6
+
+      mTela = savescreen( 00, 00, 24, 79 )
+      Fita_mostra()
+      restscreen( 00, 00, 24, 79, mTela )
+
+   elseif TT = -7
+
+      mTela = savescreen( 00, 00, 24, 79 )
+      Boleto_simulado()
+      restscreen( 00, 00, 24, 79, mTela )
+
+   elseif TT = 13
+
+      keyboard "0", CLIENTES->COD_CLI, 13
+      exit
+
+	endif	
+	keyboard 9, 9, 27
+	@ 17,04  fill to 17,68 color "N+/N"
+	@ 04,67  fill to 16,68 color "N+/N"
+	browse   window   03, 02, 16, 66        ;
+				color    "N/W,W+/N,N/W,N/W" ; && "W+/B,N/W,W+/B,W+/B" ; 
+				frame    double ;
+           	fields   CAMPOS ;
+				picture  MASCAR ;
+				heading  CABEC  ;
+				edit     .F.    ;
+				noappend        ;
+				nodelete
+
+enddo
+select "TITULOS"
+set order to 1
+select "FITAS"
+set order to 1
+select "CLIENTES"
+set order to 3
+select AREA
+set cursor   S_CURS
+return
+
+*****************
+function Zoom_cli 
+*****************
+
+private Z_cur
+restore from "TELACLI.TEL" additive
+restscreen( 00, 00, 24, 79, TELA1 )
+release  TELA1
+Z_cur = _set( "CURSOR"   ) == "ON"
+set cursor OFF
+Ult_linha( "                         <ENTER> - Seleciona - " + ;
+           "F7 - Ver as fitas com o cliente" )
+@ 03,10 say CLIENTES->COD_CLI   	picture "999999" 					color "W+/N"
+@ 03,27 say CLIENTES->CPF_CLI   	picture "@R 999.999.999-99" 	color "W+/N"
+@ 03,47 say CLIENTES->C_TIPOC   	picture "!" 						color "W+/N"
+@ 03,57 say CLIENTES->DESC_PESS 	picture "999" 						color "W+/N"
+@ 03,67 say CLIENTES->DIA_PAG   	picture "99" 						color "W+/N"
+@ 03,75 say CLIENTES->VC_QTDE	 	picture "###"	   				color "W+/N"
+@ 05,10 say CLIENTES->NOME      	picture "@!" 						color "W+/N"
+@ 05,52 say CLIENTES->DEBITOS  	picture "##,###,###.##" 		color "W+/N"
+@ 05,76 say CLIENTES->VIDEOCLUBE	picture "99"                  color "W+/N"
+@ 06,07 say nasc      	PICTURE "@E"
+@ 06,28 say data_cred   PICTURE "@E"
+
+
+*@ 07,33 say CLIENTES->NASC      	picture "@E" 						color "W+/N"
+@ 07,06 say CLIENTES->RG_CLI    	picture "@!" 						color "W+/N"
+@ 07,24 say CLIENTES->UF_RG     	picture "@!" 						color "W+/N"
+@ 07,52 say CLIENTES->RET_MES	 	picture "#####"					color "W+/N"
+@ 07,73 say CLIENTES->RET_TOTAL 	picture "#####"					color "W+/N"
+@ 09,18 say CLIENTES->END_RES   	picture "@!" 						color "W+/N"
+@ 09,58 say CLIENTES->BAI_RES   	picture "@!" 						color "W+/N"
+@ 11,18 say CLIENTES->CID_RES   	picture "@!" 						color "W+/N"
+@ 11,48 say CLIENTES->CEP_RES   	picture "99999999"   			color "W+/N"
+@ 11,62 say CLIENTES->TEL_RES   	picture "@!" 						color "W+/N"
+@ 13,22 say CLIENTES->EMPRESA   	picture "@!"						color "W+/N"
+@ 13,62 say CLIENTES->PROF 		picture "@!"						color "W+/N"
+@ 15,18 say CLIENTES->END_COM   	picture "@!" 						color "W+/N"
+@ 15,58 say CLIENTES->BAI_COM   	picture "@!" 						color "W+/N"
+@ 17,18 say CLIENTES->CID_COM   	picture "@!" 						color "W+/N"
+@ 17,48 say CLIENTES->CEP_COM   	picture "99999999"				color "W+/N"
+@ 17,62 say CLIENTES->TEL_COM   	picture "@!" 						color "W+/N"
+@ 19,14 say CLIENTES->CRED_1    	picture "@!" 						color "W+/N"
+@ 21,14 say CLIENTES->CRED_2    	picture "@!" 						color "W+/N"
+@ 19,48 say CLIENTES->CRED_3    	picture "@!" 						color "W+/N"
+@ 21,48 say CLIENTES->CRED_4    	picture "@!" 						color "W+/N"
+clear typeahead
+do while .T.
+
+   inkey( 0 )
+   if     lastkey() = -6
+
+	   Fita_mostra()
+	
+   elseif lastkey() = 13
+
+	   keyboard 13
+      exit
+
+   elseif lastkey() = 27
+
+      exit
+
+   endif      
+
+enddo
+set cursor Z_cur
+
+********************
+function Fita_mostra 
+********************
+
+private SC_FIT, Z_cur
+Z_cur = _set( "CURSOR"   ) == "ON"
+set cursor OFF
+SC_FIT = savescreen( 09, 02, 21, 78 )
+select "FITAS"
+set order to 2
+seek CLIENTES->COD_CLI
+if FITAS->COD_CLI = CLIENTES->COD_CLI
+
+   select "TITULOS"
+   set order to 1
+   select "FITAS"
+	set relation to FITAS->T_CODIGO into "TITULOS"
+   private  CAMPOS [ 5 ], CABEC [ 5 ], MASCAR [ 5 ], EDICAO [ 5 ]
+	CAMPOS[1] = "FITAS->CODFITA"
+	CAMPOS[2] = "FITAS->SEQUENCIAL"
+	CAMPOS[3] = "TITULOS->T_PORT"
+        CAMPOS[4] = "FITAS->DATA_RET"
+	CAMPOS[5] = "FITAS->DATA_PREV"
+	CABEC [1] = "CODIGO DA FITA"
+	CABEC [2] = "SEQ."
+	CABEC [3] = "TITULO EM PORTUGUES"
+	CABEC [4] = "RETIRADA"
+	CABEC [5] = "DEVOLVER"
+        MASCAR[1] = "@R 99.9999.99.9-9"
+        MASCAR[2] = "@R 9999"
+	MASCAR[3] = "@!"
+	MASCAR[4] = "@E"
+	MASCAR[5] = "@E"
+	@ 23,01 say space( 78 ) color "W+/B"
+	@ 21,04 fill to 21,78   color "N+/N"
+	@ 10,77 fill to 20,78   color "N+/N"
+	keyboard 5
+	browse   while    FITAS->COD_CLI = CLIENTES->COD_CLI ;
+				window   09, 02, 20, 76         ;
+				color    "N/BG,W+/R,W+/BG,N/BG" ;
+				frame    double ;
+                                fields   CAMPOS ;
+				picture  MASCAR ;
+				heading  CABEC  ;
+				edit     .F.    ;
+				noappend        ;
+				nodelete
+	set relation to
+	set order to 1
+	select "CLIENTES"
+	restscreen( 09, 02, 21, 78, SC_FIT )
+	Ult_linha( " " )
+   set cursor Z_cur
+	return
+
+endif
+mens_erro( " Este cliente n„o est  com fitas " )
+inkey( 5 )
+select "CLIENTES"
+restscreen( 09, 02, 21, 78, SC_FIT )
+Ult_linha( " " )
+set cursor Z_cur
+
+*******************
+procedure Ult_linha 
+*******************
+
+parameters VAR
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say VAR color "W+/B"
+
+************************
+function Boleto_simulado
+************************
+
+private SC_FIT, TOTAL_BOLETO, cf,TM,MM,MTC
+SC_FIT = savescreen( 00, 00, 24, 79 )
+TOTAL_BOLETO = 0
+TM = .F.
+cf=space(10)
+mtc=space(6)
+MM=0
+set exclusive on
+select 40
+use "FASTDEV.DBF"
+if flock(15)
+
+   zap
+*   pack nobackup
+   unlock
+   
+else
+
+	Mens_rerro( "Erro de acesso na rede, opera‡„o cancelada", 4, "W+*/B" )
+	close all
+	quit 
+
+
+endif
+set exclusive off
+select "TITULOS"
+set order to 1
+select "FITAS"
+set order to 2
+seek CLIENTES->COD_CLI
+do while .not. eof()
+
+   if FITAS->COD_CLI = CLIENTES->COD_CLI
+        MTC = FITAS->T_CODIGO
+        select "TITULOS"
+        seek MTC
+        if found()
+           MM=TITULOS->T_CLASSE
+           select 40
+           append blank
+           replace FASTDEV->COD_CLI with FITAS->COD_CLI
+           replace FASTDEV->CODFITA with FITAS->CODFITA
+           replace FASTDEV->CODFUNC with FCODFUNC
+           replace FASTDEV->BOL_MARCA with "þ"
+           replace FASTDEV->T_CLASSE  with MM
+        else
+         	Mens_rerro( "Erro de acesso na rede, indice de t¡tulos opera‡„o cancelada", 4, "W+*/B" )
+         	close all
+         	quit 
+        endif 
+  else
+      exit
+   endif
+   select "FITAS"
+   skip
+   loop
+
+enddo
+select "FITAS"
+set order to 2
+seek CLIENTES->COD_CLI
+if FITAS->COD_CLI = CLIENTES->COD_CLI
+   
+   select "TITULOS"
+   set order to 1
+   select "FITAS"
+	set relation to FITAS->T_CODIGO into "TITULOS"
+	Calc_bol_simul()
+   private  CAMPOS [ 5 ], CABEC [ 5 ], MASCAR [ 5 ], EDICAO [ 5 ]
+        CAMPOS[1] = "mid(TITULOS->T_PORT,1,29)"
+        CAMPOS[2] = "FITAS->CODFITA"
+        CAMPOS[3] = "FITAS->BOL_MARCA"
+        CAMPOS[4] = "FITAS->BOL_PRECO"
+        CAMPOS[5] = "FITAS->DATA_PREV"
+	CABEC [1] = "TITULO EM PORTUGUES"
+        CABEC [2] = "COD. DA FITA"
+        CABEC [3] = "SOMAR"
+        CABEC [4] = "PRECO"
+        CABEC [5] = "DEVOLVER"
+   	MASCAR[1] = "@!"
+        MASCAR[2] = "@R 99.9999.99-99"
+        MASCAR[5] = "@E"
+        MASCAR[4] = "9,999,999.99"
+        MASCAR[3] = "@!"
+
+	@ 23,01 say space( 78 ) color "W+/B"
+	@ 21,04 fill to 21,78   color "N+/N"
+	@ 10,77 fill to 20,78   color "N+/N"
+	@ 23,02 say "Teclas < - > Subtrai a fita  < + > Adiciona a fita  <F10> Efetiva o Boleto" color "W+/B"
+	keyboard 5
+	browse   while    FITAS->COD_CLI = CLIENTES->COD_CLI ;
+				window   09, 02, 20, 76         ;
+				color    "N/BG,W+/R,W+/BG,N/BG" ;
+				frame    double ;
+            fields   CAMPOS ;
+				picture  MASCAR ;
+				heading  CABEC  ;
+				edit     .F.    ;
+				noappend        ;
+				nodelete        ;
+				function Faz_marca()
+	set relation to
+	set order to 1
+	select "CLIENTES"
+	restscreen( 00, 00, 24, 79, SC_FIT )
+	return
+
+endif
+mens_erro( " Este cliente n„o est  com fitas " )
+inkey( 5 )
+select "CLIENTES"
+restscreen( 00, 00, 24, 79, SC_FIT )
+
+***********************
+function Calc_bol_simul
+***********************
+
+FITA_REG_ATUAL = recno()
+do while FITAS->COD_CLI = CLIENTES->COD_CLI
+
+	select "FITAS"
+   _store( FITAS->DATA_PREV , "DATA_PREV" )
+   _store( FITAS->DESCONTO , "UNI_DESC" )  	&& pega desconto da retirada
+	VC_POR_FITA = FITAS->NUM_VC
+	if FITAS->PAGTO = " "					
+
+		_store( FITAS->VALOR , "VALOR" )			&& pega valor da retirada
+
+	else												   
+
+		_store( 0 , "VALOR" )						&& zera valor a pagar
+
+	endif												   && para pagto antecipado
+   if DIA_ATUAL > M->DATA_PREV .and. mid( FITAS->CODFITA, 9, 1 ) = "1" ;
+		.and. CLIENTES->C_TIPOC # "I"
+  
+	   select "CATEGOR"
+	   if TITULOS->T_CATEGOR < 2 .or. TITULOS->T_CATEGOR > lastrec()
+
+			select "FITAS"
+			skip
+	      loop
+
+	   endif
+		go TITULOS->T_CATEGOR
+		VC_POR_FITA = ( CATEGOR->NUM_VC * -1 )
+		PRECO  = "PRECO_" + _right( str( TITULOS->T_CLASSE-1 ), 1 )
+      PRECOA = fieldcont( PRECO, "CATEGOR" )
+		if M->DATA_PREV < ctod( "01/01/80" )
+
+			DATA_PREV = DIA_ATUAL
+			select "FITAS"
+			if rlock( 15 )
+			
+				replace FITAS->DATA_PREV with DIA_ATUAL
+
+			endif	
+			unlock
+			select "FERIADOS"
+								
+		endif
+		dia_atraso =  (DIA_ATUAL - M->DATA_PREV)   && DESC FERIADOS DOS
+		select "FERIADOS"									 && DIAS ATRASADOS
+		seek FITAS->DATA_PREV
+		do while .not. eof() .and. FERIADOS->DATA_FER <= DIA_ATUAL
+
+			DIA_ATRASO = DIA_ATRASO - 1
+			skip	
+
+		enddo
+		if NAO_DIA # 0  			&& RECALC ABONO SEGUNDO DIA NAO TRAB
+
+			DATA_NAO1 = DATA_NAO - 7
+			do while DATA_NAO1 > M->DATA_PREV
+
+				seek DATA_NAO1
+				if .not. found()
+
+					DIA_ATRASO = DIA_ATRASO - 1
+
+				endif
+				DATA_NAO1 = DATA_NAO1 - 7
+
+			enddo
+
+		endif
+		_store( PRECOA , "ATRASO_VAL" )
+      PRECOA = PRECOA * dia_atraso && CALCULA VALOR ATRASO
+      PRECOA = PRECOA + VALOR
+
+   else
+
+		if PROMDEVORA = "þ" .and. ;
+			(_time() <= PROMHRAP .or. DIA_ATUAL < M->DATA_PREV )
+
+			UNI_DESC = UNI_DESC + PROMDRAP 
+
+		endif
+      PRECOA = M->VALOR
+		_store( 0 , "ATRASO_VAL" )
+		dia_atraso = 0
+
+   endif
+** COBRA DIARIA APOS HORA P/ DEVOLUCAO ***
+	if PROMHODEVO = "þ" .and. CLIENTES->C_TIPOC # "I" ;
+		.and. DIA_ATUAL >= M->DATA_PREV .and. _time() > PROMDEV
+
+		DIA_ATRASO = DIA_ATRASO + 1
+	   if M->ATRASO_VAL = 0
+    
+			select "CATEGOR"
+		   if TITULOS->T_CATEGOR < 2 .or. TITULOS->T_CATEGOR > lastrec()
+
+				select "FITAS"
+				skip
+		      loop
+
+		   endif
+			go TITULOS->T_CATEGOR
+	      PRECO = "PRECO_" + _right( str( TITULOS->T_CLASSE - 1 ) , 1 )
+         _store( fieldcont( PRECO,"CATEGOR") , "ATRASO_VAL" )
+         PRECOA = M->ATRASO_VAL + M->VALOR
+
+	  else
+
+         PRECOA = PRECOA + M->ATRASO_VAL
+
+	  endif
+
+	endif
+	PRECOA = PRECOA - (M->VALOR * (UNI_DESC / 100))
+	TOTAL_BOLETO += PRECOA
+	select "FITAS"
+	if rlock( 15 )
+
+		replace FITAS->BOL_PRECO with PRECOA
+		replace FITAS->BOL_MARCA with "þ"
+
+	endif
+	unlock
+	skip
+
+enddo
+@ 06,53 say "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»"         color "W+/BG"
+@ 07,53 say "º Total :              º"         color "W+/BG"
+@ 08,53 say "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼"         color "W+/BG"
+@ 07,63 say TOTAL_BOLETO picture "9,999,999.99" color "W+/BG"
+select "FITAS"
+go FITA_REG_ATUAL
+return
+
+******************
+function Faz_marca
+******************
+
+if lastkey() = 43 .and. FITAS->BOL_MARCA = " " .and. FITAS->BOL_PRECO # 0
+
+	Soma_fita()
+	return 7
+
+elseif lastkey() = 45 .and. FITAS->BOL_MARCA = "þ"  .and. FITAS->BOL_PRECO # 0
+
+	Subtrai_fita()
+	return 7
+
+elseif lastkey() = 27
+
+	return 0
+
+elseif lastkey()= -9   && F10 gravar - devolu‡ao FAST
+
+   if .not. nivel_acesso(115)
+
+         mens_rerro("Vocˆ n„o tem acesso a esta rotina ", 3, "W+*/B")
+
+   endif
+
+   mens_rerro("Fun‡„o ainda a ser ativada nesta vers„o", 3, "W+*/B")
+
+   return 7
+
+endif
+
+
+
+return
+
+******************
+function Soma_fita
+******************
+
+if rlock( 15 )
+
+   TOTAL_BOLETO += FITAS->BOL_PRECO
+   @ 07,63 say TOTAL_BOLETO PICTURE "9,999,999.99" color "W+/BG"
+   replace FITAS->BOL_MARCA WITH "þ"
+
+   cf = FITAS->CODFITA
+   MTC = FITAS->T_CODIGO
+   unlock
+   select 40
+   go top
+   if flock(15)
+      locate for FASTDEV->CODFITA = cf
+      do while .not. eof()
+         IF FASTDEV->CODFITA == cf
+         	if FASTDEV->T_CLASSE = 2 
+                  TM = .F.
+                  replace FASTDEV->BOL_MARCA with "þ"
+                  exit
+           	elseif FASTDEV->T_CLASSE > 2
+                  replace FASTDEV->BOL_MARCA with "þ"
+                  TM = .T.
+                  continue
+                  loop
+           	endif
+         endif
+         if TM = .T.
+              if mid(FASTDEV->CODFITA,1,8)==mid(cf,1,8)
+                  replace FASTDEV->BOL_MARCA with "þ"
+               endif
+         endif
+         continue
+      enddo
+   else
+   	Mens_rerro( "Erro na rede, opera‡„o n„o efetuada", 3, "W+*/B" )
+	   quit		
+   endif
+   SELECT "FITAS"
+   if TM
+      if flock(15)
+         go top
+         seek cf
+         do while .not. eof().or. mid(FITAS->CODFITA,1,8)==mid(cf,1,8) 
+               if FITAS->T_CODIGO==MTC
+                  if rlock(10)
+                     replace fitas->BOL_MARCA WITH "þ"
+                     unlock
+                  else
+                  	Mens_rerro( "Erro na rede, opera‡„o n„o efetuada", 3, "W+*/B" )
+                     close all
+               	   quit		
+                  endif
+               endif 
+               skip
+         enddo
+         unlock
+      endif
+   endif
+
+*   go cfr
+*   seek cf
+   clear typeahead
+    keyboard 31
+endif
+
+
+
+return
+
+*********************
+function Subtrai_fita
+*********************
+
+if rlock( 15 )
+
+	TOTAL_BOLETO -= FITAS->BOL_PRECO
+	@ 07,63 say TOTAL_BOLETO PICTURE "9,999,999.99" color "W+/BG"
+	replace FITAS->BOL_MARCA WITH " "
+
+   cf = FITAS->CODFITA
+   MTC = FITAS->T_CODIGO
+   unlock
+   select 40
+   go top
+   if flock(15)
+      locate for FASTDEV->CODFITA = cf
+      do while .not. eof()
+         IF FASTDEV->CODFITA == cf
+         	if FASTDEV->T_CLASSE = 2 
+                  TM = .F.
+                  replace FASTDEV->BOL_MARCA with " "
+                  exit
+           	elseif FASTDEV->T_CLASSE > 2
+                  replace FASTDEV->BOL_MARCA with " "
+                  TM = .T.
+                  continue
+                  loop
+           	endif
+         endif
+         if TM = .T.
+              if mid(FASTDEV->CODFITA,1,8)==mid(cf,1,8)
+                  replace FASTDEV->BOL_MARCA with " "
+               endif
+         endif
+         continue
+      enddo
+   else
+   	Mens_rerro( "Erro na rede, opera‡„o n„o efetuada", 3, "W+*/B" )
+	   quit		
+   endif
+   SELECT "FITAS"
+   if TM
+      if flock(15)
+         go top
+         seek cf
+         do while .not. eof().or. mid(FITAS->CODFITA,1,8)==mid(cf,1,8) 
+               if FITAS->T_CODIGO==MTC
+                  if rlock(10)
+                     replace fitas->BOL_MARCA WITH " "
+                     unlock
+                  else
+                  	Mens_rerro( "Erro na rede, opera‡„o n„o efetuada", 3, "W+*/B" )
+                     close all
+               	   quit		
+                  endif
+               endif 
+               skip
+         enddo
+         unlock
+      endif
+   endif
+
+*   go cfr
+*   seek cf
+   clear typeahead
+    keyboard 31
+endif
+
+
+
+return
+
+**********************
+function Data_simulada
+**********************
+
+if .not. Testa_Fun( 122 )
+
+   select "CLIENTES"
+   set order to 1
+   return
+
+endif   
+private SC_FIT
+SC_FIT = savescreen( 00, 00, 24, 79 )
+select "TITULOS"
+set order to 1
+select "FITAS"
+set order to 2
+seek CLIENTES->COD_CLI
+if found() .and. FITAS->COD_CLI == CLIENTES->COD_CLI
+
+   private CAMPOS [ 2 ], CABEC  [ 2 ], MASCAR [ 2 ],;
+           EDICAO [ 2 ], SEMANA [ 8 ], NREG
+   NREG  = recno()
+	for LOOP_1 = 1 to 8
+
+		if FITAS->COD_CLI # CLIENTES->COD_CLI
+
+			LOOP_1 -= 1
+			exit
+
+		endif	
+		skip
+
+	next
+   set relation to FITAS->T_CODIGO into "TITULOS"
+   go top
+   SEMANA [ 1 ] = "SEM DATA"
+   SEMANA [ 2 ] = "DOMINGO "
+   SEMANA [ 3 ] = "SEGUNDA "
+   SEMANA [ 4 ] = "TER€A   "
+   SEMANA [ 5 ] = "QUARTA  "
+   SEMANA [ 6 ] = "QUINTA  "
+   SEMANA [ 7 ] = "SEXTA   "
+   SEMANA [ 8 ] = "SABADO  "
+   CAMPOS [ 1 ] = "TITULOS->T_PORT"
+   CAMPOS [ 2 ] = "FITAS->DATA_PREV"
+   CABEC  [ 1 ] = "TITULO EM PORTUGUES"
+   CABEC  [ 2 ] = "DEVOLVER   DIA    "
+   MASCAR [ 1 ] = "@!"
+   MASCAR [ 2 ] = "99999999"
+	set key  13 to fNada()
+	set key   9 to fNada()
+	set key 271 to fNada()
+	go NREG
+   @ 23,01 say space( 78 ) color "W+/B"
+   @ 21,12 fill to 21,76   color "N+/N"
+   @ 10,75 fill to 20,76   color "N+/N"
+   @ 23,02 say "Tecla < - > Diminui 1 dia na data  Tecla < + > " + ;
+               "Adiciona 1 dia na data"   color "W+/B"
+   keyboard 5
+   browse   while    FITAS->COD_CLI = CLIENTES->COD_CLI ;
+   			window   09, 10, 20, 74         ;
+   			color    "N/BG,W+/R,W+/BG,N/BG" ;
+   			frame    double ;
+            fields   CAMPOS ;
+   			picture  MASCAR ;
+   			heading  CABEC  ;
+	   		edit     .F.    ;
+		   	noappend        ;
+   			nodelete        ;
+	   		function Marca_faz()
+   set relation to
+   go top
+   set key  13 to
+   set key   9 to
+   set key 271 to
+   
+else
+
+	@ 23,02 say "Este cliente n„o est  com fitas" color "W+*/B"
+	_bell()
+
+endif
+restscreen( 00, 00, 24, 79, SC_FIT )
+select "CLIENTES"
+
+******************
+function Marca_faz
+******************
+
+private LINHA
+if lastkey() = 43 .or. lastkey() = 45
+
+	if empty( FITAS->DATA_PREV )
+
+      if rlock( 15 )
+		
+			replace FITAS->DATA_PREV with _date()
+ 		   unlock
+
+		endif	
+		
+	endif
+
+endif
+if lastkey() = 43
+
+   if rlock( 15 )
+	
+		replace FITAS->DATA_PREV with Calc_dia( FITAS->DATA_PREV + 1, "+" )
+	   unlock
+		@ row(),52 say FITAS->DATA_PREV   color "N/BG"   picture "99/99/9999"
+		@ row(),63 say SEMANA [ dow( FITAS->DATA_PREV ) + 1 ] color "N/BG"
+
+	endif
+   keyboard 32
+	return 1
+
+elseif lastkey() = 45
+
+	if FITAS->DATA_PREV - 1 > FITAS->DATA_RET
+
+	   if rlock( 15 )
+
+			replace FITAS->DATA_PREV with Calc_dia( FITAS->DATA_PREV - 1, "-" )
+		   unlock
+			@ row(),52 say FITAS->DATA_PREV  color "N/BG"  picture "99/99/9999"
+			@ row(),63 say SEMANA [ dow( FITAS->DATA_PREV ) + 1 ] color "N/BG"
+
+		endif
+
+	endif
+   keyboard 32
+	return 1
+
+elseif lastkey() = 27
+
+	return 0
+
+endif
+LINHA = row()
+@ 12,63 clear to 19,69 color "N/BG"
+@ LINHA,63 say SEMANA [ dow( FITAS->DATA_PREV ) + 1 ] color "N/BG"
+return 1
+
+*****************
+function Calc_dia                    && CALCULA ABONO
+*****************
+
+parameters DATA_DEVOL, M_OP
+select "FERIADOS"		                && RECALCULA ABONOS SEGUNDO FERIADOS
+seek DATA_DEVOL
+do while DATA_DEVOL = FERIADOS->DATA_FER .or. dow( DATA_DEVOL ) = NAO_DIA
+
+	DATA_DEVOL = DATA_DEVOL + iif( M_OP == "+" ,  1, - 1 )
+	seek DATA_DEVOL
+
+enddo
+select "FITAS"
+return ( DATA_DEVOL )
+
+**************
+function fNada
+**************
+
+
+*********************
+function devolve_fast
+*********************
+******************
+*function Devolucao                     && ROTINA DE DEVOLUCAO DE FITAS
+******************
+
+declare ITEM_BOLETO[99]
+ULT_ITEM = 0
+set confirm ON
+*restscreen( 00, 00, 24, 79, NUM_A_2 )
+*@ 01,34 say "DEVOLU€ŽO" color "W+*/B"
+*CODIGO    = "      "                        && PEGAR FITAS
+NUM_FITAS = 0
+select 40
+go top
+locate for FASTDEV->BOL_MARCA # " "
+do while .not. eof()
+FITA      = alltrim( FASTDEV->CODFITA)
+*keyboard save 13
+PRIM_FITA = .T.
+Mens_erro( "" )
+@ 23,01 say " Imprime Limpa Estorno" color "W+/B"
+do while .T.
+
+*        NFITAS_C = str( NUM_FITAS, 2, 0, "0" )
+*        NUMCHAR = "NUM_P_" + _left(nfitas_c,1)
+*        restscreen( 17, 10, 21, 15, fieldcont( NUMCHAR ) )
+*        NUMCHAR = "NUM_P_" + _right( NFITAS_C, 1 )
+*        restscreen( 17, 18, 21, 23, fieldcont( NUMCHAR ) )
+*   if PRIM_FITA
+*
+*      PRIM_FITA = .F.
+*
+*   else
+*
+*                if TAMANHO = 4
+*
+*              FITA = "    "
+*
+*                else
+*
+*              FITA = "          "
+*
+*                endif
+
+*   endif
+*        poscur( 09, 33 )
+*        set cursor  ON
+	set key  73 to Tecla_i()
+	set key 105 to Tecla_i()
+	set key  76 to Tecla_l()
+	set key 108 to Tecla_l()
+	set key  69 to Tecla_e()
+	set key 101 to Tecla_e()
+	@ row(), col() get FITA color "W+/N,W+/N"
+	read
+*	accept to FITA color "W+/N,W+/N"
+	set cursor OFF
+	if len( alltrim( FITA ) ) = 0
+	
+		loop
+		
+   elseif _left( upper( FITA ), 1 ) = "I"
+*
+*                if num_fitas = 0
+*
+*                        mens_rerro( " Boleto sem fitas", 3, "W+*/B" )
+*                        loop
+*
+*                endif
+*                if tit_multiplo # 0
+*
+*                        mens_rerro( " Titulo m£ltiplo imcompleto", 3, "W+*/B" )
+*                        loop
+*
+*                endif
+      OPER = "D"
+		exit
+
+   elseif _left( upper( FITA ), 1 ) = "E"
+
+		if num_fitas = 0
+
+			mens_rerro( " Boleto sem fitas", 3, "W+*/B" )
+			loop
+
+		endif
+		if tit_multiplo # 0
+
+			mens_rerro( " Titulo m£ltiplo imcompleto", 3, "W+*/B" )
+			loop
+
+		endif
+      OPER = "E"
+		exit
+
+   elseif _left( upper( fita ), 1 ) = "L"
+
+		limpa()
+		return
+
+   elseif len(trim( fita ) ) = 2 .and. .not. isalpha( fita )
+
+		keyboard fita, 13
+      pega_func()                      && PEGA FUNCIONARIO
+		loop
+
+	endif
+   if .not. testa_fita()               && VAI TESTAR A FITA
+		if NUM_FITAS = 0
+
+			return
+
+		endif
+      loop
+
+   endif
+	SELECT "MOVIMEN"
+   _store( FITAS->DATA_PREV , "DATA_PREV" )  && P/ DEVOLUCAO GUARDA
+                                       		   && DATA PREVISTA NA RETIRADA 
+													         && P/ DEVOLUCAO NO
+ 	                                             && CAMPO DATA_PREV
+   _store( FITAS->DESCONTO , "UNI_DESC" )  	&& pega desconto da retirada
+
+	VC_POR_FITA = FITAS->NUM_VC
+	IF FITAS->PAGTO = " "					
+		_store( FITAS->VALOR , "VALOR" )			&& pega valor da retirada
+	ELSE												   
+		_store( 0 , "VALOR" )						&& zera valor a pagar
+	ENDIF												   && para pagto antecipado
+   IF DIA_ATUAL > M->DATA_PREV .AND. MID(FITAS->CODFITA,9,1)="1";
+		.AND. CLIENTES->C_TIPOC # "I"
+      && ----------------------------
+      && FUNCAO VOLUME_PRECO
+      && ----------------------------
+  
+		   SELECT "CATEGOR"
+		   IF TITULOS->T_CATEGOR < 2 .OR. TITULOS->T_CATEGOR > LASTREC()
+		      mens_rerro(" Tabela de categoria com defeito", 3, "W+*/B" )
+				SELECT "FITAS"
+				if Bloqreg( 10 ) && rlock()
+
+					REPLACE FITAS->USO WITH " "
+					unlock
+
+				else
+	
+					Mens_rerro( "Erro na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+					Limpa()
+					return
+	
+				endif
+		      SELECT "MOVIMEN"
+				rlock( 15 )
+		      DELETE
+				unlock
+		      LOOP
+		   ENDIF
+			GO TITULOS->T_CATEGOR
+
+		VC_POR_FITA = (CATEGOR->NUM_VC * -1)
+		PRECO="PRECO_"+_right(STR(TITULOS->T_CLASSE-1),1)
+      PRECOA=FIELDCONT(PRECO,"CATEGOR")
+		if M->DATA_PREV < ctod( "01/01/80" )
+
+			DATA_PREV = DIA_ATUAL
+			select "FITAS"
+			if Bloqreg( 10 ) && rlock()
+			
+				replace FITAS->DATA_PREV with DIA_ATUAL
+				unlock
+			
+			else
+	
+				Mens_rerro( "Erro na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+				Limpa()
+				return
+	
+			endif
+			select "FERIADOS"
+								
+		endif
+		dia_atraso =  (DIA_ATUAL - M->DATA_PREV)   && DESC FERIADOS DOS
+		SELECT "FERIADOS"									 && DIAS ATRASADOS
+		seek FITAS->DATA_PREV
+		DO WHILE .NOT. EOF() .AND. FERIADOS->DATA_FER <= DIA_ATUAL
+
+			dia_atraso = dia_atraso - 1
+			SKIP	
+
+		ENDDO
+		if NAO_DIA # 0  			&& RECALC ABONO SEGUNDO DIA NAO TRAB
+
+			data_nao1 = data_nao - 7
+			do while DATA_NAO1 > M->DATA_PREV
+
+				seek DATA_NAO1
+				if .not.found()
+
+					DIA_ATRASO = DIA_ATRASO - 1
+
+				endif
+				DATA_NAO1 = DATA_NAO1 - 7
+
+			enddo
+
+		endif
+		_store( PRECOA , "ATRASO_VAL" )
+      PRECOA = PRECOA * dia_atraso && CALCULA VALOR ATRASO
+      PRECOA = PRECOA + VALOR
+      && ------------------------------------------------------------
+   ELSE
+
+*** desconto p/ devolucao rapida ***
+		IF promdevora = "þ" .AND. ;
+			(_time() <= promhrap .OR. DIA_ATUAL < M->DATA_PREV)
+			uni_desc = uni_desc + promdrap
+		ENDIF
+**************************************************************
+
+      PRECOA = M->VALOR
+		_store( 0 , "ATRASO_VAL" )
+		dia_atraso = 0
+   ENDIF
+
+*** COBRA DIARIA APOS HORA P/ DEVOLUCAO ***
+	IF promhodevo = "þ" .AND. CLIENTES->C_TIPOC # "I" ;
+		.AND. DIA_ATUAL >= M->DATA_PREV .AND. _time() > promdev
+		dia_atraso = dia_atraso + 1
+
+	  IF m->atraso_val = 0
+      && ----------------------------
+      && FUNCAO VOLUME_PRECO
+      && ----------------------------
+    
+			SELECT "CATEGOR"
+		   IF TITULOS->T_CATEGOR < 2 .OR. TITULOS->T_CATEGOR > LASTREC()
+
+		      mens_rerro(" Tabela de categoria com defeito", 3, "W+*/B" )
+				SELECT "FITAS"
+				if Bloqreg( 10 ) && rlock()
+
+					REPLACE FITAS->USO WITH " "
+					unlock
+
+				else
+	
+					Mens_rerro( "Erro na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+					Limpa()
+					return
+	
+				endif
+		      SELECT "MOVIMEN"
+				rlock( 15 )
+		      DELETE
+				unlock
+		      LOOP
+
+		   ENDIF
+			GO TITULOS->T_CATEGOR
+
+	   PRECO = "PRECO_" + _right( STR( TITULOS->T_CLASSE - 1 ) , 1 )
+      _store( FIELDCONT( PRECO,"CATEGOR") , "ATRASO_VAL" )
+      PRECOA = M->ATRASO_VAL + M->VALOR
+	  ELSE
+		PRECOA = PRECOA + M->ATRASO_VAL
+	  ENDIF
+	ENDIF
+
+********************************************************************
+
+	SELECT "MOVIMEN"
+
+	_store( FITAS->DATA_RET , "DATA_PREV" ) 	&& DATA DE RETIRADA P/ BOLETO 
+																&& DE DEVOLCAO
+	rlock( 15 )
+	replace MOVIMEN->ATRASO_VAL with M->ATRASO_VAL
+	replace MOVIMEN->ATRASO_DIA with DIA_ATRASO
+   replace MOVIMEN->DESCONTO   with UNI_DESC
+   replace MOVIMEN->VALOR      with M->VALOR
+   replace MOVIMEN->DATA_PREV  with M->DATA_PREV
+	replace MOVIMEN->NUM_VC     WITH VC_POR_FITA
+   _replace( "MOVIMEN->VALOR_PAGO" , "PRECOA" )       
+	unlock
+
+   && ------------------------------------------------------------
+
+	TOTAL_BOLETO += MOVIMEN->VALOR_PAGO -;
+						 (MOVIMEN->VALOR * (MOVIMEN->DESCONTO / 100)) 
+	@ 21,38 SAY (MOVIMEN->VALOR_PAGO -;
+			  (MOVIMEN->VALOR * (MOVIMEN->DESCONTO / 100)));
+			  PICTURE "9,999,999.99"
+	@ 21,66 SAY TOTAL_BOLETO PICTURE "99,999,999.99"
+   num_fitas += 1
+
+ENDDO 
+QT_FITAS = NUM_FITAS
+
+Imp_bdevFAST()
+        CONTINUE
+ENDDO
+
+return
+* subfuncao da funcao devolucao
+
+*
+FUNCTION Imp_bdevFAST
+SELECT "MOVIMEN"
+
+if IMP_DEV = "BOLETO.PRN"
+	do while .t.
+		IMP_DEV1 = "B" + STR( _RAND()*1000000, 6 )
+		if _file(IMP_DEV1)
+			loop
+		else
+			set printer to IMP_DEV1
+			exit
+		endif
+	enddo
+else
+	set printer to IMP_DEV
+endif
+
+IF M->OPER = "D"
+
+   _store( "DEVOLUCAO" , "OPEREXT" )
+
+ELSE
+
+   _store( "ESTORNO" , "OPEREXT" )
+
+ENDIF
+SELECT "MOVIMEN"
+atual_item = 1
+rec_atual = VAL(_right(item_boleto[atual_item],6))
+cli_prox = _left(item_boleto[atual_item],6)
+go REC_ATUAL
+ DO WHILE atual_item <= ult_item
+
+	cli_atual = cli_prox
+	tot_desc = 0
+
+** DETERMINA NUMERO DO BOLETO **
+
+if flock( 15, "REDE")
+	restore from "ULT_BOL.MEM" additive
+	NUM_BOLETO = PRIM_NUM + 1
+	PRIM_NUM   += 1
+	BOLETO_STR = str( NUM_BOLETO, 6, 0, "0" )
+	save to "ULT_BOL" all like "PRIM_*"
+	unlock in "REDE"
+else	
+	Mens_rerro( "Erro de espera na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+	Limpa()
+	return
+endif
+
+**
+
+   lprint NOM_LOC
+	if IMP_NF = "S"
+
+		lprint END_LOC
+		lprint CID_LOC+" "+UF_LOC
+		lprint "CEP "+CEP_LOC
+		lprint "C.G.C : "+CGC_LOC
+		lprint "I.E.  : "+IE_LOC
+		IF _TYPE( IM_LOC ) # "U"
+		
+			IF alltrim( IM_LOC ) # "" 
+
+				lprint "INSC. MUNIC. : "+IM_LOC
+
+			ENDIF
+
+		ENDIF
+		lprint "NOTA FISCAL DE SERVICOS SIMPLIFICADA  "
+		lprint "SERIE B"
+	endif
+   lprint "LOJA : "+NUM_LOJA+"                     "+OPEREXT
+   lprint _time()+"h  -   "+DTOC(_date())+"   -  "+_raw(CDOW(_date()))
+	if IMP_NF = "S"
+
+	   lprint "BOLETO NUMERO ........... "+dtos(DIA_ATUAL)+BOLETO_STR
+
+	else
+
+	   lprint "BOLETO NUMERO ................... "+BOLETO_STR
+
+	endif
+   lprint
+   lprint "FITA           RETIR     PRECO  D.EXTRAS"
+	_store( _time() , "HORA_ATUAL" )
+   preco_tot1 = 0
+   preco_tot2 = 0
+	tot_vc = 0
+	NUM_FITAS = 0
+	_store( MOVIMEN->COD_CLI , "CLIENTE_ATUAL" )
+	SELECT "GENERO"
+	GO 1
+	IF M->OPER = "D"
+	
+		if Bloqreg( 10 ) && rlock()
+
+			REPLACE GENERO->DEV_BOL WITH GENERO->DEV_BOL+1
+			unlock
+
+		else
+	
+			Mens_rerro( "Erro na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+			Limpa()
+			return
+	
+		endif
+
+	ELSE
+
+		if Bloqreg( 10 ) && rlock()
+
+			REPLACE GENERO->EST_BOL WITH GENERO->EST_BOL+1
+			unlock
+
+		else
+	
+			Mens_rerro( "Erro na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+			Limpa()
+			return
+	
+		endif
+
+	ENDIF
+	SELECT "CLIENTES"
+	SEEK M->CLIENTE_ATUAL
+	NUM_ITEM = 0
+   DO WHILE  cli_atual = cli_prox
+
+		NUM_FITAS = NUM_FITAS+1
+		if M->OPER = "E"
+
+			select "CLIENTES"
+		   && DECREMENTAR RET. DIA P/ ESTORNO DE FITA RET. NO MESMO DIA
+			if Bloqreg( 10 ) && rlock()
+
+			   if FITAS->DATA_RET = DIA_ATUAL
+				
+				   replace CLIENTES->RET_DIA with CLIENTES->RET_DIA - 1
+			   endif
+				replace CLIENTES->RET_MES   with CLIENTES->RET_MES - 1
+				replace CLIENTES->RET_TOTAL with CLIENTES->RET_TOTAL - 1
+            tira_fz()
+				unlock
+
+			else
+	
+				Mens_rerro( "Erro na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+				Limpa()
+				return
+	
+			endif
+		
+		endif
+      SELECT "MOVIMEN"
+		rlock( 15 )
+		replace MOVIMEN->HORA       with M->HORA_ATUAL
+		replace MOVIMEN->BOLETO_NUM with M->BOLETO_STR
+		replace MOVIMEN->ITEM       with str( NUM_ITEM ,2,0,"0")
+		unlock
+	   select "FITAS"
+		set order to 1
+	   seek MOVIMEN->CODFITA
+      if mid( MOVIMEN->CODFITA, 9, 1 ) = "1"
+
+         select "TITULOS"
+         seek FITAS->T_CODIGO
+         lprint TITULOS->T_PORT 
+			if Bloqreg( 10 ) && rlock()
+
+			   replace TITULOS->N_COP_FORA with TITULOS->N_COP_FORA - 1
+				unlock
+
+			else
+	
+				Mens_rerro( "Erro na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+				Limpa()
+				return
+	
+			endif
+
+      endif
+		select "MOVIMEN"
+		rlock( 15 )
+      replace MOVIMEN->CODFUNC  WITH M->CODFUNC
+		replace MOVIMEN->DATA_MOV WITH DIA_ATUAL
+		replace MOVIMEN->OPERACAO WITH M->OPER
+		unlock
+	   select "FITAS"
+		if Bloqreg( 10 ) && rlock()
+
+			replace FITAS->USO WITH " "
+			replace FITAS->DATA_PREV WITH CTOD("  /  /  ")
+			replace FITAS->VALOR WITH 0
+			replace FITAS->DESCONTO WITH 0
+			replace FITAS->PAGTO WITH " "
+			unlock
+
+		else
+	
+			Mens_rerro( "Erro na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+			Limpa()
+			return
+	
+		endif
+		SELECT "MOVIMEN"
+		num_vc_disp = clientes->vc_qtde
+		IF NUM_VC_DISP > 0;
+			.AND. NUM_VC_DISP >= (MOVIMEN->NUM_VC * -1);
+			.AND. M->OPER = "D"
+
+			VC_POR_FITA = ( MOVIMEN->NUM_VC * -1 )
+			IF MOVIMEN->ATRASO_DIA > 0
+
+				IF NUM_VC_DISP >= ((MOVIMEN->ATRASO_DIA + 1) * VC_POR_FITA)
+
+					IF MOVIMEN->VALOR > 0
+
+						NUM_VC_DISP =;
+						NUM_VC_DISP - ((MOVIMEN->ATRASO_DIA + 1) * VC_POR_FITA)
+
+					ELSE
+
+						NUM_VC_DISP =;
+						NUM_VC_DISP - ( MOVIMEN->ATRASO_DIA * VC_POR_FITA)
+
+					ENDIF
+					VALOR_NORMAL = 0
+					VALOR_ATRASO = 0
+
+				ELSEIF NUM_VC_DISP >= ( MOVIMEN->ATRASO_DIA * VC_POR_FITA)
+
+					NUM_VC_DISP =;
+					NUM_VC_DISP - (MOVIMEN->ATRASO_DIA * VC_POR_FITA)
+					VALOR_ATRASO = 0
+					VALOR_NORMAL = MOVIMEN->VALOR
+					TOT_DESC = TOT_DESC + (VALOR_NORMAL * MOVIMEN->DESCONTO / 100) 
+
+				ELSE
+
+					ATRASOS_TIRAR = _INT(NUM_VC_DISP / VC_POR_FITA)
+					VALOR_ATRASO = MOVIMEN->ATRASO_VAL * ;
+										(MOVIMEN->ATRASO_DIA - ATRASOS_TIRAR)
+*					NUM_VC_DISP = (ATRASOS_TIRAR * VC_POR_FITA)
+					NUM_VC_DISP = NUM_VC_DISP - ( ATRASOS_TIRAR * VC_POR_FITA )
+					VALOR_NORMAL = MOVIMEN->VALOR
+					TOT_DESC = TOT_DESC + (VALOR_NORMAL * MOVIMEN->DESCONTO / 100) 
+
+				ENDIF
+
+			ELSE
+
+				IF MOVIMEN->VALOR > 0
+
+					NUM_VC_DISP = NUM_VC_DISP - VC_POR_FITA
+
+				ENDIF	
+				VALOR_NORMAL = 0
+				VALOR_ATRASO = 0
+
+			ENDIF
+
+		ELSE
+
+			VALOR_NORMAL = MOVIMEN->VALOR
+			VALOR_ATRASO = MOVIMEN->VALOR_PAGO - MOVIMEN->VALOR
+			TOT_DESC = TOT_DESC + (MOVIMEN->VALOR * (MOVIMEN->DESCONTO / 100))
+
+		ENDIF
+		rlock( 15 )
+		REPLACE MOVIMEN->NUM_VC WITH (CLIENTES->VC_QTDE - NUM_VC_DISP),;
+				  MOVIMEN->VALOR_PAGO WITH ;
+			  (VALOR_NORMAL-(VALOR_NORMAL*(MOVIMEN->DESCONTO/100)))+VALOR_ATRASO
+		unlock
+		SELECT "FITAS"
+		if Bloqreg( 10 ) && rlock()
+
+			REPLACE FITAS->RECEBIDO WITH FITAS->RECEBIDO +;
+			  ((VALOR_NORMAL-(VALOR_NORMAL*(MOVIMEN->DESCONTO/100)))+VALOR_ATRASO);
+			  / IND_VALOR
+			unlock
+
+		else
+	
+			Mens_rerro( "Erro na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+			Limpa()
+			return
+	
+		endif
+		TOT_VC = TOT_VC + MOVIMEN->NUM_VC
+		SELECT "CLIENTES"
+		if Bloqreg( 10 ) && rlock()
+
+
+			REPLACE CLIENTES->VC_QTDE WITH NUM_VC_DISP
+         tira_fz()
+			unlock
+
+		else
+	
+			Mens_rerro( "Erro na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+			Limpa()
+			return
+	
+		endif
+		SELECT "MOVIMEN"
+
+      lprint MOVIMEN->CODFITA PICTURE "@R 99.9999.99.9-9" nolinefeed
+      lprint " " nolinefeed
+      lprint _left(DTOC(MOVIMEN->DATA_PREV),5)            nolinefeed
+      lprint " " nolinefeed
+      lprint M->VALOR_NORMAL PICTURE "##,###.##" nolinefeed
+      lprint " " nolinefeed
+      lprint M->VALOR_ATRASO PICTURE iif( M->VALOR_ATRASO < 100000, ;
+		                                   "##,###.##", "######.##" )
+		IF M->OPER = "D"
+			SELECT "GENERO"
+			GO VAL(_LEFT(FITAS->CODFITA,2))+1
+			if Bloqreg( 10 ) && rlock()
+
+				replace 	GENERO->DEV_FIT WITH GENERO->DEV_FIT+1
+				replace	GENERO->DEV_VAL WITH GENERO->DEV_VAL +;
+							(VALOR_NORMAL-(VALOR_NORMAL*(MOVIMEN->DESCONTO/100))) +;
+							VALOR_ATRASO
+				replace  GENERO->FITAS_FORA WITH (GENERO->FITAS_FORA-1)
+				unlock
+
+			else
+	
+					Mens_rerro( "Erro na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+					Limpa()
+					return
+	
+			endif
+				
+		ELSE
+			SELECT "GENERO"
+			GO VAL(_LEFT(FITAS->CODFITA,2))+1
+			if Bloqreg( 10 ) && rlock()
+
+				replace 	GENERO->EST_FIT WITH GENERO->EST_FIT+1
+				replace	GENERO->EST_VAL WITH GENERO->EST_VAL +;
+							(VALOR_NORMAL-(VALOR_NORMAL*(MOVIMEN->DESCONTO/100))) +;
+							VALOR_ATRASO
+				replace	GENERO->FITAS_FORA WITH (GENERO->FITAS_FORA-1)
+				unlock
+
+			else
+		
+				Mens_rerro( "Erro na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+				Limpa()
+				return
+	
+			endif
+				
+		ENDIF
+		SELECT "MOVIMEN"
+      preco_tot1=preco_tot1+M->VALOR_NORMAL
+      preco_tot2=preco_tot2+M->VALOR_ATRASO
+
+ 		atual_item += 1
+		IF atual_item > ult_item
+			EXIT
+		ENDIF
+	   rec_atual = VAL(_right(item_boleto[atual_item],6))
+  	   cli_prox = _left(item_boleto[atual_item],6)
+
+		rlock( 15 )
+		REPLACE MOVIMEN->LINK WITH REC_ATUAL-RECNO()
+		unlock
+		SKIP rec_atual-recno()
+
+		NUM_ITEM += 1
+   ENDDO
+
+   lprint
+   lprint "TOTAL FITAS = " nolinefeed
+   lprint NUM_FITAS PICTURE "99"
+   lprint "PRECO TOTAL ................." nolinefeed
+   IF M->OPER = "E"
+      val_estor = 0
+      lprint val_estor PICTURE "####,###.##"
+   ELSE   
+      lprint (preco_tot1+preco_tot2) PICTURE "####,###.##"
+   ENDIF
+
+	preco_total = preco_tot1+preco_tot2
+	IF tot_desc # 0 .AND. CLIENTES->C_TIPOC # "I" .AND.;
+	   preco_total > 0 .AND. M->OPER = "D"
+		lprint "DESCONTO PROMOCIONAL DE ....." nolinefeed
+		lprint tot_desc PICTURE "####,###.##"
+		lprint "TOTAL A PAGAR ..............." nolinefeed
+		lprint (preco_total-tot_desc) PICTURE "####,###.##"
+	ENDIF
+	if CLIENTES->DEBITOS # 0
+
+	  	lprint "       " nolinefeed
+	   if CLIENTES->DEBITOS > 0
+   
+      	lprint " DEBITO ANTERIOR = " nolinefeed
+
+		elseif CLIENTES->DEBITOS < 0
+	
+	      lprint "CREDITO ANTERIOR = " nolinefeed
+
+   	endif 
+      lprint _abs( CLIENTES->DEBITOS ) picture "###,###,###.##"
+
+	endif
+   lprint
+   lprint "FUNC : "+FUNCION->NOME+"   "
+   lprint
+	SELECT "FUNCION"
+	rlock( 15 )
+	IF M->OPER = "D"
+		REPLACE FUNCION->LOC_DEV WITH FUNCION->LOC_DEV + NUM_FITAS
+	ELSE
+		REPLACE FUNCION->LOC_EST WITH FUNCION->LOC_EST + NUM_FITAS
+	ENDIF
+	unlock
+   lprint CLIENTES->COD_CLI+"  " nolinefeed
+   lprint CLIENTES->NOME
+
+*** IMPRIME EXTRATO DO VIDEO CHEQUE ***
+
+	IF tot_vc > 0 
+		lprint
+		lprint "VIDEO CHEQUE EXTRATO"
+		lprint
+		lprint "VALIDO ATE DIA = " nolinefeed
+		lprint CLIENTES->VC_DATA PICTURE "@E"
+		lprint "SALDO ANTERIOR = " nolinefeed
+		lprint (tot_vc+CLIENTES->VC_QTDE) PICTURE "##,###"
+		lprint "USADOS         = " nolinefeed
+		lprint tot_vc PICTURE "##,###"
+		lprint "SALDO ATUAL    = " nolinefeed
+		lprint CLIENTES->VC_QTDE PICTURE "##,###"
+	ENDIF
+
+	SELECT "GENERO"
+	GO 1
+	if Bloqreg( 10 ) && rlock()
+
+		REPLACE GENERO->FITAS_TOT WITH GENERO->FITAS_TOT + TOT_VC
+		unlock
+
+	else
+	
+		Mens_rerro( "Erro na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+		Limpa()
+		return
+	
+	endif
+   SELECT "FITAS"      
+   SET ORDER TO 2
+   SEEK CLIENTES->COD_CLI 
+   IF FOUND() .AND. (FITAS->COD_CLI = CLIENTES->COD_CLI)
+		lprint
+      lprint "FITAS AINDA NAO DEVOLVIDAS"
+      DO WHILE FITAS->COD_CLI = CLIENTES->COD_CLI
+         SELECT "TITULOS"
+         SEEK FITAS->T_CODIGO
+         lprint TITULOS->T_PORT
+         lprint FITAS->CODFITA PICTURE "@R 99.9999.99.9-9" nolinefeed
+         lprint " Retirou em "+_left(DTOC(FITAS->DATA_RET),5) nolinefeed
+         lprint " P/ "+_left(DTOC(FITAS->DATA_PREV),5)
+         SELECT "FITAS"
+         SKIP
+      ENDDO
+   ENDIF
+   SELECT "FITAS"      
+   SET ORDER TO 1
+
+*** imprime mensagem no boleto ***
+		if MEN_LDEV = "S"
+			IF ult_linha > 1
+				lprint
+				lprint men_l01
+			ENDIF
+			IF ult_linha > 2
+				lprint men_l02
+			ENDIF
+			IF ult_linha > 3
+				lprint men_l03
+			ENDIF
+			IF ult_linha > 4
+				lprint men_l04
+			ENDIF
+			IF ult_linha > 5
+				lprint men_l05
+			ENDIF
+			IF ult_linha > 6
+				lprint men_l06
+			ENDIF
+			IF ult_linha > 7
+				lprint men_l07
+			ENDIF
+			IF ult_linha > 8
+				lprint men_l08
+			ENDIF
+			IF ult_linha > 9
+				lprint men_l09
+			ENDIF
+			IF ult_linha > 10
+				lprint men_l10
+			ENDIF
+		endif
+
+*** IMPRIME N' LINHAS APOS BOLETO ***
+	FOR L1 = 1 TO imp_lind
+	   lprint
+	NEXT
+
+	SELECT "MOVIMEN"
+ ENDDO
+
+set printer to
+
+SELECT "MOVIMEN"
+
+if flock( 15, "REDE")
+	restore from "ULT_BOL.MEM" additive
+	PRIM_ITEM = lastrec() + 1
+	save to "ULT_BOL" all like "PRIM_*"
+	unlock in "REDE"
+else	
+	Mens_rerro( "Erro de espera na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+	Limpa()
+	return
+endif
+
+if IMP_DEV = "BOLETO.PRN"
+
+	Boleto_tela(IMP_DEV1)
+
+endif
+
+RETURN 
+

@@ -1,0 +1,237 @@
+set date to "DMY"
+set deleted  ON
+set softseek ON
+*--------------------------- Abertura de arquivos ----------------------------
+select 10
+use "FERIADOS"
+set index to "FERIADOS.K1" key FERIADOS->DATA_FER
+*-------------------*
+select 4
+use "CLIENTES.DBF"
+set index to "CLIENTES.K1" key CLIENTES->NOME,   ;
+  	          "CLIENTES.K2" key CLIENTES->CPF_CLI,;
+     	       "CLIENTES.K3" key CLIENTES->COD_CLI 
+set order to 3
+*-------------------*
+select 5
+use "TITULOS.DBF"
+set index to "TITULOS.K1" key TITULOS->T_CODIGO,;
+  	          "TITULOS.K2" key TITULOS->T_PORT
+set order to  1
+*-------------------*
+select 6
+use "FITAS.DBF"
+set index to "FITAS.K1" key FITAS->CODFITA,;
+             "FITAS.K2" key FITAS->COD_CLI + FITAS->CODFITA,;
+				 "FITAS.K3" key FITAS->SEQUENCIAL
+set order to  2
+*-----------------------------------------------------------------------------
+restore from "DIANAO.MEM" additive
+CODIGO = "000000"
+declare SEMANA [ 8 ]
+SEMANA [ 1 ] = "SEM DATA"
+SEMANA [ 2 ] = "DOMINGO "
+SEMANA [ 3 ] = "SEGUNDA "
+SEMANA [ 4 ] = "TER€A   "
+SEMANA [ 5 ] = "QUARTA  "
+SEMANA [ 6 ] = "QUINTA  "
+SEMANA [ 7 ] = "SEXTA   "
+SEMANA [ 8 ] = "SABADO  "
+set color to "W+/B,N/W,N,W+/R"
+@ 00,00 to 24,79 double
+scroll( 01, 01, 23, 78, 0 )
+@ 02,00 say "Ì"+replicate("Í",78) + "¹"
+@ 01,01 say "VSV 3.0 - Torusº         Acerto de Datas de Devolu‡„o         º ESC - Retorna"
+@ 00,16 say "Ë"
+@ 02,16 say "Ê"
+@ 00,63 say "Ë"
+@ 02,63 say "Ê"
+@ 22,00 say "Ì" + replicate( "Í", 78 ) + "¹"
+@ 03,19 clear to 07,60  color "N/BG"
+@ 03,19 to 07,60 double color "W+/BG"
+@ 08,21 fill to 08,62   color "N+/N"
+@ 04,61 fill to 07,62   color "N+/N"
+do while .T.
+
+	@ 23,01    say space( 78 )
+	@ 04,21    say "Digite o c¢digo do cliente  :  " color "N/BG" 
+	@ 04,col() get CODIGO  picture "999999"          color "W+/BG,N/W,N,W+/BG"
+	read
+	if lastkey() = 27
+
+		exit
+
+	endif
+	if CODIGO == "000000"
+
+		loop
+
+	endif
+	select "CLIENTES"
+	seek CODIGO
+	if found() .and. CLIENTES->COD_CLI == CODIGO
+
+		@ 06,21    say "Nome : "       color "N/BG"
+		@ 06,col() say CLIENTES->NOME  color "W+/BG"
+
+	else
+
+		@ 23,02 say "Cliente n„o encontrado" color "W+*/B"
+		_bell()
+		inkey( 20 )
+		@ 23,01 say space( 78 ) color "W/B"
+		loop
+		
+	endif	
+	select "FITAS"
+	seek CODIGO
+	if found() .and. FITAS->COD_CLI == CODIGO
+
+		for LOOP_1 = 1 to 8
+
+			if FITAS->COD_CLI # CODIGO
+
+				LOOP_1 -= 1
+				exit
+
+			endif	
+			skip
+
+		next
+		seek CODIGO
+		set key  13 to fNada()
+		set key   9 to fNada()
+		set key 271 to fNada()
+		Data_simulada()
+		set key  13 to
+		set key   9 to
+		set key 271 to
+
+	else
+
+		@ 23,02 say "Este cliente n„o est  com fitas" color "W+*/B"
+		_bell()
+		inkey( 20 )
+		@ 23,01 say space( 78 ) color "W/B"
+
+	endif
+
+enddo
+close all
+set color  to
+set cursor ON
+clear	
+quit
+
+**********************
+function Data_simulada
+**********************
+
+private SC_FIT
+SC_FIT = savescreen( 09, 02, 21, 78 )
+select "TITULOS"
+set order to 1
+select "FITAS"
+set relation to FITAS->T_CODIGO into "TITULOS"
+private  CAMPOS [ 2 ], CABEC [ 2 ], MASCAR [ 2 ], EDICAO [ 2 ]
+CAMPOS[1] = "TITULOS->T_PORT"
+CAMPOS[2] = "FITAS->DATA_PREV"
+CABEC [1] = "TITULO EM PORTUGUES"
+CABEC [2] = "DEVOLVER  SEMANA"
+MASCAR[1] = "@!"
+MASCAR[2] = "@E"
+@ 23,01 say space( 78 ) color "W+/B"
+@ 21,12 fill to 21,72   color "N+/N"
+@ 10,71 fill to 20,72   color "N+/N"
+@ 23,02 say "Tecla < - > Diminui 1 dia na data  Tecla < + > Adiciona 1 dia na data" color "W+/B"
+keyboard 5
+browse   while    FITAS->COD_CLI = CODIGO;  &&  CLIENTES->COD_CLI ;
+			window   09, 10, 20, 70         ;
+			color    "N/BG,W+/R,W+/BG,N/BG" ;
+			frame    double ;
+         fields   CAMPOS ;
+			picture  MASCAR ;
+			heading  CABEC  ;
+			edit     .F.    ;
+			noappend        ;
+			nodelete        ;
+			function Faz_marca()
+set relation to
+restscreen( 09, 02, 21, 78, SC_FIT )
+return
+inkey( 5 )
+restscreen( 09, 02, 21, 78, SC_FIT )
+
+******************
+function Faz_marca
+******************
+
+private LINHA
+if     lastkey() = 43
+
+	if empty( FITAS->DATA_PREV )
+
+		replace FITAS->DATA_PREV with _date()
+		
+	endif
+	replace FITAS->DATA_PREV with Calc_dia( FITAS->DATA_PREV + 1, "+" )
+	@ row(),52 say FITAS->DATA_PREV                       color "N/BG"
+	@ row(),62 say SEMANA [ dow( FITAS->DATA_PREV ) + 1 ] color "N/BG"
+	return 1
+
+elseif lastkey() = 45
+
+	if empty( FITAS->DATA_PREV )
+
+		replace FITAS->DATA_PREV with _date()
+		
+	endif
+	replace FITAS->DATA_PREV with Calc_dia( FITAS->DATA_PREV - 1, "-" )
+	@ row(),52 say FITAS->DATA_PREV                       color "N/BG"
+	@ row(),62 say SEMANA [ dow( FITAS->DATA_PREV ) + 1 ] color "N/BG"
+	return 1
+
+elseif lastkey() = 27
+
+	return 0
+
+endif
+LINHA = row()
+if lastkey() = 5 .and. .not. row() = 12 && SETA PRA CIMA
+
+	LINHA -= 1
+
+endif
+if lastkey() = 24 .and. .not. row() = 19 && SETA PRA BAIXO
+
+	LINHA += 1
+	if LOOP_1 < 8 .and. LINHA = 12 + LOOP_1
+
+		LINHA -= 1
+
+	endif
+
+endif
+@ 12,61 clear to 19,69 color "N/BG"
+@ LINHA,62 say SEMANA [ dow( FITAS->DATA_PREV ) + 1 ] color "N/BG"
+return 1
+
+*****************
+function Calc_dia                    && CALCULA ABONO
+*****************
+
+parameters DATA_DEVOL, M_OP
+select "FERIADOS"		                && RECALCULA ABONOS SEGUNDO FERIADOS
+seek DATA_DEVOL
+do while DATA_DEVOL = FERIADOS->DATA_FER .or. dow( DATA_DEVOL ) = NAO_DIA
+
+	DATA_DEVOL = DATA_DEVOL + iif( M_OP == "+" ,  1, - 1 )
+	seek DATA_DEVOL
+
+enddo
+select "FITAS"
+return ( DATA_DEVOL )
+
+**************
+function fNada
+**************

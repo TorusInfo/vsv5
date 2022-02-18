@@ -1,0 +1,249 @@
+********************
+procedure Altera_tpo 
+********************
+
+select 14
+use "ARQTPO.DBF"
+if .not. flock( 15 )
+
+	Mens_rerro( " Rotina em uso por outro terminal, opera‡„o n„o efetuada", 4, "W+*/B" )
+	return
+
+endif
+set deleted ON
+set confirm ON
+set precedence to FIELDS
+count to NUM_TPO
+private  MAT_TPO [ NUM_TPO ], MAT_COR [ NUM_TPO ]
+SCALT    = savescreen( 03, 01, 23, 78 )
+COR_TPO  = setcolor()
+go 1
+for A = 1 to NUM_TPO
+
+   MAT_TPO[A] = upper( ARQTPO->TITULO )
+	MAT_COR[A] = _left( ARQTPO->TITULO, 1 )
+  	skip
+
+next
+NUM_MAX = iif( NUM_TPO > 11, 11, NUM_TPO )
+do while .T.
+	
+	@ 03,01 clear to 21,78 color "W/B"
+	Quadro( 05, 43, 06 + NUM_MAX, 60, "W+/BG,W+/N,N,W+/BG", "N+/N" )
+	popup window 	06, 45, 05 + NUM_MAX, 59;
+			to 		OP;
+			options 	MAT_TPO;
+			hilite	MAT_COR,"GR+/BG";
+			color		"N/BG,W+/BG,W+/BG,N/BG"
+   if OP = 0
+
+		select 1
+		close
+		select 14
+      close "ARQTPO"
+		restscreen(03,01,23,78,SCALT)
+		setcolor(COR_TPO)
+		set confirm OFF
+		set precedence to VARIABLES
+		return
+
+	else
+
+		select "ARQTPO"
+      go OP
+      select 1
+      use ARQTPO->ARQUIVO
+		if .not. flock( 15 )
+		
+			Mens_rerro( " Arquivo em uso por outro terminal, opera‡„o n„o efetuada", 4, "W+*/B" )
+			select 1
+			close
+			select 14
+      	close "ARQTPO"
+			restscreen(03,01,23,78,SCALT)
+			setcolor(COR_TPO)
+			set confirm OFF
+			set precedence to VARIABLES
+			return
+
+		endif
+
+   endif
+	NUM_CAMPOS = afields()
+	private NOME [ NUM_CAMPOS ], TIPO [ NUM_CAMPOS ], TAM [ NUM_CAMPOS ]
+	afields( NOME, TIPO, TAM )
+	count to NUM_REG_1 for .not. _deleted()
+	if NUM_REG_1 = 1
+
+		append blank
+		NUM_REG_1 = 2
+
+	endif
+	@ 03,01 clear to 21,78 color "W/B"
+	Teclaedit()
+	set precedence to FIELDS
+	private CABEC  [ 2 ], EDICAO [ 2 ],;
+			  MASCAR [ 2 ], CAMPOS [ 2 ]
+	CAMPOS [ 1 ] = "DADOS"
+	CAMPOS [ 2 ] = "LETRA"
+	EDICAO [ 1 ] = .T.
+	EDICAO [ 2 ] = .T.
+	NUM_REG = iif( NUM_REG_1 > 13, 20, NUM_REG_1 + 8 ) 
+	Quadro( 03, 01, NUM_REG, 8 + TAM [ 1 ], "W+/BG,W+/N,N,GR+/BG", "N+/N" )
+	set color to "W+/BG,W+/BG,N,W+/BG"
+	@ 03,01 to 05,8+TAM[1] double 
+	@ 04,02 say space(_int((7+TAM[1]-len(trim(MAT_TPO[OP])))/2))+;
+					trim(MAT_TPO[OP])
+	set key 27 to Escapa()	
+	go 2
+	if ARQTPO->ARQUIVO # "CATEGOR.TPO" .and. ARQTPO->ARQUIVO # "GENERO.TPO"
+
+		browse 	for 		recno() > 1;
+				 	window 	06, 01, NUM_REG, 8 + TAM [ 1 ];
+				 	color 	"N/BG,W+/BG,W+/BG,N/BG";
+		       	frame 	double;
+	      	 	fields 	CAMPOS;
+					edit		EDICAO
+
+	elseif ARQTPO->ARQUIVO = "GENERO.TPO"
+
+		browse	for 		recno() > 1 .and. GENERO->DADOS # "PRODUTOS";
+					window 	06, 01, NUM_REG, 8 + TAM [ 1 ];
+					color 	"N/BG,W+/BG,W+/BG,N/BG";
+			      frame 	double;
+		      	fields	CAMPOS;
+					edit		EDICAO;
+					nodelete
+
+	elseif ARQTPO->ARQUIVO = "CATEGOR.TPO"
+
+		browse	for 		recno()>1;
+					window 	6,1,NUM_REG,8+TAM[1];
+					color 	"N/BG,W+/BG,W+/BG,N/BG";
+			      frame 	double;
+		      	fields	CAMPOS;
+					edit		EDICAO;
+					nodelete
+
+	endif
+	if ARQTPO->ARQUIVO = "CATEGOR.TPO"
+
+		set deleted OFF
+		Acerta_pro( "DOMINGO" )
+		Acerta_pro( "SEGUNDA" )
+		Acerta_pro( "TERCA"   )
+		Acerta_pro( "QUARTA"  )
+		Acerta_pro( "QUINTA"  )
+		Acerta_pro( "SEXTA"   )
+		Acerta_pro( "SABADO"  )
+		set deleted ON
+
+	endif				
+	if ARQTPO->ARQUIVO = "GENERO.TPO"
+
+		set deleted OFF
+		Acerta_mes()
+		set deleted ON
+
+	endif
+	set precedence to VARIABLES
+
+enddo
+select 1
+close
+select 14
+close "ARQTPO"
+restscreen( 03, 01, 23, 78, SCALT )
+setcolor( COR_TPO )
+set confirm OFF
+
+return
+
+*******************
+function Acerta_pro 
+*******************
+
+parameters NOME_PRO
+select 3
+use NOME_PRO + ".PRO"
+if flock( 15 )
+
+	select "CATEGOR"
+	FIM_REG = reccount()
+	for NUM_REG = 2 to FIM_REG
+	
+		select "CATEGOR"
+		go NUM_REG
+		X = _deleted()
+		select 3
+		if NUM_REG - 1 <= reccount()
+	
+			go NUM_REG - 1
+			if X
+	
+				delete
+				unlock
+	
+			else
+
+				replace DADOS with CATEGOR->DADOS
+
+			endif
+
+		else
+
+			append blank
+			replace DADOS with CATEGOR->DADOS
+
+		endif
+
+	next
+
+else
+
+	Mens_rerro( " Arquivo em uso por outro terminal, opera‡„o n„o efetuada", 4, "W+*/B" )
+
+endif
+select 3
+close
+
+return
+
+*******************
+FUNCTION acerta_mes 
+*******************
+
+select 3
+use "MES"
+if flock( 15 )
+
+	select "GENERO"
+	FIM_REG = reccount()
+	for NUM_REG = 1 to FIM_REG
+
+		select "GENERO"
+		go NUM_REG
+		select "MES"
+		if NUM_REG <= reccount()
+
+			go NUM_REG
+			replace DADOS with GENERO->DADOS
+
+		else
+
+			append  blank
+			replace MES->DADOS with GENERO->DADOS
+			replace MES->LETRA with GENERO->LETRA
+
+		endif
+
+	next
+
+else
+
+	Mens_rerro( " Arquivo em uso por outro terminal, opera‡„o n„o efetuada", 4, "W+*/B" )
+
+endif
+close "MES"
+
+return

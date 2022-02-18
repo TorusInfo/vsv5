@@ -1,0 +1,35 @@
+clear
+select 10
+use "sinopse.dbf"
+SET INDEX TO "SINOPSE.K1" KEY SINOPSE->T_CODIGO
+a=0
+seek "010001"
+mcodigo=sinopse->t_codigo
+mcodigo2=sinopse->t_codigo
+skip
+mcodigo2=sinopse->t_codigo
+do while .not. eof()
+   @ 10,10 say recno()
+   if mcodigo==mcodigo2
+      if len(alltrim(l1)) = 0
+         replace sinopse->L1 with "AP"
+         delete
+         a=a+1
+         @ 23,01 say "entrei"
+         @ 23,col()+1 say a
+      endif
+   endif
+   mcodigo=sinopse->t_codigo
+   mcodigo2=sinopse->t_codigo
+   skip
+   if .not.eof()
+      mcodigo2=sinopse->t_codigo
+   endif
+   @ 10,10 say space(20)
+enddo
+
+quit
+
+
+
+

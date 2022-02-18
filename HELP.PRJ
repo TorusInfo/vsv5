@@ -1,0 +1,305 @@
+*******************************************************************************
+*                                                                             *
+*   PROGRAMA HELP.PRJ                                                         *
+*                                                                             *
+*   16/07/91 - Fran                                                           *
+*                                                                             *
+*******************************************************************************
+*
+**************
+function Ajuda  && noswap
+**************
+
+*parameters ARQ_TXT, ARQ_DBF, COR_POPUP, COR_EDITM
+*--------------------------------------------------------------
+private NUM_REG, AREA, POSICAO, OP_IND, HANDLE, SC_HELP, SC_COR
+*--------------------------------------------------------------
+savekey()
+SC_HELP   = savescreen( 00, 00, 24, 79 )
+SC_COR    = setcolor()
+AREA      = _select()
+COR_POPUP = iif( _type( COR_POPUP ) == "U", "W+/R,N/W,W+/R,GR+/R", COR_POPUP )
+COR_EDITM = iif( _type( COR_EDITM ) == "U", "W/W,N/W,N/W,N/W"    , COR_EDITM )
+S_WRAP    = _set( "WRAP"   ) == "ON"
+S_CURS    = _set( "CURSOR" ) == "ON"
+if _type( ARQ_TXT ) == "U" .or. _type( ARQ_DBF ) == "U"
+   * if pcount() < 2 && usar este rodar sem funcao
+
+	?
+	?  " Use : help arq.texto arq.dbf [cor da janela] [cor do texto] " 
+	?
+	_bell()
+	inkey( 05 )
+   return
+
+endif
+if pcount() = 2
+
+	COR_POPUP  = "W+/R,N/W,W+/R,GR+/R"
+	COR_EDITM  = "W/W,N/W,N/W,N/W"
+
+elseif pcount() = 3
+
+	COR_EDITM  = "W/W,N/W,N/W,N/W"
+	
+endif
+POS_1      = _at( ",", COR_EDITM, 1 ) + 1
+POS_2      = _at( ",", COR_EDITM, POS_1 + 1 )
+COR_TITULO = mid( COR_EDITM, POS_1, POS_2 - POS_1 )
+COR_TITULO = iif( POS_2 - POS_1 < 3, "N/W", COR_TITULO )
+COR_SOMBRA = "N+/N"
+COR_ELEV   = "N/BG"
+ED_LIN_ESQ = 03
+ED_COL_ESQ = 01
+ED_LIN_DIR = 20
+ED_COL_DIR = 78
+select  20
+use ARQ_DBF
+count to NUM_REG
+private  MTIND [ NUM_REG ],;
+		 	MTSEL [ NUM_REG ],;
+			MTPOS [ NUM_REG ],;
+			MTQTD [ NUM_REG ]
+*-----------------------
+set precedence to FIELDS
+*-----------------------
+for LOOP_1 = 1 to NUM_REG
+
+	go LOOP_1
+	MTIND [ LOOP_1 ] = INDICES
+   MTSEL [ LOOP_1 ] = SELECAO
+	MTPOS [ LOOP_1 ] = POSICAO
+	MTQTD [ LOOP_1 ] = QUANTOS
+
+next
+*--------------------------
+set precedence to VARIABLES
+*--------------------------
+close
+select AREA
+HANDLE  = _fopen( ARQ_TXT )
+if HANDLE < 0
+
+      MENS_ERRO( "Arquivo nao encontrado ! ","" , "w+*/n")
+      _fclose( HANDLE )
+      quit
+endif
+POSICAO  = 06
+set wrap   OFF
+set cursor OFF
+@ 20,04 say "ษออออออออออออออออออออออออออออออออออออออออออออออออออออออ" + ;
+            "ออออออออออออออออป" color COR_POPUP
+@ 21,04 say "บ Use ==>  Setas - Posicionar - <ENTER> - Ver texto - <" + ;
+            "Esc> - Retornar บ" color COR_POPUP
+@ 22,04 say "ศออออออออออออออออออออออออออออออออออออออออออออออออออออออ" + ;
+            "ออออออออออออออออผ" color COR_POPUP
+do while .T.
+
+	@ 04,04  to  17,46 double  color COR_POPUP
+	@ 05,46  say chr( 219 )    color COR_ELEV
+	@ 16,46  say chr( 219 )    color COR_ELEV
+	@ 06,46  say chr( 004 )    color COR_ELEV
+	for LOOP_1 = 07 to 15
+	
+		@ LOOP_1, 46 say " "    color COR_ELEV
+
+	next
+	@ 18,06  fill to     18,48 color COR_SOMBRA
+	@ 05,47  fill to     17,48 color COR_SOMBRA
+	popup		window		05,05,16,45     ;
+				to				OP_IND          ;
+				options		MTIND           ;
+				selectable  MTSEL           ;
+				hilite		MTIND,COR_POPUP ;
+				color			COR_POPUP       ;
+				function    Elevador()
+	if OP_IND < 1
+	
+		exit
+		
+	endif
+	
+enddo
+_fclose( HANDLE )
+set wrap   S_WRAP
+set cursor S_CURS
+restscreen( 00, 00, 24, 79, SC_HELP )
+setcolor( SC_COR )
+restkey()
+
+return
+					
+*****************
+function Elevador 
+*****************
+
+parameters  P_MODO, P_INDI
+private     ACAO,   SALVA_LINHA
+TECLA       = lastkey()
+ACAO        = 2
+if P_MODO  == 0
+
+	ACAO = 3
+	@ POSICAO,46 say " "       color COR_ELEV
+	  POSICAO = 05 + _int( P_INDI * 10 / NUM_REG )
+	@ POSICAO,46 say chr( 4 ) color COR_ELEV
+
+elseif P_MODO == 1 .or. P_MODO == 2 .or. P_MODO == 4
+
+	SALVA_LINHA = savescreen( 21, 05, 21, 73 )
+	@ 21,05 say space( 69 ) color COR_POPUP
+	if P_MODO == 1
+	
+		@ 21,06 say "Voc j  est  no primeiro กtem selecion vel " color COR_POPUP
+	
+	elseif P_MODO == 2	
+
+		@ 21,06 say "Voc j  est  no ฃltimo กtem selecion vel   " color COR_POPUP
+
+	elseif P_MODO == 4
+
+		@ 21,06 say "No existem op”es selecion veis           " color COR_POPUP
+
+	endif
+	_bell()
+	inkey( 1 )
+	restscreen( 21, 05, 21, 73, SALVA_LINHA )
+	
+endif
+if TECLA == 27
+
+	ACAO = 0
+
+elseif TECLA == 13
+
+	Mostra_help( P_INDI )
+	ACAO = 2
+
+endif
+
+return ACAO
+
+********************
+function Mostra_help 
+********************
+
+parameters IND_HELP
+private    TEXTO_HELP, POS_EDIT
+POS_EDIT = 05
+SC_EDIT  = savescreen( 00, 00, 24, 79 )
+@ 21,04 say "บ Use as Setas / PgUp / PgDn - Para ver todo o texto - " + ;
+            "<Esc> - Retorna บ" color COR_POPUP
+_fseek( HANDLE, MTPOS [ IND_HELP ], 0 )
+TEXTO_HELP = ""
+if MTQTD [ IND_HELP ] <= 10000
+
+	TEXTO_HELP = _freadstr( HANDLE, MTQTD [ IND_HELP ] )
+
+else
+
+	TEXTO_HELP = _freadstr( HANDLE, 10000 )
+	
+endif
+TEXTO_HELP = hardcr( TEXTO_HELP )
+PRI_LINHA  = 01
+ULT_LINHA  = mlcount( TEXTO_HELP )
+edit 	memo 			TEXTO_HELP ;
+		to 			TEXTO_HELP ;
+		window		ED_LIN_ESQ,;
+						ED_COL_ESQ,;
+						ED_LIN_DIR,;
+						ED_COL_DIR ;
+		frame    	double     ;
+		color    	COR_EDITM  ;
+		linlength	77         ;
+		line        1          ;
+		column      1          ;
+		noupdate    	        ;
+		function 	Mostra_qual()
+				
+restscreen( 00, 00, 24, 79, SC_EDIT )
+
+return
+
+********************
+function Mostra_qual 
+********************
+
+parameters ED_MODO, ED_LINHA, ED_COLUNA, ED_POSICAO
+private    ACAO, TECLA
+set cursor OFF
+ACAO  = 32
+TECLA = lastkey()
+if ED_MODO == 3
+
+	ACAO    = 0
+	TAMANHO = len( alltrim ( MTIND [ IND_HELP ] ) ) + 2
+	@ ED_LIN_ESQ-2,ED_COL_ESQ+2 say "ษ" + replicate( "อ", TAMANHO )     + "ป"  ;
+     color COR_TITULO
+	@ ED_LIN_ESQ-1,ED_COL_ESQ+2 say "บ " + alltrim( MTIND [ IND_HELP ] )+ " บ" ;
+     color COR_TITULO
+	@ ED_LIN_ESQ  ,ED_COL_ESQ+2 say "ส" + replicate( "อ", TAMANHO )     + "ส"  ;
+     color COR_TITULO
+	@ 04,78  say chr( 219 )    color COR_ELEV
+	@ 19,78  say chr( 219 )    color COR_ELEV
+	@ 05,78  say chr( 004 )    color COR_ELEV
+	for LOOP_1 = 06 to 18
+	
+		@ LOOP_1, 78 say " "    color COR_ELEV
+
+	next
+
+elseif ED_MODO == 0
+
+		ACAO = 0
+		@ POS_EDIT,78 say " "       color COR_ELEV
+		  POS_EDIT = 05 +_int( ED_LINHA * 14 / iif( ULT_LINHA<1, 1, ULT_LINHA ) )
+		  POS_EDIT = iif( POS_EDIT > 17, 18, POS_EDIT )
+		@ POS_EDIT,78 say chr( 4 )  color COR_ELEV
+		TESTE_1 = iif( PRI_LINHA = ED_LINHA, .T., .F. ) && TIREI UM *
+		if ULT_LINHA < ED_LINHA
+
+			ULT_LINHA = ED_LINHA
+         TESTE_2 = .F.
+		
+		elseif ULT_LINHA > ED_LINHA
+		
+			TESTE_2 = .F.
+
+		else
+		
+			TESTE_2 = .T.
+
+		endif	
+		if ED_LINHA = 1 .or. TESTE_2
+
+			if TECLA = 05 .or. TECLA = 18 .or. TECLA = 03 .or. TECLA = 24
+
+				SALVA_LINHA = savescreen( 21, 05, 21, 73 )
+				@ 21,05 say space( 69 ) color COR_POPUP
+				if TECLA = 05 .or. TECLA = 18
+
+				 @ 21,06 say "Voc j  est  vendo o inicio do texto" color COR_POPUP
+	
+				elseif TECLA = 03 .or. TECLA = 24
+
+				 @ 21,06 say "Voc j  est  vendo o final  do texto" color COR_POPUP
+
+				endif
+				_bell()
+				inkey( 1 )
+				restscreen( 21, 05, 21, 73, SALVA_LINHA )
+
+			endif
+
+		endif
+
+endif
+if TECLA = 27
+
+	ACAO  = 27
+
+endif
+
+return ACAO
+

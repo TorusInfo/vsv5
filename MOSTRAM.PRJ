@@ -1,0 +1,65 @@
+clear
+set century on
+set date "ddmmyyyy"
+if network()
+	NOME_NET =alltrim(netname())
+	set exclusive off
+        @ 23,02 SAY "MultiUser "+ "Terminal = > "+ NOME_NET 
+else
+	set exclusive on
+endif
+
+*arq_tam,arq_data,arq_hora,arq_atrib)
+arq_nome = space(20)
+arq_tam=0
+arq_data=ctod("          ")
+arq_hora=0
+arq_atrib=space(10)
+mascara="*.mem"
+no_arq = adir (mascara)
+
+*IF _file("ult_bol.mem")
+
+*@ 08,10 say "achei arquivo"
+*inkey(0)
+
+declare arq_nome[no_arq],;
+        arq_tam[no_arq],;
+        arq_data[no_arq],;
+        arq_hora[no_arq],;
+        arq_atrib[no_arq]
+adir (mascara, arq_nome, arq_tam,arq_data,arq_hora,arq_atrib)
+
+for i= 1 to no_arq
+        if i < 17
+                linha = i + 2
+        else
+                linha = 19
+        endif
+
+       at linha, 1 say arq_nome [ i ]
+       at linha, 14 say arq_tam [ i ] picture "@R 999,999,999"
+       at linha, 35 say arq_data [ i ]
+       at linha, 55 say arq_hora [ i ]
+       at linha, 69 say arq_atrib [ i ]        
+inkey(0)
+linha = linha +1
+next
+*@ 09,10 say "nome    = "
+*@ 09,col()+1 say arq_nome
+*@ 10,10 say "tamanho = "
+*@ 10,col()+1 say arq_tam[1] picture "999.999.999.999"
+*@ 11,10 say "data    = "
+*@ 11,col()+1 say arq_data[1] picture "@E"
+*@ 12,10 say "hora    = "
+*@ 12,col()+1 say arq_hora[1] picture "99:99"
+*@ 13,10 say "atributos = "
+*@ 13,col()+1 say arq_atrib[1]
+*inkey (0)
+*	DELETE FILE "ult_bol.mem"
+*ENDIF
+
+quit
+
+quit
+

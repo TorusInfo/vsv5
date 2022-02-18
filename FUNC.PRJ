@@ -1,0 +1,379 @@
+*
+PROCEDURE FUNCIONARIOS
+*
+
+select "FUNCION"   && Arquivo de func aberto no VSV.PRJ na area 11
+SCPR = savescreen(03,01,21,78)
+COR_ANT = setcolor()
+set color to "B/B"
+scroll(03,01,21,78,0)
+setcolor(COR_ANT)
+SC14  = savescreen(03,36,12,74)
+VAR_1 = "Ctrl N - Incluir   F9 - Excluir  F6 - Alterar"
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say VAR_1       color "W+/B"
+set deleted ON
+NUM_LIN = 19
+DO WHILE LASTKEY() # 27
+
+	acerta_arq()
+	op_fun = 1
+	popup	window	08,02,NUM_LIN-1,30;
+			to			OP_FUN;
+			options	MATFUN;
+			hilite   MATFUN,"N/BG";
+			color		"N/BG,W+/BG,N/BG,N/BG";
+			function Altfun()
+
+ENDDO
+RESTSCREEN(03,01,21,78,scpr)
+release 	MATFUN
+@ 23,01 SAY SPACE(78) COLOR "W+/B"
+SET DELETED OFF
+
+RETURN
+*
+FUNCTION altfun
+*
+PARAMETERS estado, posicao
+
+cor_ant 	= SETCOLOR()
+
+IF LASTKEY() = 14  && Ctrl N - ACRESCENTA NOVO FUNCIONARIO
+
+	private XCODIGO, XNOME, XSENHA
+	do while lastkey() # 27
+
+		cor_ant 	= SETCOLOR()
+		quadro(03,36,06,68,"N/BG,W+/R,N,N/BG","N/N")
+		XCODIGO = "    "
+		XNOME   = space( 20 )
+		XSENHA  = "    "
+		@ 04,38 		SAY "CODIGO : "
+		@ 04,COL()	GET XCODIGO PICTURE "99" valid Testa_len() COLOR "N/BG,W+/R"
+		@ 05,38		SAY "NOME   : " COLOR "N/BG"
+		@ 05,COL()	GET XNOME PICTURE "@!" COLOR "N/BG,W+/R"
+		SET CURSOR ON
+   	READ
+		SET CURSOR OFF
+		IF LEN(ALLTRIM(XCODIGO)) = 0 .or. lastkey() = 27
+			RESTSCREEN(03,36,12,74,sc14)
+			SETCOLOR(cor_ant)
+			RETURN 0
+		ENDIF
+		seek XCODIGO
+		if alltrim( FUNCION->F_CODIGO ) = alltrim( XCODIGO )
+
+			Mens_erro(" C¢digo j  existente")
+			inkey( 2 )
+			XCODIGO = "    "
+			@ 23,01 	say space(78) color "W+/B"
+			@ 23,01 	say VAR_1     color "W+/B"
+			loop
+
+		else
+
+			if flock( 15 )
+			
+				append 	blank
+				replace 	FUNCION->F_CODIGO with XCODIGO,;
+							FUNCION->NOME		with XNOME
+				replace  FUNCION->SENHA		with "0000",;
+							FUNCION->ACESSO	with "0"
+				unlock			
+
+			else
+
+				Mens_rerro( " Arquivo em uso por outro terminal, opera‡„o n„o efetuada", 4, "W+*/B" )
+				
+
+			endif
+			commit
+			exit
+		endif
+
+	enddo
+	SETCOLOR(cor_ant)
+	RESTSCREEN(03,36,12,74,sc14)
+	@ 23,01 	SAY SPACE(78) COLOR "W+/B"
+	@ 23,01 	SAY var_1 COLOR "W+/B"
+	RETURN 0
+ENDIF
+if lastkey() = -8    &&     F9 - DELETA FUNCIONARIO DO ARQUIVO FUNCION.DBF
+
+	if alltrim( _left( MATFUN [ POSICAO ], 5 ) ) # "99"
+
+		COR_ANT 	= setcolor()
+		seek alltrim( _left( MATFUN [ POSICAO ], 5 ) )
+		MAT_COL = iif( len( alltrim( FUNCION->NOME ) ) < 7, 7, ;
+	                  len( alltrim( FUNCION->NOME ) ) )
+		Quadro( 03, 36, 06, 48 + MAT_COL, "N/BG,W+*/BG,N,N/BG", "N+/N")
+		@ 04,38 say "Excluir " + alltrim( FUNCION->NOME )
+		@ 05,38 say "Confirma "
+		@ 05,47 prompt "N„o"
+		@ 05,51 prompt "Sim"
+		menu to EXC_FUN
+		if EXC_FUN = 2
+
+			if rlock( 15 )
+			
+				replace 	FUNCION->F_CODIGO	with "þþþþ",;
+							FUNCION->NOME		with space( 20 ),;
+							FUNCION->SENHA		with "    ",;
+							FUNCION->ACESSO	with " "
+				delete
+				unlock
+
+			else
+
+				Mens_rerro( " Registro em uso por outro terminal, opera‡„o n„o efetuada", 4, "W+*/B" )
+				
+
+			endif
+				
+		endif
+
+	else
+
+		Mens_rerro( " Vocˆ n„o pode apagar o funcion rio S.V.S.V ", 2, "W+*/B" )
+
+	endif
+	restscreen( 03, 36, 12, 74, SC14 )
+	setcolor(   COR_ANT )
+	@ 23,01 	say space(78) color "W+/B"
+	@ 23,01 	say VAR_1     color "W+/B"
+	return 0
+
+endif	
+IF LASTKEY() = -5        && F6 - ALTERAR CODIGO,NOME E SENHA DO FUNCIONARIO
+
+	if alltrim( _left( MATFUN [ POSICAO ], 5 ) ) # "99"
+
+		seek alltrim( _left( MATFUN[POSICAO] , 5 ) )
+		private XCODIGO, XNOME, XSENHA, XANTES, XACESSO
+		do while lastkey() # 27
+
+			cor_ant = SETCOLOR()
+			quadro(03,36,11,72,"N/BG,W+/R,N,N/BG","N/N")
+			@ 09,36 SAY "Ì"+REPLICATE("Í",35)+"¹"
+			@ 04,40 SAY "ALTERAR DADOS"
+			XANTES  = FUNCION->F_CODIGO
+			XCODIGO = FUNCION->F_CODIGO
+			XNOME   = FUNCION->NOME
+			XSENHA  = FUNCION->SENHA
+			XACESSO = FUNCION->ACESSO
+			@ 05,38 		say "CODIGO : "	                            COLOR "N/BG"
+			@ 05,col()	get XCODIGO 	PICTURE "99" valid Testa_len() COLOR "N/BG,W+/R"
+			@ 06,38		say "NOME   : "	                            COLOR "N/BG"
+			@ 06,col()	get XNOME 		PICTURE "@!"                   COLOR "N/BG,W+/R"
+			@ 07,38		say "SENHA  : " 	                            COLOR "N/BG"
+			@ 08,38		say "ACESSO : " 	                            COLOR "N/BG"
+			set cursor ON
+	      read
+			set cursor OFF
+			if len( alltrim( XCODIGO ) ) = 0 .or. lastkey() = 27
+
+				restscreen(03,36,12,74,SC14)
+				setcolor(COR_ANT)
+				@ 23,01 	say space(78) color "W+/B"
+				@ 23,01 	say VAR_1     color "W+/B"
+				return 0
+
+			endif
+			if alltrim( XCODIGO ) # alltrim( XANTES )
+
+				NUM_REG = recno()
+				seek XCODIGO
+				if found()
+
+					Mens_erro(" C¢digo j  existente ")
+					inkey(3)
+					XCODIGO = "    "
+					@ 23,01 	say space( 78 ) color "W+/B"
+					@ 23,01 	say VAR_1       color "W+/B"
+					loop
+
+				endif
+				go NUM_REG
+
+			endif
+			teste = "N"
+			@ 10,38		SAY SPACE(28)
+			@ 10,38 		SAY "Altera senha ? (S/N) " COLOR "N/BG"
+			@ 10,COL()	GET teste PICTURE "!" COLOR "N/BG,W+/R" VALID (teste$"SN")
+			SET CURSOR ON
+		   READ
+			SET CURSOR OFF
+			IF teste = "S"
+
+				alt_senha()
+	
+			ENDIF
+			if ACESSO > "8"
+
+				teste = "N"
+				@ 10,38		SAY SPACE(28)
+				@ 10,38 		SAY "Altera acesso? (S/N) " COLOR "W+/BG"
+				@ 10,COL()	GET teste PICTURE "!" COLOR "N/BG,W+/R" VALID (teste$"SN")
+				SET CURSOR ON
+			   READ
+				SET CURSOR OFF
+				IF teste = "S"
+
+					@ 08,48 GET XACESSO	PICTURE "9" COLOR "N/BG,W+/R"
+					SET CURSOR ON
+					READ
+					SET CURSOR OFF
+
+				ENDIF
+
+			ENDIF
+			if rlock( 15 )
+
+				REPLACE 	FUNCION->F_CODIGO WITH XCODIGO,;
+							FUNCION->NOME		WITH XNOME,;
+							FUNCION->SENHA		WITH XSENHA,;
+							FUNCION->ACESSO	WITH XACESSO
+				unlock
+
+			else
+
+				Mens_rerro( " Registro em uso por outro terminal, opera‡„o n„o efetuada", 4, "W+*/B" )
+				
+
+			endif
+			COMMIT
+			EXIT
+
+		ENDDO
+
+	else
+
+		Mens_rerro( " Vocˆ n„o pode alterar o funcion rio S.V.S.V ", 2, "W+*/B" )
+
+	endif
+	RESTSCREEN(03,36,12,74,sc14)
+	@ 23,01 	SAY SPACE(78) COLOR "W+/B"
+	@ 23,01 	SAY var_1 COLOR "W+/B"
+	RETURN 0
+ENDIF
+SETCOLOR(cor_ant)
+RETURN 3
+
+*******************
+function Acerta_arq
+*******************
+
+count to NUM_REG for len( alltrim( FUNCION->F_CODIGO ) ) # 0 
+public MATFUN[NUM_REG]
+go top
+A = 1
+do while .not. eof()
+
+	MATFUN [ A ]  = " " + FUNCION->F_CODIGO + " º " + FUNCION->NOME
+	A = A + 1
+	skip
+
+enddo
+NUM_LIN = iif(NUM_REG>10,19,NUM_REG+8)
+@ 03,01 clear to 21,33 color "W/B"
+quadro(03,01,num_lin,31,"N/BG,W+/BG,N,N/BG","N/N")
+@ 04,02 SAY "    FUNCIONARIOS" COLOR "N/BG"
+@ 05,01 SAY "Ì"+REPLICATE("Í",06)+"Ë"+REPLICATE("Í",22)+"¹"
+@ 06,02 SAY "CODIGOº        NOME"
+@ 07,01 SAY "Ì"+REPLICATE("Í",06)+"Î"+REPLICATE("Í",22)+"¹"
+@ num_lin,08 SAY "Ê"
+@ 23,01 	SAY SPACE(78) COLOR "W+/B"
+@ 23,01 	SAY var_1 COLOR "W+/B"
+RETURN
+
+******************
+function Alt_senha
+******************
+
+@ 10,38 SAY SPACE(28)
+@ 10,38 SAY "Digite SENHA anterior"
+
+DECLARE SENHA[4],SENHAN[4]
+
+teste_senha = .F.
+tentativas	= 1
+
+DO WHILE (.NOT. teste_senha) .AND. tentativas < 3
+   POSCUR(10,62)
+   FOR L1 = 1 TO 4 
+      SENHA[L1]=CHR(INKEY(0))
+		?? "*"
+	NEXT
+   FOR L1 = 1 TO 4
+      IF SENHA[L1] # MID(FUNCION->SENHA,L1,1)
+			teste_senha = .F.
+       	EXIT
+	   ENDIF      
+      teste_senha = .T.
+	NEXT
+	IF teste_senha
+      @ 10,56 SAY "     " COLOR "N/BG"
+		@ 10,38 SAY SPACE(28)
+		@ 10,38 SAY "Digite nova SENHA"
+	   POSCUR(10,62)
+	   FOR L1 = 1 TO 4 
+	      SENHA[L1]=CHR(INKEY(0))
+			?? "*"
+		NEXT
+		@ 10,38 SAY SPACE(28)
+		@ 10,38 SAY "Confirme nova SENHA"
+	   POSCUR(10,62)
+	   FOR L1 = 1 TO 4 
+	      SENHAN[L1]=CHR(INKEY(0))
+			?? "*"
+		NEXT
+		OLDSENHA = FUNCION->SENHA
+		NOVSENHA = ""
+	   FOR L1 = 1 TO 4
+   	   IF SENHA[L1] # SENHAN[L1]
+			   _bell()
+				_bell()
+				MENS_ERRO("")
+				MENS_ERRO("SENHA NAO FOI ALTERADA")
+				INKEY(5)
+	       	EXIT
+		   ENDIF      
+			NOVSENHA = NOVSENHA+SENHA[L1]
+		NEXT
+*		INKEY(0)
+		IF L1 < 4
+			NOVSENHA = OLDSENHA
+		ENDIF
+		_store( NOVSENHA , "XSENHA" )
+	ELSE
+      IF tentativas < 2
+  	      mens_erro("SENHA ERRADA, Tente outra vez")
+         @ 10,62 SAY "     " COLOR "N/BG"
+			INKEY(5)
+      ELSE 
+	      mens_erro("SENHA ERRADA")
+			INKEY(5)
+			KEYBOARD 27
+			RETURN
+      ENDIF
+   ENDIF
+	mens_erro("")
+   tentativas = tentativas + 1
+ENDDO
+@ 23,01 	SAY SPACE(78) COLOR "W+/B"
+@ 23,01 	SAY var_1 COLOR "W+/B"
+RETURN
+
+******************
+function Testa_len 
+******************
+
+if len( alltrim( XCODIGO ) ) < 2
+
+	Mens_rerro( " O c¢digo do funcion rio tem que ter 2 digitos ", 10 )
+	_bell()
+	return .F.
+
+endif
+return .T.

@@ -1,0 +1,259 @@
+*******************
+procedure Autentica
+*******************
+
+restore from "DESCDEB.MEM" additive
+restore from "DEBCLI.MEM" additive
+TEMP_TOT_DEB = 0
+COR_ANT 	= setcolor()
+CX_CUR 	= _set( "CURSOR"  ) == "ON"
+CX_CON 	= _set( "CONFIRM" ) == "ON"
+SCDH     = savescreen( 14, 09, 21, 44 )
+*Quadro( 14, 09, 20, 40, "N/BG,W+/N,N,GR+/BG", "N+/N" )
+Quadro( 14, 09, 20, 40, "W+/B,W+/N,N,GR+/B", "N+/N" )
+set cursor  ON
+set confirm ON
+select "CLIENTES"
+set order to 3
+select "MOVIMEN"
+do while .T.
+
+	select "MOVIMEN"
+   NUM_BOL = "      "
+   @ 16,11 say "N£mero do Boleto :" get NUM_BOL picture "999999"
+   read
+   if len( alltrim( NUM_BOL ) ) = 0
+
+      exit
+
+   endif
+	locate for MOVIMEN->BOLETO_NUM = NUM_BOL .and. MOVIMEN->ITEM = "00"
+   if .not. found()
+
+      @ 23,01 say space( 78 ) color "W+*/B"
+      @ 23,02 say "Este n£mero de boleto n„o existe" color "W+*/B"
+      loop
+
+   elseif MOVIMEN->OPERACAO # "D"
+
+      @ 23,01 say space( 78 ) color "W+*/B"
+      @ 23,02 say "Este boleto n„o ‚ de devolu‡„o" color "W+*/B"
+      loop
+
+   elseif MOVIMEN->DATA_MOV # _date()
+
+      @ 23,01 say space( 78 ) color "W+*/B"
+      @ 23,02 say "Este boleto n„o ‚ de hoje" color "W+*/B"
+      loop
+
+   elseif MOVIMEN->CONCLUSAO # .F.
+
+      @ 23,01 say space( 78 ) color "W+*/B"
+      @ 23,02 say "Este boleto j  foi autenticado, quer desfazer (S/N) ? ";
+						 color "W+*/B,W+/R"
+		DESFAZ = "N"
+		@ 23,col() get DESFAZ picture "!" color "W+*/B,W+/R" valid (DESFAZ$"SN")
+      read
+		if DESFAZ = "S"
+
+			Reacerta( "D" )
+
+		endif			
+		@ 23,01 say space( 78 ) color "W+/B"
+      loop
+
+   else
+
+		Reacerta( "F" )
+
+   endif
+   select 7
+   @ 18,11 say "Ultimo boleto    : " + NUM_BOL
+
+enddo
+Mens_erro("")
+setcolor( COR_ANT )
+set cursor 	CX_CUR
+set confirm CX_CON
+restscreen( 14, 09, 21, 44, SCDH )
+
+return
+
+*****************
+function Reacerta
+*****************
+
+parameters VAI
+TESTE     = iif(VAI = "F", .F.,.T.)
+CODIGO    = MOVIMEN->COD_CLI
+VALOR_BOL = 0
+FUN_OK    = .F.
+select "FUNCION"
+seek MOVIMEN->CODFUNC
+if found()
+
+	FUN_OK = .T.
+
+endif
+do while MOVIMEN->BOLETO_NUM = NUM_BOL
+
+	select "MOVIMEN"
+
+   if MOVIMEN->CONCLUSAO = TESTE .and. MOVIMEN->OPERACAO = "D"
+
+		if VAI = "F"
+
+			rlock( 15 )
+      	replace MOVIMEN->CONCLUSAO with .T. && CONCLUSAO = .T. AUTENTICADO 
+			unlock
+			if FUN_OK
+
+				select "FUNCION"
+				rlock( 15 )
+				replace FUNCION->LOC_AUT with FUNCION->LOC_AUT + 1
+				replace FUNCION->LOC_DEV with FUNCION->LOC_DEV - 1
+				unlock
+
+			endif
+			select "GENERO"
+			go val( _left( MOVIMEN->CODFITA, 2 ) ) + 1
+			rlock( 15 )
+			replace GENERO->AUT_FIT with GENERO->AUT_FIT + 1
+         replace GENERO->DEV_FIT with GENERO->DEV_FIT - 1
+  		   if DESC_DEB = "M"
+
+			   replace GENERO->AUT_VAL with GENERO->AUT_VAL + MOVIMEN->VALOR_PAGO
+  			   replace GENERO->DEV_VAL with GENERO->DEV_VAL - MOVIMEN->VALOR_PAGO
+
+		   else
+
+			  replace GENERO->AUT_VAL with GENERO->AUT_VAL + ;
+			          ( MOVIMEN->VALOR_PAGO + ;
+						 ( MOVIMEN->VALOR * ( MOVIMEN->DESCONTO / 100 ) ) )
+			  replace GENERO->DEV_VAL with GENERO->DEV_VAL - MOVIMEN->VALOR_PAGO
+			          * + ( MOVIMEN->VALOR * ( MOVIMEN->DESCONTO / 100 ) ) )
+
+		  endif
+  		  unlock
+		  select "MOVIMEN"
+
+		else
+
+			rlock( 15 )
+      	replace MOVIMEN->CONCLUSAO with .F.  && CONCLUSAO = .F. DESAUTENTICADO
+			unlock
+			if FUN_OK
+
+				select "FUNCION"
+				rlock( 15 )
+				replace FUNCION->LOC_AUT with FUNCION->LOC_AUT - 1
+				replace FUNCION->LOC_DEV with FUNCION->LOC_DEV + 1
+				unlock
+
+			endif
+			select "GENERO"
+			go val( _left( MOVIMEN->CODFITA, 2 ) ) + 1
+			rlock()
+			replace GENERO->AUT_FIT with GENERO->AUT_FIT - 1
+         replace GENERO->DEV_FIT with GENERO->DEV_FIT + 1
+		   if DESC_DEB = "M"
+
+			   replace GENERO->AUT_VAL with GENERO->AUT_VAL - MOVIMEN->VALOR_PAGO
+			   replace GENERO->DEV_VAL with GENERO->DEV_VAL + MOVIMEN->VALOR_PAGO
+		  
+		  else
+		
+		   	replace GENERO->AUT_VAL with GENERO->AUT_VAL - ;
+				        ( MOVIMEN->VALOR_PAGO + ( MOVIMEN->VALOR * ;
+						  ( MOVIMEN->DESCONTO / 100 ) ) )
+			   replace GENERO->DEV_VAL with GENERO->DEV_VAL + MOVIMEN->VALOR_PAGO
+			           * + ( MOVIMEN->VALOR * ( MOVIMEN->DESCONTO / 100 ) ) )
+
+		  endif
+		  unlock
+		  select "MOVIMEN"
+
+		endif
+		if DESC_DEB = "M"
+
+	  		VALOR_BOL = VALOR_BOL + MOVIMEN->VALOR_PAGO
+
+		else
+
+	  		VALOR_BOL = VALOR_BOL + ( MOVIMEN->VALOR_PAGO + ;
+			            ( MOVIMEN->VALOR * ( MOVIMEN->DESCONTO / 100 ) ) )
+
+		endif
+
+   else
+
+      @ 23,01 say space(78) color "W+*/B"
+      @ 23,02 say "O boleto " + NUM_BOL + " est  com problemas";
+				  color "W+*/B"
+      return
+
+   endif
+	if MOVIMEN->LINK = 0
+
+		exit
+
+	endif
+   skip MOVIMEN->LINK
+
+enddo
+select "GENERO"
+go 1
+rlock( 15 )
+if VAI = "F"
+
+	replace GENERO->AUT_BOL with GENERO->AUT_BOL + 1
+	replace GENERO->DEV_BOL with GENERO->DEV_BOL - 1
+
+
+else
+
+	replace GENERO->AUT_BOL with GENERO->AUT_BOL - 1
+	replace GENERO->DEV_BOL with GENERO->DEV_BOL + 1
+
+endif
+unlock
+select "CLIENTES"
+seek CODIGO
+if .not. found()
+
+   @ 23,01 say space(78) color "W+*/B"
+   @ 23,02 say "Cliente n„o encontrado" color "W+*/B"
+   return
+
+else   
+
+	if VAI = "F"
+
+		TEMP_TOT_DEB += VALOR_BOL
+   	VALOR_BOL = VALOR_BOL + CLIENTES->DEBITOS
+
+	else
+
+		TEMP_TOT_DEB -= VALOR_BOL
+   	VALOR_BOL = CLIENTES->DEBITOS - VALOR_BOL
+
+	endif
+	rlock( 15 )
+  	replace CLIENTES->DEBITOS with VALOR_BOL
+	unlock
+	if flock( 15, "REDE")
+
+		restore from "DEBCLI.MEM" additive
+		TOTAL_DEB_CLIENTES += TEMP_TOT_DEB
+		save to "DEBCLI" all like "TOTAL_DEB_CLIENTES*"
+		unlock in "REDE"
+
+	else	
+
+		Mens_rerro( "Erro de espera na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+		Limpa()
+		return
+
+	endif
+
+endif

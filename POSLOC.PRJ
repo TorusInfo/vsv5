@@ -1,0 +1,116 @@
+*****************
+procedure Pos_loc 
+*****************
+
+private SC_TEL
+savekey()
+SC_TEL = SAVESCREEN( 00,00, 24, 79 )
+@ 03,01 clear to 21,78  color "W/B"
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say " Posio da Locadora  - Pressione < Alt I > para imprimir" color "W+/B"
+SELECT 2
+USE "CODCLIV"
+GO 2
+CLIENTESTOT = val( CODCLIV->COD_CLI )
+CLOSE "CODCLIV"
+SELECT 2
+USE "GENERO.TPO"
+SUM TITULOS,FITAS_TOT,FITAS_FORA TO T_TITULOS,T_FITAS,T_FITAS_FORA;
+	 FOR RECNO() > 1 .AND. DADOS # "PRODUTOS"
+restore from "DEBCLI.MEM" additive
+@ 03, 02 say "ษออออออออออออออออออออออออออออออออออออออออออออออออป" color "W+/R"
+@ 04, 02 say "บ Total de          de clientes :                บ" color "W+/R"
+@ 05, 02 say "ศออออออออออออออออออออออออออออออออออออออออออออออออผ" color "W+/R"
+@ 06, 04 fill to 06, 53 color "N+/N"
+@ 04, 52 fill to 05, 53 color "N+/N"
+@ 04, 13 say iif( TOTAL_DEB_CLIENTES < 0, "CREDITOS", " DEBITOS" ) color "W+/R"
+@ 04, 36 say transform( _abs( TOTAL_DEB_CLIENTES ), "###,###,###.##" ) color "W+/R"
+@ 07, 02 say "ษอออออออออออออออออออป" color "W+/R"
+@ 08, 02 say "บ                   บ" color "W+/R"
+@ 09, 02 say "บ CLIENTES = " + transform( CLIENTESTOT,  "##,###" ) + " บ" color "W+/R"
+@ 10, 02 say "บ                   บ" color "W+/R"
+@ 11, 02 say "บ TITULOS  = " + transform( T_TITULOS,    "##,###" ) + " บ" color "W+/R"
+@ 12, 02 say "บ                   บ" color "W+/R"
+@ 13, 02 say "บ FITAS    = " + transform( T_FITAS,      "##,###" ) + " บ" color "W+/R"
+@ 14, 02 say "บ                   บ" color "W+/R"
+@ 15, 02 say "บ NA LOJA  = " + transform( T_FITAS - T_FITAS_FORA, "##,###" ) + " บ" color "W+/R"
+@ 16, 02 say "บ                   บ" color "W+/R"
+@ 17, 02 say "บ LOCADAS  = " + transform( T_FITAS_FORA, "##,###" ) + " บ" color "W+/R"
+@ 18, 02 say "บ                   บ" color "W+/R"
+@ 19, 02 say "ศอออออออออออออออออออผ" color "W+/R"
+@ 20, 04 fill to 20, 24 color "N+/N"
+@ 08, 23 fill to 19, 24 color "N+/N"
+set precedence to FIELDS
+private CAMPOS [ 4 ], CABEC [ 4 ], MASCAR [ 4 ], EDICAO [ 4 ]
+CAMPOS[1] = "DADOS"
+CAMPOS[2] = "TITULOS"
+CAMPOS[3] = "FITAS_TOT"
+CAMPOS[4] = "FITAS_FORA"
+CABEC [1] = "GENEROS"
+CABEC [2] = "TITULOS"
+CABEC [3] = "FITAS   "
+CABEC [4] = "LOCADAS "
+@ 20,33  FILL TO 20,75 COLOR "N+/N"
+@ 08,74  FILL TO 19,75 COLOR "N+/N"
+go 2
+set key 279 to Imprime_posloc()
+BROWSE 	FOR      RECNO() > 1;
+			WINDOW   07,31,19,73;
+			FRAME    DOUBLE;
+			COLOR    "W+/R,N/W,W++/R,W+/R";
+			FIELDS 	CAMPOS;
+			HEADING  CABEC;
+		 	EDIT 		.F.  ;
+			noappend      ;
+			nodelete
+CLOSE "GENERO"
+RESTSCREEN( 00,00, 24, 79, SC_TEL )
+set precedence to VARIABLES
+restkey()
+
+RETURN
+
+***********************
+function Imprime_posloc 
+***********************
+
+restore from "SYSFILE.MEM" additive
+Abrir_Imp( NOM_TERM )
+
+set printer to IMP_RET
+lprint "  " + NOM_LOC 
+lprint
+lprint "  LOJA : " + NUM_LOJA 
+lprint
+lprint "  Data : "                     nolinefeed
+lprint _date() picture "@E"            nolinefeed
+lprint space( 06 )                     nolinefeed
+lprint "Hora : "                       nolinefeed
+lprint _time() picture "##:##"
+lprint
+lprint "  Clientes cadastrados    = "  nolinefeed
+lprint CLIENTESTOT picture "###,###"
+lprint
+lprint "  Quantidade de Titulos   = "  nolinefeed
+lprint T_TITULOS picture "###,###"
+lprint
+lprint "  Quantidade de Fitas     = "  nolinefeed   
+lprint T_FITAS picture "###,###"
+lprint
+lprint "  Numero de fitas locadas = "  nolinefeed
+lprint T_FITAS_FORA picture "###,###"
+lprint
+lprint "  Numero de fitas na loja = "  nolinefeed
+lprint T_FITAS - T_FITAS_FORA picture "###,###"
+lprint
+lprint "  " + iif( TOTAL_DEB_CLIENTES < 0, "CREDITOS", "DEBITOS " )  + " clientes = "  nolinefeed
+lprint transform( _abs( TOTAL_DEB_CLIENTES ), "##,###,###.##" )
+for A = 1 to IMP_LINR
+
+	lprint
+
+next
+set printer to
+
+return
+

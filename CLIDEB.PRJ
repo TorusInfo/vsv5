@@ -1,0 +1,1135 @@
+*
+* Programa para acertar os debitos no dia 30 e reacerta-los com acrescimo
+* no dia que o proprietario da locadora determinar, com a porcentagem que
+* ele decidir na hora, somente para debitos, nao para creditos.
+*
+set deleted    ON
+set softseek   OFF
+set date      "DMY"
+set mark       to "/"
+set hours      to 24
+set point      to ","
+set separator  to "."
+set recbuffer  to 0
+set cursor    .F.
+set key        302 to Calc_Tor()
+*------------------------ Arquivos que serao utilizados ----------------------
+select 1
+use "CLIENTES"
+set index to "CLIENTES.K3" key CLIENTES->COD_CLI 
+select 2
+use "CLIDEB"
+*-----------------------------------------------------------------------------
+*------------------------ Menu para escolher o que fazer ---------------------
+set color to "W+/B"
+@ 00,00 to 24,79 double
+scroll( 01, 01, 23, 78, 0 )
+@ 02,00 say "Ì"+replicate("Í",78)+"¹"
+@ 01,01 say "VSV 3.0 - Torusº              Acertar D‚bitos                 º ESC - Retorna"
+@ 00,16 say "Ë"
+@ 02,16 say "Ê"
+@ 00,63 say "Ë"
+@ 02,63 say "Ê"
+@ 22,00 say "Ì"+replicate("Í",78)+"¹"
+Quadro( 03, 03, 07, 24, "W+/R,W+/R", "N/N" )
+set color to   "W+/R, N/W, N, W+/R"
+do while .T.
+
+	clear typeahead
+	@ 04,05 prompt "Salvar  os d‚bitos"
+	@ 05,05 prompt "Alterar os d‚bitos"
+	@ 06,05 prompt "Encerrar  programa"
+	menu to ESCOLHA
+	if ESCOLHA < 1 .or. ESCOLHA > 2
+
+		Encerra()
+	
+	elseif ESCOLHA = 1
+
+		Salvar()
+	
+	elseif ESCOLHA = 2
+		
+		Alterar()
+
+	endif
+
+enddo
+Encerra()
+
+**************** && Termina o programa voltando ao sistema operacional
+function Encerra
+****************
+
+close all
+set color   to
+set cursor .T.
+clear
+quit
+
+*************** && Salva os debitos dos clientes no dia em que for rodado
+function Salvar
+***************
+
+clear typeahead
+_bell()
+SC_PER = setcolor()
+set color to   "W+/B,W+*/B,N,W+/B"
+@ 23, 01        say     space( 78 ) color "W/B"
+@ 23, 02        say    "Confirma  ? "
+@ 23, col() + 1 prompt "Sim "
+@ 23, col() + 1 prompt "N„o "
+menu to E_CONF
+setcolor( SC_PER )
+@ 23,01 say space(78) color "W/B"
+if E_CONF # 1
+
+	return
+	
+endif
+private TELA_ANT, CONTADOR, CONTADEBI
+TELA_ANT = savescreen( 00, 00, 24, 79 )
+select "CLIDEB"
+zap
+select "CLIENTES"
+go top
+CONTDEBI = 0
+CONTADOR = 0
+@ 16, 05 say "Total de registros      : " color "W+/B"
+@ 16, 31 say reccount() picture "@E 99,999" color "W+/B"
+@ 18, 05 say "Registros j  conferidos : " color "W+/B"
+@ 18, 31 say CONTADOR picture "@E 99,999" color "W+/B"
+@ 20, 05 say "Clientes com d‚bitos    : " color "W+/B"
+@ 20, col() say CONTDEBI picture "@E 99,999" color "W+/B"
+do while .not. eof()
+             
+	@ 18, 31 say CONTADOR picture "@E 99,999" color "W+/B"
+	inkey()
+	if CLIENTES->DEBITOS > 0
+	
+		select "CLIDEB"
+		append blank
+		replace CLIDEB->COD_CLI with CLIENTES->COD_CLI,;
+		        CLIDEB->DEBITOS with CLIENTES->DEBITOS
+		select "CLIENTES"
+		CONTDEBI += 1  
+		@ 20, 31 say CONTDEBI picture "@E 99,999" color "W+/B"
+	
+	elseif lastkey() = 27
+	
+		clear typeahead
+		exit
+
+	endif
+	skip
+	CONTADOR += 1
+	
+enddo
+@ 18, 31 say CONTADOR picture "@E 99,999" color "W+/B"
+commit
+Toca()
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,02 say "Pressione qualquer tecla para retornar" color "W+*/B"
+clear typeahead
+inkey( 0 )
+restscreen( 00, 00, 24, 79, TELA_ANT )
+
+**************** && Altera os debitos para maior, do arquivo CLIDEB e coloca
+function Alterar && no arquivo de CLIENTES, verificando as alteracoes feitas
+****************
+
+private TELA_ANT, CONTADEBI, INDIVIDUAL, PORCENT, PAGOU
+TELA_ANT   = savescreen( 00, 00, 24, 79 )
+PAGOU      = 0
+PORCENT    = 0
+INDIVIDUAL = "G"
+@ 23, 01 say  space( 78 ) color "W/B"
+_bell()
+@ 23, 02 say   "A porcentagem ser  <I>ndividual ou <G>lobal : " color "W+/B";
+         get   INDIVIDUAL picture "@!" color "W+/B,N/W,N,W+/B";
+			valid ( INDIVIDUAL $ "GI" )
+read
+if lastkey() = 27
+
+	@ 23, 01 say  space( 78 ) color "W/B"
+	clear typeahead
+	return
+	
+endif
+if INDIVIDUAL = "G"
+
+	@ 23, 02 say   "Digite a porcentagem de acr‚scimo aos d‚bitos : " ;
+	         color "W+/B";
+   	      get   PORCENT picture "@E ###.##" color "W+/B,N/W,N,W+/B"
+	read
+	if PORCENT = 0 .or. lastkey() = 27
+
+		@ 23, 01 say  space( 78 ) color "W/B"
+		clear typeahead
+		return
+	
+	endif
+
+endif
+@ 23, 01 say  space( 78 ) color "W/B"
+_bell()
+select "CLIENTES"
+go top
+select "CLIDEB"
+go top
+set relation to COD_CLI into "CLIENTES"
+do while .not. eof()
+             
+	select "CLIENTES"
+	seek CLIDEB->COD_CLI
+	if found() .and. .not. eof()
+	
+		if CLIENTES->DEBITOS > 0
+		*---------------------------------------------------------------------
+		* Calculo quanto e a diferenca entre os debitos, se for maior que zero
+		* uso a porcentagem em cima do debito antigo e somo com a diferenca do
+		* do debito atual e repasso no arquivo de CLIENTES, se  nao  for maior
+		* do que zero,  aumento so o debito que estava no arquivo de CLIENTES.
+		* Se por	acaso nao achar o cliente nao altero o debito,  se os debitos
+		* no arquivo de clientes estiverem com zero, tambem nao altero o valor
+		*---------------------------------------------------------------------
+			for LOOP_1 = 04 to 18 step 2
+
+				@ LOOP_1,30 say space( 48 ) color "W/B"
+
+			next
+			PAGOU = 0
+			@ 04,30 say   "C¢digo do Cliente : " + CLIENTES->COD_CLI color "W+/B"
+			@ 06,30 say   "Nome : " + CLIENTES->NOME                 color "W+/B"
+			@ 08,30 say   "Valor Anterior  : " + ;
+			        transform( CLIDEB->DEBITOS, "@ER ###,###,###,###.##" );
+					  color "W+/B"
+			@ 10,30 say   "Valor Atual     : " + ;
+			        transform( CLIENTES->DEBITOS, "@ER ###,###,###,###.##");
+					  color "W+/B"
+			@ 12,30 say   "Pagou           :" color "W+/B" ;
+			        get   PAGOU picture "@ER ###,###,###,###.##" ;
+					  color "W+/B,N/W,N,W+/B"
+			if INDIVIDUAL == "I"
+			
+				@ 14,30 say   "Porcentagem (%) :            " color "W+/B" ;
+				        get   PORCENT picture "@ER ###.##" ;
+					  	  color "W+/B,N/W,N,W+/B"
+
+			endif							 
+			read
+			if lastkey() = 27
+
+				exit
+
+			endif
+			if lastkey() # 03             && PgDn - Passa p /proximo sem alterar
+
+				DEB1 = CLIENTES->DEBITOS - CLIDEB->DEBITOS + PAGOU
+				DEB2 = CLIENTES->DEBITOS
+				if CLIDEB->DEBITOS - PAGOU > 0
+
+					if DEB1 > 0
+		
+						DEB2 = ( ( CLIDEB->DEBITOS - PAGOU ) * ;
+						       ( 1 + ( PORCENT / 100 ) ) ) + DEB1 
+			
+					else
+		
+						DEB2 = ( CLIENTES->DEBITOS ) * ;
+						       ( 1 + ( PORCENT / 100 ) )
+		
+					endif	
+
+				endif
+				@ 16,30 say   "Novo valor      : " color "W+/B" ;
+			           get   DEB2 picture "@ER ###,###,###,###.##" ;
+						  color "W+/B,N/W,N,W+/B"
+				read
+				CONFIRMA = "N"
+				@ 18,30 say   "Confirma altera‡„o ? ( S/N ) " color "W+/B" ;
+				        get   CONFIRMA picture "@!" valid ( CONFIRMA $ "SN" );
+						  color "W+/B,N/W,N,W+/B"
+				read
+				@ 18,30 say space( 48 ) color "W/B"
+				if CONFIRMA == "S"		  
+				
+					replace CLIENTES->DEBITOS with DEB2
+					
+				endif
+
+			endif
+
+		endif
+
+	endif
+	select "CLIDEB"
+	skip
+	
+enddo
+commit
+Toca()
+restscreen( 00, 00, 24, 79, TELA_ANT )
+
+***************
+function Quadro 
+***************
+
+parameters LI, CI, LF, CF, CORBOX, CORSOMBRA
+@ LI + 1,CI + 2 fill to LF + 1,CF + 2 color CORSOMBRA
+set color to CORBOX
+@ LI,CI clear to LF,CF color CORBOX
+@ LI,CI to LF,CF double
+
+*************
+function Toca
+*************
+
+for A = 1000 to 3500 step 500
+
+	tone( A, 4 )
+
+next
+for A = 3500 to 1000 step -500
+
+	tone( A, 4 )
+
+next
+for A = 2500 to 0 step -500
+
+	tone( A, 5 )
+
+next
+for A = 1500 to 0 step -500
+
+	tone( A, 5 )
+
+next
+
+*********************************
+* CALCULADORA
+*********************************
+	 *********************************************************
+	 *                                                       *
+	 *  TORUS INFORAMTICA LTDA                               *
+	 *                                                       *
+	 *********************************************************
+	 *                                                       *
+	 *  CALCULADORA                                          *
+	 *  CALCULA.PRJ                                          *
+	 *  FAZ CONTAS                                           *
+	 *  DATA DO INICIO = 18/06/91                            *
+	 *  POR FRAN                                             *
+	 *	 DATA DA ULTIMA ATUALIZACAO = 18/06/91                *
+	 *	 POR FRAN                                             *
+	 *                                                       *
+	 *********************************************************
+
+*****************
+function Calc_tor 
+*****************
+
+s_cur=_set("CURSOR")=="ON"
+set cursor 		OFF
+set confirm    ON
+clear typeahead
+*
+**  Guarda o estado em que estava o NUM_LOCK, e liga
+*
+ESTADO_DO_NUM_LOCK = numlock()
+numlock( .T. )
+*
+**  Guarda o estado em que estava o CAPS_LOCK, e liga
+*
+ESTADO_DO_CAPS_LOCK = capslock()
+capslock( .T. )
+
+*
+**  Verifica se existe arquivo de configuracao da calculadora
+**  se existir carrega para saber ultimos dados utilizados
+**  "CALC.CFG"
+*
+if _file( "CALC.CFG" )
+
+	restore from "CALC.CFG" additive
+
+else
+
+	** Cria as variaveis que serao usadas e gravadas pela calculadora
+	CALC_COL = 01
+	CALC_DEC = "###,###,###.##"
+
+endif
+
+**  Verifica se existe arquivo de configuracao de impressoras
+*   "SYSFILE.MEM", se existir pega a variavel "IMP_REL"
+*if _file( "SYSFILE.MEM" ) .and. _type( IMP_REL ) == "U"
+*
+*	restore from "SYSFILE.MEM" additive
+*
+*else
+*
+*	** Cria a variavel que sera usada para impressora
+*	IMP_REL  = "LPT1:"
+*
+*endif
+*
+**  Salva a tela anterior a chamada da calculadora
+TELA_ANTERIOR = savescreen( 00,00,24,79 )
+*
+** Ativar as teclas de funcionamento da calculadora
+*
+savekey()
+Ativa_teclas_calcula()
+TELA_CALC = ""
+Tela_calc()
+set cursor ON
+ACEITA_VALOR      = 00
+RESULTADO         = 00
+TIPO_OPERACAO     = " "
+OPERACAO          = 32    		&& operacao " "
+OPERACAO_ANTERIOR = 32			&& operacao " "
+MEMORIA           = 00
+LINHA_SCROLL      = 12			&& primeira linha para fazer o scroll da fita
+VAI_IMP           = .F.
+keyboard "C"
+do while lastkey() # 27
+
+	EXECUTA_OPERACAO = .T.
+	ACEITA_VALOR = RESULTADO
+	@ 21, CALC_COL + 22 say "I" color iif( VAI_IMP = .T., "GR+*/N", "GR+/N" )
+	@ 21, CALC_COL + 26 say "M" color iif( MEMORIA # 0, "GR+*/N", "GR+/N" )
+	@ 15,CALC_COL+20 get ACEITA_VALOR ;
+						  picture CALC_DEC ;
+						  color "W+/N,W+/N,N,W+/N"
+	read local
+	if OPERACAO = 27 .or. OPERACAO_ANTERIOR = 27
+	
+		exit
+		
+	endif
+	if updated()
+
+		VALOR = ACEITA_VALOR
+		if OPERACAO_ANTERIOR = 244
+
+			OPERACAO_ANTERIOR = 32
+
+		endif
+
+	endif
+	TIPO_OPERACAO = chr( OPERACAO )
+	if TIPO_OPERACAO = "Y" .or. TIPO_OPERACAO = "y"
+
+		TIPO_OPERACAO = "û"
+
+	elseif TIPO_OPERACAO = "X" .or. TIPO_OPERACAO = "x"
+
+		TIPO_OPERACAO = "ý"
+
+	endif
+	if EXECUTA_OPERACAO
+	
+		if       OPERACAO_ANTERIOR =   32
+
+			Quase_nada()
+
+		elseif   OPERACAO_ANTERIOR = 244
+		
+			Nada()
+
+		elseif	OPERACAO_ANTERIOR =  89 .or. ;			&& (Y)
+					OPERACAO_ANTERIOR = 121						&& (y)
+	
+			Raiz_quadrada()
+			loop
+
+		elseif 	OPERACAO_ANTERIOR =  88 .or. ;			&& (X)
+					OPERACAO_ANTERIOR = 120						&& (x)
+
+			Eleva_quadrado()
+			loop
+	
+		elseif 	OPERACAO_ANTERIOR =  61 					&& (=)
+		
+			Igual()
+			loop
+
+		elseif 	OPERACAO_ANTERIOR =  43						&& (+)
+
+			Adicao()
+
+		elseif 	OPERACAO_ANTERIOR =  45						&& (-)
+
+		   Subtracao()
+
+		elseif 	OPERACAO_ANTERIOR =  42						&& (*)
+	
+			Multiplicacao()
+
+		elseif 	OPERACAO_ANTERIOR =  47						&& (/)
+	
+			Divisao()
+
+		endif
+		Faz_fita( VALOR, TIPO_OPERACAO )
+
+	endif
+	OPERACAO_ANTERIOR = OPERACAO
+	
+enddo
+set confirm OFF
+set cursor  OFF
+set printer to
+numlock( ESTADO_DO_NUM_LOCK )
+capslock( ESTADO_DO_CAPS_LOCK )
+*
+**  Grava as alteracoes feitas no arquivo de configuracao "CALC.CFG"
+*
+save to "CALC.CFG" all like "CALC_*"
+
+*
+**  Devolve a tela anterior a chamada da calculadora
+*
+restscreen( 00,00,24,79,TELA_ANTERIOR )
+*
+**  Devolve todas as teclas ao que eram antes
+*
+Desativa_teclas_calcula()
+
+restkey()
+
+set cursor s_cur
+
+return	&& Saida do programa de calculadora			
+
+***************************************************
+*                                                 *
+*        Final do programa da calculadora         *
+*                                                 *
+***************************************************
+
+***************
+function Acerta              && Acerto para terminar a edicao
+***************
+
+OPERACAO = lastkey()
+keyboard 13
+if 	 OPERACAO = 27
+
+	EXECUTA_OPERACAO = .F.
+	
+elseif OPERACAO =  61
+
+	keyboard save 13
+
+elseif OPERACAO =  89 .or. OPERACAO = 121
+
+	TIPO_OPERACAO = "û"
+	keyboard save 13
+
+elseif OPERACAO =  88 .or. OPERACAO = 120
+
+	TIPO_OPERACAO = "ý"
+	keyboard save 13
+
+elseif OPERACAO =  67 .or. ;
+		 OPERACAO =  99
+
+	keyboard save 13
+
+endif
+
+return
+
+*************
+function Nada              			&& Nao faz nada
+*************
+
+VALOR = RESULTADO
+
+return
+
+*******************
+function Quase_nada              	&& Nao faz quase nada
+*******************
+
+RESULTADO = VALOR
+
+return
+
+***************
+function Adicao              			&& TECLA < + > ( 43 )
+***************
+
+RESULTADO = RESULTADO + VALOR
+
+return
+
+******************
+function Subtracao              		&& TECLA < - > ( 45 )
+******************
+
+RESULTADO = RESULTADO - VALOR
+
+return
+
+*********************
+function Multiplicacao          		&& TECLA < * > (42)
+**********************
+
+RESULTADO = RESULTADO * VALOR
+
+return
+
+****************
+function Divisao          				&& TECLA < / > (47)
+****************
+
+if VALOR > 0
+
+	RESULTADO = RESULTADO / VALOR
+
+endif
+
+return
+
+**********************
+function Raiz_quadrada          		&& TECLA < Y > < y > (89) (121)
+**********************
+
+RESULTADO = _sqrt( _abs( VALOR ) )
+OPERACAO_ANTERIOR = 244
+Faz_fita( resultado , "T" )
+Faz_fita( space( 14 ) , " " )
+
+return
+
+***********************
+function Eleva_quadrado          	&& TECLA < X > < x > (88) (120)
+***********************
+
+RESULTADO         = VALOR * VALOR
+OPERACAO_ANTERIOR = 244
+Faz_fita( resultado , "T" )
+Faz_fita( space( 14 ) , " " )
+
+return
+
+********************
+function Porcentagem 
+********************
+
+if editing()
+
+	EXECUTA_OPERACAO = .F.
+	keyboard 03, 37
+
+	return
+	
+endif
+private FFF, LOOP_1
+Faz_fita( VALOR, "%" )
+PORCENT_VAL = ( VALOR / 100 ) * RESULTADO
+FFF = transform( PORCENT_VAL, CALC_DEC )
+Faz_fita( PORCENT_VAL, "=" )
+if OPERACAO_ANTERIOR = 43
+
+	RESULTADO = RESULTADO + PORCENT_VAL
+	
+elseif OPERACAO_ANTERIOR = 45
+
+	RESULTADO = RESULTADO - PORCENT_VAL
+	
+elseif OPERACAO_ANTERIOR = 42
+
+	RESULTADO = PORCENT_VAL
+
+endif
+FFF = transform( RESULTADO, CALC_DEC )
+for LOOP_1 = 1 to len( FFF )
+
+	if mid( FFF, LOOP_1, 1 ) # "."
+
+		keyboard save mid( FFF, LOOP_1, 1 )
+	
+	endif
+	
+next
+Faz_fita( RESULTADO,   "T" )
+Faz_fita( space( 14 ), " " )
+OPERACAO_ANTERIOR = 244
+OPERACAO          = 244
+EXECUTA_OPERACAO = .F.
+keyboard 13
+
+return
+
+**************
+function Igual          				&& TECLA < = > (61)
+**************
+
+Faz_fita( resultado , "T" )
+Faz_fita( space( 14 ) , " " )
+OPERACAO_ANTERIOR = 244
+
+return
+
+*******************
+function Limpa_tudo 						&& Teclas (C) (c) <67> <99>
+*******************
+
+VALOR             = 00
+ACEITA_VALOR      = 00
+RESULTADO         = 00
+TIPO_OPERACAO     = " "
+OPERACAO          = 32
+OPERACAO_ANTERIOR = 32
+LINHA_SCROLL      = 12
+EXECUTA_OPERACAO  = .F.
+restscreen( 00,00,24,79,TELA_ANTERIOR )
+restscreen( 12, CALC_COL, 24, CALC_COL + 40, TELA_CALC )
+keyboard 21, "0", 13
+
+return
+
+**********************
+function Limpa_parcela   				&& Teclas (E) (e) <69> <101>
+**********************
+
+keyboard 1, 25
+
+return
+
+*****************
+function Decimais  					&& Teclas (D) (d) <68> <100>
+*****************
+
+private TECLA, SC_DEC
+savekey()
+SC_DEC = savescreen( 18, CALC_COL + 05, 21, CALC_COL + 26 )
+@ 18, CALC_COL + 05 say "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»" color "N/W"
+@ 19, CALC_COL + 05 say "º Casas decimais   º" color "N/W"
+@ 20, CALC_COL + 05 say "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼" color "N/W"
+@ 19, CALC_COL + 25 fill to 20, CALC_COL + 26  color "W/N"
+@ 21, CALC_COL + 07 fill to 21, CALC_COL + 26  color "W/N"
+poscur( 19, CALC_COL + 22 )
+TECLA = inkey( 0 )
+restscreen( 18, CALC_COL + 05, 21, CALC_COL + 26, SC_DEC )
+if     TECLA = 48						&& 0 casas decimais
+
+	CALC_DEC = "##,###,###,###"
+
+elseif TECLA = 49						&& 1 casas decimais
+
+	CALC_DEC = "#,##,###,###.#"
+
+elseif TECLA = 50						&& 2 casas decimais
+
+	CALC_DEC = "###,###,###.##"
+
+elseif TECLA = 51						&& 3 casas decimais
+
+	CALC_DEC = "##,###,###.###"
+
+elseif TECLA = 52						&& 4 casas decimais
+
+	CALC_DEC = "#,###,###.####"
+
+elseif TECLA = 53						&& 5 casas decimais
+
+	CALC_DEC = "####,###.#####"
+
+elseif TECLA = 54						&& 6 casas decimais
+
+	CALC_DEC = "###,###.######"
+
+elseif TECLA = 55						&& 7 casas decimais
+
+	CALC_DEC = "##,###.#######"
+
+elseif TECLA = 56						&& 8 casas decimais
+
+	CALC_DEC = "#,###.########"
+
+elseif TECLA = 57						&& 9 casas decimais
+
+	CALC_DEC = "####.#########"
+
+endif
+EXECUTA_OPERACAO  = .F.
+keyboard 13
+restkey()
+
+return
+
+*******************
+function Op_memoria 
+*******************
+
+if editing()
+
+	if .not. updated()
+	
+		EXECUTA_OPERACAO = .F.
+	
+	endif
+	keyboard 1, 13, 77
+
+	return
+	
+endif
+private TECLA, SC_DEC, LOOP_1, FFF
+if OPERACAO = 61
+
+	VALOR = RESULTADO
+	
+endif	
+savekey()
+SC_DEC = savescreen( 18, CALC_COL + 05, 21, CALC_COL + 26 )
+@ 18, CALC_COL + 05 say "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»" color "N/W"
+@ 19, CALC_COL + 05 say "ºMem¢ria opera‡„o  º" color "N/W"
+@ 20, CALC_COL + 05 say "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼" color "N/W"
+@ 19, CALC_COL + 25 fill to 20, CALC_COL + 26  color "W/N"
+@ 21, CALC_COL + 07 fill to 21, CALC_COL + 26  color "W/N"
+poscur( 19, CALC_COL + 23 )
+TECLA = inkey( 0 )
+restscreen( 18, CALC_COL + 05, 21, CALC_COL + 26, SC_DEC )
+if TECLA = 83 .or. TECLA = 115 && s ou S
+
+	MEMORIA = VALOR
+
+elseif TECLA = 82 .or. TECLA = 114 && r ou R
+
+	FFF = transform( MEMORIA, CALC_DEC )
+	keyboard 1, 25
+	for LOOP_1 = 1 to len( FFF )
+
+		if mid( FFF, LOOP_1, 1 ) # "."
+
+			keyboard save mid( FFF, LOOP_1, 1 )
+	
+		endif
+		
+	next
+
+elseif TECLA = 67 .or. TECLA =  99 && c ou C
+
+	MEMORIA = 00
+
+elseif TECLA = 43
+
+	MEMORIA = MEMORIA + VALOR
+	
+elseif TECLA = 45
+
+	MEMORIA = MEMORIA - VALOR
+	
+elseif TECLA = 42 .or. TECLA = 56
+
+	MEMORIA = MEMORIA * VALOR
+	
+elseif TECLA = 47
+
+	if VALOR > 0
+
+		MEMORIA = MEMORIA / VALOR
+	
+	endif
+
+endif	
+@ 21, CALC_COL + 26 say "M" color iif( MEMORIA # 0, "GR+*/N", "GR+/N" )
+restkey()
+
+return
+
+*****************
+function Faz_fita 
+*****************
+
+parameters F_VALOR, F_OPERA
+
+if _type( F_VALOR ) == "N"
+
+	F_VALOR = transform( F_VALOR, CALC_DEC )
+
+endif
+
+LINHA_SCROLL = iif( LINHA_SCROLL > 01, LINHA_SCROLL - 1, 01 )
+scroll( LINHA_SCROLL,CALC_COL + 18,12,CALC_COL + 35, 1 )
+@ 12,CALC_COL + 18 say "  " + F_VALOR + " " + F_OPERA color   "N/W"
+
+if VAI_IMP = .T.
+
+	lprint space( 05 ) + "  " + F_VALOR + " " + F_OPERA
+
+endif	
+
+return
+
+******************
+function Ativa_imp 
+******************
+
+VAI_IMP = iif( VAI_IMP = .T., .F., .T. )
+@ 21, CALC_COL + 22 say "I" color iif( VAI_IMP = .T., "GR+*/N", "GR+/N" )
+if VAI_IMP = .T.
+
+
+	if _type( IMP_REL ) # "U"
+
+		set printer to IMP_REL
+
+	else
+	
+		set printer to "LPT1:"
+	
+	endif
+
+else
+
+	set printer to
+	
+endif
+
+return		
+
+*********************
+function Muda_posicao 
+*********************
+
+savekey()
+EXECUTA_OPERACAO = .F.
+if lastkey() = 26
+
+	if CALC_COL = 01
+
+		CALC_COL =  37
+		
+	else
+		
+		CALC_COL = CALC_COL - 18
+		
+	endif
+	
+endif
+if lastkey() = 0 .or. lastkey() = 2
+
+	if CALC_COL = 37
+
+		CALC_COL =  01
+		
+	else
+		
+		CALC_COL = CALC_COL + 18
+		
+	endif
+	
+endif
+keyboard 13, 32, 13
+set key 32 to Muda_1()
+
+return
+
+***************
+function Muda_1 
+***************
+
+set key 32 to
+restscreen( 00,00,24,79,TELA_ANTERIOR )
+Tela_calc()
+VALOR             = 00
+ACEITA_VALOR      = 00
+RESULTADO         = 00
+TIPO_OPERACAO     = " "
+OPERACAO          = 32
+OPERACAO_ANTERIOR = 32
+MEMORIA           = 00
+LINHA_SCROLL      = 12
+EXECUTA_OPERACAO = .F.
+restkey()
+
+return
+
+*****************************
+function Ativa_teclas_calcula 
+*****************************
+*
+**  As teclas Ctrl-Setas horizontais movem a calculadora
+*
+set key 26 to Muda_posicao()			&& Tecla Ctrl-Esquerda
+set key  0 to Muda_posicao()			&& Tecla Ctrl-Direita
+*
+**  Teclas de operacao
+*
+set key  61 to Acerta()				&& IGUAL     			(=)
+set key  43 to Acerta()				&& SOMA      			(+)
+set key  45 to Acerta()				&& SUBTRACAO 			(-)
+set key  42 to Acerta()				&& MULTIPLICACAO 		(*)
+set key  47 to Acerta()				&& DIVISAO				(/)
+set key  37 to Porcentagem()		&& PORCENTAGEM			(%)
+set key  89 to Acerta()				&& RAIZ QUADRADA		(Y)
+set key 121 to Acerta()				&& RAIZ QUADRADA		(y)
+set key  88 to Acerta()				&& ELEVA AO QUADRADO (X)
+set key 120 to Acerta()				&& ELEVA AO QUADRADO (x)
+set key  73 to Ativa_imp()			&& FITA IMPRESSORA   (I)
+set key 105 to Ativa_imp()			&& FITA IMPRESSORA   (i)
+set key  77 to Op_memoria() 		&& MEMORIA				(M)
+set key 109 to Op_memoria()  		&& MEMORIA				(m)
+set key  65 to Ajuda_calcula()	&& AJUDA					(A)
+set key  97 to Ajuda_calcula()  	&& AJUDA					(a)
+set key  67 to Limpa_tudo()   	&& LIMPA TUDO			(C)
+set key  99 to Limpa_tudo()   	&& LIMPA TUDO			(c)
+set key  69 to Limpa_parcela()	&& LIMPA PARCELA		(E)
+set key 101 to Limpa_parcela()   && LIMPA PARCELA		(e)
+set key  68 to Decimais()			&& CASAS DECIMAIS		(D)
+set key 100 to Decimais()			&& CASAS DECIMAIS		(d)
+*
+**  Acerta Esc para sair da calculadora
+*
+set key  27 to Acerta()				&& SAIDA DA CALCULADORA
+
+return
+
+********************************
+function Desativa_teclas_calcula 
+********************************
+
+set key  26 to 
+set key 	 0 to 
+set key  61 to 
+set key  43 to 
+set key  45 to 
+set key  42 to 
+set key  47 to 
+set key  37 to 
+set key  89 to 
+set key 121 to 
+set key  88 to 
+set key 120 to 
+set key  69 to 
+set key 101 to 
+set key  73 to 
+set key 105 to 
+set key  68 to 
+set key 100 to 
+set key  65 to 
+set key  97 to 
+set key  77 to 
+set key 109 to 
+set key  67 to 
+set key  99 to 
+set key  27 to 
+
+return
+
+**********************
+function Ajuda_calcula 
+**********************
+
+private TELA_CALC_AJ, TECLA, MAT_AJUDA[25], POSICAO,;
+ 		  MENSAGEM_PRI, MENSAGEM_TEM, MENSAGEM_FIM
+set cursor OFF
+numlock( .F. )
+savekey()
+MAT_AJUDA[01] = " +  = Adi‡„o                       "
+MAT_AJUDA[02] = " -  = Subtra‡„o                    "
+MAT_AJUDA[03] = " *  = Multiplica‡„o                "
+MAT_AJUDA[04] = " /  = Divis„o                      "
+MAT_AJUDA[05] = " =  = Encerra as opera‡”es         "
+MAT_AJUDA[06] = " %  = Porcentagem ( N <+ - *> n % )"
+MAT_AJUDA[07] = " Y  = Raiz Quadrada (û)            "
+MAT_AJUDA[08] = " X  = Eleva ao Quadrado (xý)       "
+MAT_AJUDA[09] = " C  = Limpa tudo                   "
+MAT_AJUDA[10] = " E  = Limpa parcela (cE)           "
+MAT_AJUDA[11] = " I  = Fita tambŠm na impressora    "
+MAT_AJUDA[12] = " D  = N£mero de casas decimais     "
+MAT_AJUDA[13] = " A  = Chama esta tela de ajuda     "
+MAT_AJUDA[14] = " Ms = Guarda um n£mero na mem¢ria  "
+MAT_AJUDA[15] = " M+ = Soma na mem¢ria              "
+MAT_AJUDA[16] = " M- = Diminui na mem¢ria           "
+MAT_AJUDA[17] = " M* = Multiplica na mem¢ria        "
+MAT_AJUDA[18] = " M/ = Divide na mem¢ria            "
+MAT_AJUDA[19] = " Mr = Chama o n£mero da mem¢ria    "
+MAT_AJUDA[20] = " Mc = Limpa o conte£do da mem¢ria  "
+MAT_AJUDA[21] = " ^" + chr( 26 ) + " = Move calculadora p/ direita  "
+MAT_AJUDA[22] = " ^" + chr( 27 ) + " = Move calculadora p/ esquerda "
+MAT_AJUDA[23] = "                                   "
+MAT_AJUDA[24] = "                                   "
+MAT_AJUDA[25] = "                                   "
+MENSAGEM_PRI  = " " + chr( 25 ) + " " + chr( 32 )
+MENSAGEM_TEM  = " " + chr( 25 ) + " " + chr( 24 )
+MENSAGEM_FIM  = " " + chr( 32 ) + " " + chr( 24 )
+TELA_CALC_AJ  = savescreen( 13, CALC_COL+1, 22, CALC_COL + 37 )
+@ 13, CALC_COL+1 clear to 22, CALC_COL + 37                color "N/GR"
+@ 13, CALC_COL+1 to 22, CALC_COL + 37 double               color "N/GR"
+@ 14, CALC_COL+2 say "   CALCULADORA DA TORUS  -  AJUDA  " color "N/GR"
+@ 15, CALC_COL+1 say "Ì" + replicate( "Í", 35 ) + "¹"      color "N/GR"
+@ 20, CALC_COL+1 say "Ì" + replicate( "Í", 35 ) + "¹"      color "N/GR"
+TECLA   = 00
+POSICAO = 01
+clear typeahead
+do while TECLA # 27
+
+	@ 16, CALC_COL+2 say MAT_AJUDA[POSICAO + 00]        color "N/GR"
+	@ 17, CALC_COL+2 say MAT_AJUDA[POSICAO + 01]        color "N/GR"
+	@ 18, CALC_COL+2 say MAT_AJUDA[POSICAO + 02]        color "N/GR"
+	@ 19, CALC_COL+2 say MAT_AJUDA[POSICAO + 03]        color "N/GR"
+	if POSICAO = 01
+	
+		@ 21, CALC_COL+2 say MENSAGEM_PRI                color "N/GR"
+		
+	elseif POSICAO > 00 .and. POSICAO < 21
+		
+		@ 21, CALC_COL+2 say MENSAGEM_TEM                color "N/GR"
+	
+	else
+
+		@ 21, CALC_COL+2 say MENSAGEM_FIM                color "N/GR"
+		
+	endif
+	@ 21,col() say " - P/ mover-se   Esc - retorna "    color "N/GR"
+	TECLA = inkey(0)
+	if TECLA = 5 .and. POSICAO >= 05
+	
+		POSICAO = POSICAO - 04
+		
+	elseif TECLA = 24 .and. POSICAO <= 17
+	
+		POSICAO = POSICAO + 04
+		
+	endif		
+
+enddo	
+restscreen( 13, CALC_COL+1, 22, CALC_COL + 37, TELA_CALC_AJ )
+restkey()
+set cursor ON
+numlock( .T. )
+
+return
+
+******************
+function Tela_calc   
+******************
+
+@ 12,CALC_COL    say "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»                  ÉÍ»" color "GR+/N"
+@ 13,CALC_COL    say "º                ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼ º" color "GR+/N"
+@ 14,CALC_COL    say "º                ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸ º" color "GR+/N"
+@ 15,CALC_COL    say "º 7 ³ 8 ³ 9 ³ / ³³                  ³ º" color "GR+/N"
+@ 16,CALC_COL    say "º ÍÍ¾ ÍÍ¾ ÍÍ¾ ÍÍ¾ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾ º" color "GR+/N"
+@ 17,CALC_COL    say "º 4 ³ 5 ³ 6 ³ * ³ % ³ C ³ D ³ M+³ M-³ º" color "GR+/N"
+@ 18,CALC_COL    say "º ÍÍ¾ ÍÍ¾ ÍÍ¾ ÍÍ¾ ÍÍ¾ ÍÍ¾ ÍÍ¾ ÍÍ¾ ÍÍ¾ º" color "GR+/N"
+@ 19,CALC_COL    say "º 1 ³ 2 ³ 3 ³ - ³ ûy³ cE³ A ³ M*³ M/³ º" color "GR+/N"
+@ 20,CALC_COL    say "º ÍÍ¾ ÍÍ¾ ÍÍ¾ ÍÍ¾ ÍÍ¾ ÍÍ¾ ÍÍ¾ ÍÍ¾ ÍÍ¾ º" color "GR+/N"
+@ 21,CALC_COL    say "º 0 ³ . ³ = ³ + ³ xý³ I ³ Ms³ Mr³ Mc³ º" color "GR+/N"
+@ 22,CALC_COL    say "º ÍÍ¾ ÍÍ¾ ÍÍ¾ ÍÍ¾ ÍÍ¾ ÍÍ¾ ÍÍ¾ ÍÍ¾ ÍÍ¾ º" color "GR+/N"
+@ 23,CALC_COL    say "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼" color "GR+/N"
+@ 13,CALC_COL+03 say "TORUS - CALC" 									color "W+/N"
+@ 14,CALC_COL+03 say "ßßßßßßßßßßßß" 									color "W+/N"
+@ 12,CALC_COL+18 say space(18) 											color "N/W"
+@ 13,CALC_COL+39 fill to 23,CALC_COL+40 		                  color "N+/N"
+@ 24,CALC_COL+02 fill to 24,CALC_COL+40 		                  color "N+/N"
+TELA_CALC = savescreen( 12,CALC_COL,24,CALC_COL+40 )
+
+
+

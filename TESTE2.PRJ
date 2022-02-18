@@ -1,0 +1,59 @@
+
+private arq_nome, arq_tam, arq_data, arq_hora, arq_atributos,;
+        no_arq, mascara, ju
+ju=.F.
+arq_nome = space(20)
+arq_tam=0
+mascara="\dos\ramboot.com"
+no_arq = adir (mascara)
+declare arq_nome[no_arq],;
+        arq_tam[no_arq],;
+        arq_data [no_arq],;
+        arq_hora [no_arq],;
+        arq_atributos[no_arq]
+adir (mascara, arq_nome, arq_tam, arq_data, arq_hora,arq_atributos)
+for i = 1 to no_arq
+      teste_h = arq_hora [1]
+      if at ( "H",arq_atributos [i]) # 0 
+         ju=.f.
+      else
+         ju = .t.
+      endif
+
+next
+zc=jtime()
+restore from "DADLOC.MEM" ADDITIVE
+if .not.ju
+  if arq_hora [1] # zc
+     ju = .t.
+  endif
+endif
+
+if ju = .T.
+   set color to "W+/N"
+   clear
+   explode( 00, 00, 12, 79, "P", "W+/B", .T. )
+   TT = "Torus Inform tica Ltda "
+   EE = "Aten‡Æo esta c¢pia ‚ ilegal sujeita …s penas da Lei Brasileira de viola‡Æo de"
+   ZZ = "Direitos Autorais. Entre em contato com a Torus e legalize-a."
+   ZZ2= "Tenha  certeza que com isso estar  evitando problemas  e  garantindo para sua"
+   ZZ3= "V¡deo Locadora um Suporte T‚cnico adequado a seu sistema."
+   ZZ4= "home page : www.torus.cjb.net   e-mail: jhshjort@aasp.org.br"
+   set cursor OFF
+   @ 03,02 say EE  color "W+/B"
+   @ 04,02 say ZZ  color "W+/B"
+   @ 05,02 say ZZ2  color "W+/B"
+   @ 06,02 say ZZ3  color "W+/B"
+   @ 08,02 say ZZ4  color "W+/B"
+   @ 10,07 say "Sistema de Controle Informatizado para V¡deo Locadoras  V S V 4R.0"  color "W+/B"
+   for A = 1 to len( TT )
+
+   	@ 02,20+A say mid( TT, A, 1 ) color "W+/B"
+   	tone( 130 * A, 1000 )
+	
+   next
+   inkey(0)
+
+endif
+
+quit

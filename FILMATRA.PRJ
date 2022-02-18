@@ -1,0 +1,580 @@
+*******************
+procedure Film_atra 
+*******************
+
+AREA    = _select()
+F_ATRA  = _set( "SOFTSEEK" ) == "ON"
+select   "CLIENTES"
+ORD_CLI = indexord()
+set order to 3
+select "FITAS"
+ORD_FIT = indexord()
+set order to 2
+@ 23,01 	say space( 78 ) color "W+/B"
+@ 23,01 	say "AGUARDE... Estou preparando lista dos filmes em atraso";
+ 			color "W+*/B"
+_bell()
+set relation to FITAS->COD_CLI  into "CLIENTES",;
+				 to FITAS->T_CODIGO into "TITULOS"
+go  top
+set softseek ON
+seek "000001"
+COD = FITAS->COD_CLI
+A = 1
+P = 1
+@ 23,01 say space( 78 ) color "W+/B"
+@ 23,01 say "AGUARDE... Estou imprimindo o relat¢rio" color "W+/B"
+_bell()
+
+restore from "SYSFILE" additive
+Abrir_Imp( NOM_TERM )
+
+set printer to IMP_REL
+Cabeca(p)
+do while .not. eof()
+
+	if _date() > FITAS->DATA_PREV
+		
+		if COD # FITAS->COD_CLI
+
+			lprint "      "+FITAS->COD_CLI+" - "+CLIENTES->NOME+"  - " nolinefeed
+			lprint CLIENTES->TEL_RES+" - " nolinefeed
+			COD = FITAS->COD_CLI
+
+		else
+
+			if A = 1
+
+				lprint "      "+FITAS->COD_CLI+" - "+CLIENTES->NOME+"  - ";
+																				NOLINEFEED
+				lprint CLIENTES->TEL_RES+" - " NOLINEFEED
+				A = 0
+
+			else
+
+				lprint space( 69 ) nolinefeed
+
+			endif
+
+		endif		
+		lprint dtoc( FITAS->DATA_RET ) + " " + FITAS->CODFITA nolinefeed
+		lprint " " + _left( TITULOS->T_PORT , 37 ) + " - "    nolinefeed
+		lprint ( _date() - FITAS->DATA_PREV ) picture "####"
+		if prow() = 62
+
+			lprint "      " + replicate( "=", 127 )
+			eject
+			P = P + 1
+			Cabeca( P )
+
+		endif
+
+	endif
+	skip
+
+enddo
+lprint "      " + replicate( "=", 127 )
+lprint
+lprint chr( 18 )
+@ 23,01 say space( 78 ) color "W/B"
+_bell()
+_bell()
+set softseek F_ATRA
+select "CLIENTES"
+set order to ORD_CLI
+select "FITAS"
+set relation to
+set order to ORD_FIT
+select AREA
+
+return
+*
+
+*
+FUNCTION cabeca
+*
+PARAMETERS pg
+*
+LPRINT CHR(18) NOLINEFEED
+LPRINT "          VSV 4.0 - Torus "+nom_loc
+LPRINT "                        L O J A : "+num_loja
+LPRINT
+LPRINT "      RELATORIO DE CLIENTES COM FITAS EM ATRASO NO DIA " NOLINEFEED
+LPRINT _date() NOLINEFEED
+LPRINT "         Pag. " NOLINEFEED
+LPRINT pg PICTURE "##"
+LPRINT CHR(15) 
+LPRINT
+LPRINT "      CODIGO   NOME"+SPACE(31)+"FONE"+SPACE(15) NOLINEFEED
+LPRINT "DATA RET FITA"+SPACE(07)+"TITULO"+SPACE(34)+"DIAS"
+LPRINT "      "+REPLICATE("-",127)
+
+RETURN
+
+*******************
+procedure Ficha_cad
+*******************
+
+parameters FICHA_ARQ
+
+FICHA_ARQ = alltrim( FICHA_ARQ )
+restore from "DADLOC.MEM" additive
+SCFIC   = savescreen( 03, 01, 21, 78 )
+COR_FIC = setcolor()
+Quadro( 16, 13, 18, 38, "N/BG,W+/N, , , GR+/BG", "N+/N" )
+set color to "N/BG,W+/N,N,N/BG"
+set cursor ON
+NUM_COP = 1
+@ 17,15 say "Quantas copias : " get NUM_COP picture "9999"
+read
+
+restore from "SYSFILE.MEM" additive
+Abrir_Imp( NOM_TERM )
+
+set printer to IMP_REL
+select 10
+use FICHA_ARQ   								&& "FCADAST.DBF" ou FTIT.DBF
+Mens_erro( "" )
+EXPANDE  = chr( 14 )                   && variavel por impressora
+COMPRIM  = chr( 15 )
+SAICOMP  = chr( 18 )
+NUM_CONT = 0
+T_PRECE  = _set( "PRECEDENCE" )
+set precedence to FIELDS
+do while NUM_COP > NUM_CONT
+
+	lprint
+	lprint COMPRIM + EXPANDE + "     "+NOM_LOC+"  Loja : " + NUM_LOJA + SAICOMP
+	for A = 1 to reccount()
+
+		go A
+		lprint LINHA
+
+	next		
+	eject
+	NUM_CONT = NUM_CONT + 1
+
+enddo
+close 10
+setcolor( COR_FIC )
+restscreen( 03, 01, 21, 78, SCFIC )
+set cursor OFF
+if T_PRECE # "FIELDS"
+
+	set precedence to VARIABLES
+
+endif
+
+return
+
+**********************
+procedure Ficha_pronta 
+**********************
+
+set deleted ON
+
+restore from "SYSFILE.MEM" additive
+Abrir_Imp( NOM_TERM )
+
+AREA 	  = _select()
+SC_ETI  = savescreen( 00, 00, 24, 79 )
+SC_CLI  = setcolor()
+SC_CUR  = _set( "CURSOR" ) == "ON"
+select  "CLIENTES"
+ORD_CLI = indexord()
+set order to 3
+declare MAT_COD[50],MAT_COR[50]
+QT_COD  = 0
+Faz_lista()
+if QT_COD > 0
+
+	set printer to IMP_REL
+	for A = 1 to QT_COD	
+
+		inkey()
+		if lastkey() = 6
+
+			exit
+
+		endif
+		seek MAT_COD[A]
+		if found()
+			
+			Imprime()				
+
+		endif
+
+	next
+
+endif
+Volta_tudo()
+
+return
+*
+
+*****************
+procedure Imprime 
+*****************
+
+if A/2 # _INT(A/2) .and. A > 1
+
+	eject
+
+endif
+lprint replicate("-",77)
+lprint NOM_LOC nolinefeed
+LPRINT SPACE(22)+"  Codigo = "+chr(27)+"E"+chr(14)+mat_cod[a]+chr(27)+"F"
+LPRINT REPLICATE("-",77)
+LPRINT "Tipo de cliente : "+CLIENTES->C_TIPOC NOLINEFEED
+LPRINT SPACE(22)+"Data da emissao da ficha : " NOLINEFEED
+LPRINT _DATE() PICTURE "@E"
+LPRINT
+LPRINT "Cliente : "+CLIENTES->NOME+SPACE(15)+"CPF : " NOLINEFEED
+LPRINT CLIENTES->CPF_CLI PICTURE "@R 999.999.999-99"
+LPRINT
+LPRINT "R.G.: "+CLIENTES->RG_CLI+" UF: "+UF_RG+SPACE(30) NOLINEFEED
+LPRINT "Data nasc.: " NOLINEFEED
+LPRINT CLIENTES->NASC PICTURE "@E"
+LPRINT REPLICATE("-",77)
+LPRINT SPACE(30)+"Endereco Residencial"
+LPRINT REPLICATE("-",77)
+LPRINT CLIENTES->END_RES+"    Bairro : "+CLIENTES->BAI_RES
+LPRINT "Cidade : "+CLIENTES->CID_RES+" CEP "+CLIENTES->CEP_RES NOLINEFEED
+LPRINT "      Fone : "+TEL_RES
+LPRINT REPLICATE("-",77)
+LPRINT SPACE(30)+"Endereco Comercial"
+LPRINT REPLICATE("-",77)
+LPRINT "Empresa "+CLIENTES->EMPRESA+" Prof.: "+CLIENTES->PROF
+LPRINT CLIENTES->END_COM+"    Bairro : "+CLIENTES->BAI_COM
+LPRINT "Cidade : "+CLIENTES->CID_COM+" CEP "+CLIENTES->CEP_COM NOLINEFEED
+LPRINT "      Fone : "+TEL_COM
+LPRINT REPLICATE("-",77)
+LPRINT SPACE(30)+"Pessoas Autorizadas"
+LPRINT REPLICATE("-",77)
+LPRINT CLIENTES->CRED_1+SPACE(10)+CLIENTES->CRED_2
+LPRINT CLIENTES->CRED_3+SPACE(10)+CLIENTES->CRED_4
+LPRINT
+LPRINT
+LPRINT
+LPRINT
+LPRINT SPACE(40)+"------------------------------"
+LPRINT SPACE(50)+"ASSINATURA"
+LPRINT REPLICATE("-",77)
+
+RETURN
+*
+
+*
+PROCEDURE volta_tudo
+*
+SELECT "CLIENTES"
+SET FILTER TO
+SET ORDER TO ord_cli
+RESTSCREEN(00,00,24,79,sc_eti)
+SET CURSOR sc_cur
+SETCOLOR(sc_cli)
+SET PRINTER TO
+SELECT area
+
+RETURN
+*
+
+*
+PROCEDURE faz_lista
+*
+SELECT "CLIENTES"
+ord_cli = INDEXORD()
+SET ORDER TO 3
+
+@ 23,01	SAY SPACE(78) COLOR "W/B"
+@ 23,01	SAY "Vocˆ pode digitar at‚ 50 c¢digos por vez" COLOR "W+/B"
+
+sc_most = SAVESCREEN(03,67,15,78)
+
+sc_pop = SETCOLOR()
+
+quadro(16,50,20,76,"N/BG","N/N")
+	
+SET KEY 9 TO most_pop_c()
+		
+DO WHILE LASTKEY() # 27
+	IF qt_cod > 0
+		x = IIF(qt_cod<8,11-qt_cod,03)
+		quadro(x,67,14,76,"W+/R,W+/R,N,W+/R","N/N")
+      @ x+1,69 SAY "CODIGO"						COLOR "W+/R"
+      @ x+2,67 SAY "Ì"+REPLICATE("Í",08)+"¹"	COLOR "W+/R"
+		most_pop_c("X")
+		@ 23,01 SAY SPACE(78) COLOR "W/B"
+		@ 23,01 SAY "Tab - Ver c¢digos - <ENTER> - Para imprimir" COLOR "W+/B"
+	ENDIF
+	SET CURSOR ON
+	eti_cod = SPACE(06)
+	@ 17,52	SAY "C¢digo  : ";
+				COLOR "N/BG";
+				GET eti_cod;
+	 			PICTURE "######";
+				COLOR "N/BG,W+/N,N,N/BG"
+	READ
+	SETCOLOR(sc_pop)
+	SET CURSOR OFF
+	IF eti_cod = "-"
+		LOOP
+	ENDIF
+	IF LASTKEY() = 27
+		@ 23,01	SAY SPACE(78) COLOR "W/B"
+		@ 23,01	SAY "Abandonar a tarefa - Confirma (S/N)" COLOR "W+/B"
+		tt = INKEY(0)
+		IF tt = 83 .OR. tt = 115
+			qt_cod = 0
+			EXIT
+		ELSE
+			@ 23,01	SAY SPACE(78) COLOR "W/B"
+			CLEAR TYPEAHEAD
+			LOOP
+		ENDIF
+	ENDIF
+	IF LEN(ALLTRIM(eti_cod)) = 0
+		EXIT
+	ENDIF
+	IF eti_cod = "000000"
+		@ 23,01 SAY SPACE(78) COLOR "W/B"
+		@ 23,01	SAY "N„o posso utilizar o c¢digo 000000" COLOR "W+*/B"
+		INKEY(10)
+		LOOP
+	ENDIF
+	IF LEN(ALLTRIM(eti_cod)) < 6	
+		@ 23,01 SAY SPACE(78) COLOR "W/B"
+		@ 23,01	SAY "C¢digo com menos de 6 digitos" COLOR "W+*/B"
+		INKEY(10)
+		LOOP
+	ENDIF
+	IF qt_cod = 50
+		@ 23,01 SAY SPACE(78) COLOR "W/B"
+		@ 23,01	SAY "Vocˆ j  digitou 50 c¢digos de clientes" COLOR "W+*/B"
+		_BELL()
+		INKEY(30)
+		EXIT
+	ENDIF
+	aa = ASCAN(mat_cod,eti_cod)
+	IF aa # 0
+		@ 23,01 SAY SPACE(78) COLOR "W/B"
+		@ 23,01	SAY "C¢digo j  digitado" COLOR "W+*/B"
+		INKEY(10)
+		LOOP
+	ENDIF
+	SEEK eti_cod
+	IF .NOT. FOUND()
+		@ 23,01 SAY SPACE(78) COLOR "W/B"
+		@ 23,01	SAY "Este c¢digo n„o existe" COLOR "W+*/B"
+		INKEY(10)
+		LOOP
+	ENDIF
+	qt_cod = qt_cod + 1
+	mat_cod[qt_cod] = eti_cod
+	mat_cor[qt_cod] = ""
+	@ 19,52		SAY SPACE(20) COLOR "N/BG"
+	@ 19,52		SAY qt_cod PICTURE "##" COLOR "N/BG"
+	tantos_cod 	=	IIF(qt_cod>1,"C¢digos digitados","C¢digo digitado")
+	@ 19,COL()	SAY " "+tantos_cod 		COLOR "N/BG"
+ENDDO
+SET KEY 9 TO
+
+RETURN
+
+*
+PROCEDURE most_pop_c
+*
+IF qt_cod = 0
+
+	RETURN
+
+ENDIF
+SET KEY 9 TO 
+KEYBOARD 6
+IF PCOUNT() > 0
+
+	KEYBOARD SAVE 13
+
+ELSE
+
+	@ 23,01 	SAY SPACE(78) COLOR "W/B"
+	@ 23,01 	SAY "<F9> - Deleta o c¢digo - "+;
+				CHR(24)+" "+CHR(25)+" - Movimenta" COLOR "W+/B"
+
+ENDIF
+POPUP	WINDOW	x+3,69,13,75;
+		TO			op;
+		OPTIONS	mat_cod;
+		HILITE	mat_cor,"W+/R";
+		COLOR		"W+/R,N/R,W+,W+/R";
+		FUNCTION	del_cod()
+SET KEY 9 TO most_pop_c()
+@ 23,01 SAY SPACE(78) COLOR "W/B"
+@ 23,01 SAY "Tab - Ver c¢digos - <ENTER> - Para imprimir" COLOR "W+/B"
+
+RETURN
+*
+
+*
+FUNCTION del_cod
+*
+PARAMETERS estado, posicao
+*
+IF LASTKEY() = -8
+
+	ADEL(mat_cod,posicao)
+	ADEL(mat_cor,posicao)
+	qt_cod = qt_cod - 1
+	@ 19,52		SAY SPACE(20) COLOR "N/BG"
+	IF qt_cod > 0
+
+		@ 19,52		SAY qt_cod PICTURE "##" COLOR "N/BG"
+		tantos_cod 	=	IIF(qt_cod>1,"C¢digos digitados","C¢digo digitado")
+		@ 19,COL()	SAY " "+tantos_cod 		COLOR "N/BG"
+
+	ENDIF
+	RESTSCREEN(03,67,15,78,sc_most)
+	IF qt_cod > 0
+
+		x = IIF(qt_cod<8,11-qt_cod,03)
+		quadro(x,67,14,76,"W+/R,W+/R,N,W+/R","N/N")
+		@ x+1,69 SAY "CODIGO"						COLOR "W+/R"
+		@ x+2,67 SAY "Ì"+REPLICATE("Í",08)+"¹"	COLOR "W+/R"
+		most_pop_c("X")
+		RESTSCREEN(03,67,15,78,sc_most)
+		KEYBOARD SAVE "-", 13
+
+	ELSE
+
+		RESTSCREEN(03,67,15,78,sc_most)
+		KEYBOARD SAVE "0", 13
+
+	ENDIF	
+
+ENDIF
+
+RETURN 3
+
+*********************
+procedure Muda_debito    && Alterar debitos de clientes
+*********************
+
+private SC_TEL, SC_CUR, PORCENT, ORD_CLI, AREA
+SC_CUR = _set( "CURSOR" ) == "ON"
+SC_TEL = savescreen( 11, 52, 20, 77 )
+@ 11,52 say "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»" color "W+/BG"
+@ 12,52 say "º       CLIENTES       º" color "W+/BG"
+@ 13,52 say "ÌÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹" color "W+/BG"
+@ 14,52 say "º Altera‡„o de d‚bitos º" color "W+/BG"
+@ 15,52 say "º                      º" color "W+/BG"
+@ 16,52 say "º Digite a porcentagem º" color "W+/BG"
+@ 17,52 say "º                      º" color "W+/BG"
+@ 18,52 say "º a majorar :        % º" color "W+/BG"
+@ 19,52 say "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼" color "W+/BG"
+@ 12,76 fill to 19,77 color "N+/N"
+@ 20,54 fill to 20,77 color "N+/N"
+PORCENT = 00
+@ 18,66 get PORCENT picture "###.##" color "W+/BG,W+/N"
+set cursor ON
+read
+set cursor OFF
+if lastkey() = 27 .or. PORCENT = 00
+
+	set cursor SC_CUR
+	restscreen( 11, 52, 20, 77, SC_TEL )
+	return
+
+endif
+PORCENT = 1 + ( PORCENT / 100 )
+AREA = _select()
+select "CLIENTES"
+ORD_CLI = indexord()
+set order to 0
+_bell()
+@ 23,01 say space( 78 )      color "W/B"
+@ 23,01 say " Aguarde.... "  color "W+/B"
+if flock( 15 )
+
+	replace all CLIENTES->DEBITOS with CLIENTES->DEBITOS * PORCENT ;
+   	     for CLIENTES->DEBITOS > 0
+	unlock
+
+else
+
+	Mens_rerro( " Arquivo em uso por outro terminal, opera‡„o n„o efetuada", 4, "W+*/B" )	
+
+endif
+_bell()
+@ 23,01 say space( 78 )      color "W/B"
+_bell()
+_bell()
+set order to ORD_CLI
+_select( AREA )     
+set cursor SC_CUR
+restscreen( 11, 52, 20, 77, SC_TEL )
+return
+
+*********************
+procedure Muda_custos   && Alterar debitos de clientes
+*********************
+
+private SC_TEL, SC_CUR, PORCENT, ORD_CLI, AREA, GG
+SC_CUR = _set( "CURSOR" ) == "ON"
+SC_TEL = savescreen( 11, 52, 20, 77 )
+@ 11,52 say "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»" color "W+/BG"
+@ 12,52 say "º       PRODUTOS       º" color "W+/BG"
+@ 13,52 say "ÌÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹" color "W+/BG"
+@ 14,52 say "º Altera‡„o dos pre‡os º" color "W+/BG"
+@ 15,52 say "º                      º" color "W+/BG"
+@ 16,52 say "º Digite a porcentagem º" color "W+/BG"
+@ 17,52 say "º                      º" color "W+/BG"
+@ 18,52 say "º a majorar :        % º" color "W+/BG"
+@ 19,52 say "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼" color "W+/BG"
+@ 12,76 fill to 19,77 color "N+/N"
+@ 20,54 fill to 20,77 color "N+/N"
+PORCENT = 00
+@ 18,66 get PORCENT picture "###.##" color "W+/BG,W+/N"
+set cursor ON
+read
+set cursor OFF
+if lastkey() = 27 .or. PORCENT = 00
+
+	set cursor SC_CUR
+	restscreen( 11, 52, 20, 77, SC_TEL )
+	return
+
+endif
+PORCENT = 1 + ( PORCENT / 100 )
+AREA = _select()
+if REGISTRO_PRODUTO = 99
+
+	Mens_rerro( " N„o existe o genero PRODUTOS ", 20, "W+*/B" )
+	
+endif
+GG = REGISTRO_PRODUTO
+select "TITULOS"
+ORD_CLI = indexord()
+set order to 0
+@ 23,01 say space( 78 )      color "W/B"
+@ 23,01 say " Aguarde.... "  color "W+/B"
+_bell()
+if flock( 15 )
+
+	replace all TITULOS->T_CUSTO with TITULOS->T_CUSTO * PORCENT ;
+   	     for TITULOS->T_GENERO   = GG
+	unlock
+
+else
+
+	Mens_rerro( " Arquivo em uso por outro terminal, opera‡„o n„o efetuada", 4, "W+*/B" )	
+
+endif
+_bell()
+@ 23,01 say space( 78 )      color "W/B"
+_bell()
+_bell()
+set order to ORD_CLI
+_select( AREA )     
+set cursor SC_CUR
+restscreen( 11, 52, 20, 77, SC_TEL )
+return

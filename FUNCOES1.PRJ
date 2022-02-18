@@ -1,0 +1,573 @@
+*
+PROCEDURE vc_control
+*
+AREA 		= _select()
+ORD_CLI 	= indexord()
+COR_ANT	= setcolor()
+SC_CUR   = _set( "CURSOR" ) == "ON"
+select "FUNCION"
+go top
+MFUNC	= FUNCION->F_CODIGO
+
+restore from "SYSFILE.MEM" additive
+Abrir_Imp( NOM_TERM )
+
+restore from "DADLOC.MEM"  additive
+SC_TEL = savescreen( 03, 01, 21, 78 )
+VENDA  = "VENDA DE VIDEO CHEQUE"
+LINHA  = "Ì"+REPLICATE("Í",48)+"¹"
+A		 = "GR+/R,GR+/N,N,GR+/R"
+B      = "N+/N"
+SELECT 2
+USE "GENERO.TPO"
+do while lastkey() # 27
+
+	set cursor ON
+	select "CLIENTES"
+	set order to 3
+	restscreen( 03, 01, 21, 78, SC_TEL )
+	CODIGO 	= space( 06 )
+	QTDE_VC	= 0				&& qt. de folhas compradas
+	VALOR_U	= 0				&& valor unitario de cada folha
+	PERIODO	= 0				&& numero de dias de validade para utilizacao
+	Quadro( 03, 22, 07, 71, A, B )
+	@ 04,38 say VENDA
+	@ 05,22 say LINHA
+	@ 06,24 say "C¢digo do cliente = " get CODIGO picture "999999"
+   read
+	if lastkey() = 27 .or. len( alltrim( CODIGO ) ) = 0
+
+		exit
+
+	endif
+	if len( alltrim( CODIGO ) ) < 6
+
+		loop
+
+	endif
+	seek CODIGO
+	if .not. found()
+
+		@ 23,01 say space( 78 )              color "W/B"
+		@ 23,01 say "CLIENTE NAO ENCONTRADO" color "W+/B"
+		_bell()
+		inkey( 50 )
+		exit
+
+	else
+
+		if CLIENTES->VC_DATA < _date()
+
+			rlock( 15 )
+			replace CLIENTES->VC_QTDE with 0
+			unlock
+	
+		endif
+		clear typeahead
+		Quadro( 03, 22, 20, 71, A, B )
+		@ 04,38 	say  VENDA
+		@ 05,22 	say  LINHA
+		@ 06,24 	say "C¢digo do cliente = " + CODIGO
+		@ 08,24 	say "Nome  :   " + CLIENTES->NOME	                      
+		@ 10,24 	say "Qtde. de video cheques .......:          ";
+				 	get  QTDE_VC picture "9999" valid Conta()
+		@ 12,24 	say "Valor unit rio ...............:    ";
+					get  VALOR_U picture "999,999.99" valid Conta()
+		@ 14,24	say "Valor total a pagar ...........:         0,00"
+		@ 16,24  say "Per¡odo de validade (n§ de dias):         ";
+					get  PERIODO picture "999"
+		@ 18,24	say "Funcion rio : ";
+	 				get  MFUNC picture "####" valid Nome_func()
+		read
+
+	endif
+	if lastkey() = 27
+
+		loop
+
+	endif
+	if QTDE_VC = 0
+
+		loop
+
+	endif
+	V_DATA = _date() + PERIODO
+	********************************* FAZER A IMPRESSAO ********************
+
+	if IMP_DEV = "BOLETO.PRN"
+		do while .t.
+			IMP_DEV1 = "B" + STR( _RAND()*1000000, 6 )
+			if _file(IMP_DEV1)
+				loop
+			else
+				set printer to IMP_DEV1
+				exit
+			endif
+		enddo
+	else
+		set printer to IMP_DEV
+	endif
+
+	** DETERMINA NUMERO DO BOLETO DE CAIXA **
+
+	if flock( 15, "REDE")
+		restore from "ULT_BOL.MEM" additive
+		PRIM_CXNUM   += 1
+		save to "ULT_BOL" all like "PRIM_*"
+		unlock in "REDE"
+	else	
+		Mens_rerro( "Erro de espera na rede, oper‡„o n„o efetuada",  3, "W+*/B" )
+		Limpa()
+		return
+	endif
+	**
+
+	lprint NOM_LOC
+	lprint
+	lprint "LOJA : " + NUM_LOJA
+	lprint
+	lprint _time() + "h  -     "+dtoc( _date() ) + "   -   " nolinefeed
+	lprint _raw( cdow( _date() ) )
+	lprint
+	lprint "BOLETO NUMERO ................... "+ str(PRIM_CXNUM - 1,6,0,"0")
+	lprint
+	lprint "OUTROS RECEBIMENTOS"
+	lprint
+	if QTDE_VC > 0
+
+		lprint "VENDA DE VIDEO CHEQUES"
+
+	else
+
+		lprint "ESTORNO DE VIDEO CHEQUES"
+
+	endif	
+	lprint
+	lprint CODIGO + " - " + CLIENTES->NOME
+	lprint
+	lprint "SALDO ANTERIOR :     " nolinefeed
+	lprint CLIENTES->VC_QTDE PICTURE "999"
+	lprint "COMPRADO       :     " nolinefeed
+	lprint QTDE_VC picture "999"
+	lprint "SALDO ATUAL    :     " nolinefeed
+	lprint ( CLIENTES->VC_QTDE + QTDE_VC) picture "999"
+	lprint
+	if QTDE_VC > 0
+
+		lprint "VALIDO  PARA  UTILIZACAO  ATE' " nolinefeed
+		lprint V_DATA
+		lprint
+
+	endif
+	lprint "VALOR UNITARIO  : ......... " nolinefeed
+	lprint valor_u PICTURE "9,999,999.99"
+	lprint
+	if QTDE_VC > 0
+
+		lprint "TOTAL A PAGAR   : ........ " nolinefeed
+
+	else
+
+		lprint "VALOR ESTORNADO : ........ " nolinefeed
+
+	endif
+	lprint QTDE_VC * VALOR_U picture "99,999,999.99"
+	for L1 = 1 to IMP_LIND
+
+		lprint 
+
+	next
+	set printer to
+	****************************************** ACERTAR CLIENTE *************
+	if QTDE_VC > 0
+
+		rlock( 15 )
+		replace 	CLIENTES->VC_QTDE with (CLIENTES->VC_QTDE + QTDE_VC )
+		replace  CLIENTES->VC_VALI with PERIODO
+		replace	CLIENTES->VC_DATA with V_DATA
+		unlock
+
+	else
+
+		rlock( 15 )
+		replace 	CLIENTES->VC_QTDE with (CLIENTES->VC_QTDE + QTDE_VC )
+		unlock
+
+	endif	
+	**************************** LANCAR EM OUTROS RECEBIMENTOS *************
+	select "CAIXA"
+	flock( 15 )
+	append blank
+	unlock
+	rlock( 15 )
+	replace  CAIXA->NUMERO	 	with str(PRIM_CXNUM,6,0,"0")
+	replace	CAIXA->OPERACAO 	with "R"
+	replace	CAIXA->VALOR 		with ( QTDE_VC * VALOR_U )
+	if QTDE_VC > 0
+		replace  CAIXA->HISTORICO 	with "VENDA DE VIDEO CHEQUE  -  " + CODIGO
+	else
+		replace  CAIXA->HISTORICO 	with "ESTORNO DE VIDEO CHEQUES -" + CODIGO
+	endif	
+	replace	CAIXA->CX_DATA 	with _date()
+	replace	CAIXA->CX_HORA 	with _time()
+	replace  CAIXA->CODFUNC 	with MFUNC
+	unlock
+
+	select "GENERO"
+	go REGISTRO_PRODUTO
+	if GENERO->DADOS = "PRODUTOS"
+
+		rlock( 15 )
+		replace GENERO->EST_VAL with GENERO->EST_VAL + ( QTDE_VC * VALOR_U )
+		replace GENERO->EST_FIT with GENERO->EST_FIT + 1
+		unlock
+
+	endif
+	************************************************************************
+
+	if IMP_DEV = "BOLETO.PRN"
+
+		Boleto_tela(IMP_DEV1)
+
+	endif
+
+enddo                     
+restscreen( 03, 01, 21, 78, SC_TEL )
+close "GENERO"
+select "CLIENTES"
+set order to 1 && ORD_CLI
+setcolor( COR_ANT )
+set cursor SC_CUR
+select AREA
+
+return
+
+**************
+function Conta  
+**************
+
+if QTDE_VC > 999 .or. QTDE_VC < -999
+
+	return .F.
+
+endif
+@ 14,57 say QTDE_VC * VALOR_U picture "99,999,999.99"
+
+return .T.
+*
+
+*
+FUNCTION nome_func
+*
+IF LASTKEY() = 27
+	mfunc  = "    "
+	mfnome = SPACE(20)
+	RETURN .T.
+ENDIF
+SELECT "FUNCION"
+SEEK mfunc
+IF .NOT. FOUND()
+	@ 23,01 SAY SPACE(78) COLOR "W/B"
+	@ 23,01 SAY "FUNCIONARIO NAO ENCONTRADO" color "W+/B"
+	INKEY(1)
+ELSE
+	SET CURSOR OFF
+	mfnome = FUNCION->NOME
+	@ 18,47 SAY mfnome
+	INKEY(1)
+	SET CURSOR ON
+ENDIF
+SELECT "CLIENTES"
+
+RETURN .T.
+*
+
+*****************
+procedure Memoria 
+*****************
+
+MMDD="Mem¢ria dispon¡vel: "+TRANSFORM(_memory(),"###,###")+" bytes  "
+MMDD=MMDD+"Espa‡o no Winchester: "+TRANSFORM(diskspace(),"###,###,###")+" bytes"
+Mens_rerro( MMDD, 20, "W+/B" )
+
+return
+
+* ROTINA DE CONFIGURACAO DE IMPRESSORAS
+*
+PROCEDURE impress_bol
+*
+SET KEY -16 TO && SHIFT F7 
+
+impr_tel = SAVESCREEN(03,01,21,78)
+impr_cor = SETCOLOR()
+SET COLOR TO "W+/B"
+@ 03,01 CLEAR TO 21,78
+
+restore from "SYSFILE" additive
+Abrir_Imp( NOM_TERM )
+
+@ 23,01 SAY SPACE(78) COLOR "W/B"
+@ 23,01 SAY "  "+CHR(26)+"  ou  "+CHR(27)+"   Altera a op‡„o     -    "+;
+				CHR(24)+"  ou  "+CHR(25)+"   Altera a saida" COLOR "W+/B"
+Quadro(3,8,11,68,"N/BG,W+/BG,,GR+/BG","N/N")
+SET COLOR TO "N/BG,W+/BG,,GR+/BG"
+@ 05,08 SAY "Ç"+REPLICATE("Ä",19)+"Å"+REPLICATE("Ä",19)+;
+				"Å"+REPLICATE("Ä",19)+"¶"
+@ 03,28 SAY "Ñ"
+@ 03,48 SAY "Ñ"
+@ 04,28 SAY "³"
+@ 04,48 SAY "³"
+FOR a = 6 TO 10
+	@ a,28 SAY "³"
+	@ a,48 SAY "³"
+NEXT
+@ 11,28 SAY "Ï"
+@ 11,48 SAY "Ï"
+FOR a = 9 TO 49 STEP 20
+   IF a = 9
+      var_bol = "imp_ret"
+	ELSEIF a = 29
+		var_bol = "imp_dev"
+	ELSEIF a = 49
+		var_bol = "imp_rel"
+	ENDIF
+   IF FIELDCONT(var_bol,"M") = "LPT1:"
+      op = 1
+   ELSEIF FIELDCONT(var_bol,"M") = "LPT2:"
+      op = 2
+   ELSEIF FIELDCONT(var_bol,"M") = "COM1:"
+      op = 3
+   ELSEIF FIELDCONT(var_bol,"M") = "COM2:" 
+      op = 4
+   ELSE
+      op = 5
+	ENDIF
+	KEYBOARD 13
+	@ 06,a PROMPT " 1-IMP. PARALELA 1 "
+	@ 07,a PROMPT " 2-IMP. PARALELA 2 "
+	@ 08,a PROMPT " 3-IMP. SERIAL 1   "
+	@ 09,a PROMPT " 4-IMP. SERIAL 2   "
+	@ 10,a PROMPT " 5-ARQUIVO / TELA  "
+     MENU TO op
+NEXT
+KEYBOARD 4
+DO WHILE LASTKEY() # 27
+   SET KEY  4 TO dir_1()
+	SET KEY 19 TO esq_1()
+	@ 04,09 PROMPT "BOLETO DE RETIRADA "
+	@ 04,29 PROMPT "BOLETO DE DEVOLUCAO"
+	@ 04,49 PROMPT "    RELATORIOS     "
+	  MENU TO esc_bol
+	IF esc_bol = 0
+	   EXIT
+	ELSEIF esc_bol = 1
+  		col = 9
+		var_bol = "imp_ret"
+	   arq_nome = "BOLETO.PRN"
+	ELSEIF esc_bol = 2
+		col = 29
+  		var_bol = "imp_dev"
+	   arq_nome = "BOLETO.PRN"
+	ELSEIF esc_bol = 3
+		col = 49
+  		var_bol = "imp_rel"
+	   arq_nome = "RELATOR.PRN"
+	ENDIF	
+   IF FIELDCONT(var_bol,"M") = "LPT1:"
+      op = 1
+   ELSEIF FIELDCONT(var_bol,"M") = "LPT2:"
+      op = 2
+   ELSEIF FIELDCONT(var_bol,"M") = "COM1:"
+      op = 3
+   ELSEIF FIELDCONT(var_bol,"M") = "COM2:" 
+      op = 4
+   ELSE
+      op = 5
+	ENDIF
+   SET KEY  4 TO dir_2()
+	SET KEY 19 TO esq_2()
+	SET KEY 27 TO sai_2()
+	saida = .T.
+   DO WHILE saida .AND. LASTKEY() # 27
+		@ 06,col PROMPT " 1-IMP. PARALELA 1 "
+		@ 07,col PROMPT " 2-IMP. PARALELA 2 "
+		@ 08,col PROMPT " 3-IMP. SERIAL 1   "
+		@ 09,col PROMPT " 4-IMP. SERIAL 2   "
+		@ 10,col PROMPT " 5-ARQUIVO / TELA  "
+	     MENU TO op
+  		IF op = 1
+      	_store("LPT1:",var_bol)
+	  	ELSEIF op = 2
+   	   _store("LPT2:",var_bol)
+	  	ELSEIF op = 3
+   	  	_store("COM1:",var_bol)
+	   ELSEIF op = 4
+  		   _store("COM2:",var_bol)
+	   ELSEIF op = 5
+  		   _store(arq_nome,var_bol)
+	   ENDIF
+	ENDDO
+ENDDO
+
+Grava_Imp( NOM_TERM )
+
+RESTSCREEN(03,01,21,78,impr_tel)
+SETCOLOR(impr_cor)
+SET KEY -16 TO impress_bol()           && SHIFT F7 
+SET KEY   4 TO
+SET KEY  19 TO
+@ 23,01 SAY SPACE(78) COLOR "W/B"
+
+RETURN
+
+*
+FUNCTION dir_1
+*
+SET KEY 4 TO
+KEYBOARD 4, 13
+RETURN
+*
+FUNCTION esq_1
+*
+SET KEY 19 TO
+KEYBOARD 19, 13
+RETURN
+*
+FUNCTION dir_2
+*
+SET KEY 4 TO
+KEYBOARD 13, 4
+saida = .F.
+RETURN
+*
+FUNCTION esq_2
+*
+SET KEY 19 TO
+KEYBOARD 13, 19
+saida = .F.
+RETURN
+*
+FUNCTION sai_2
+SET KEY 27 TO
+KEYBOARD 13, 27
+RETURN
+*
+* FIM DA ROTINA DE CONFIGURACAO DE IMPRESSORAS
+*
+
+******************
+procedure Sos_fita 
+******************
+
+select 8
+use "GENERO.TPO"
+select "FITAS"
+set order to 1
+SC_TELA = savescreen( 10, 15, 20, 58 )
+Quadro( 10, 15, 19, 56, "W+/BG,W+/R,N,W+/N", "N+/N" )
+do while lastkey() # 27  			   && EXECUTAR ENQUANTO NAO TECLAR ESC
+
+	select "FITAS"						   && SELECIONA O ARQUIVO DE FITAS
+	CODIGO = space(10)  				   && LIMPA CODIGO DA FITA
+	@ 12,17 		say "Digite o c¢digo da fita "
+	@ 12,col()	get CODIGO 
+	set cursor ON
+	read
+	set cursor OFF
+	if lastkey() = 27 					&& SE TECLARAM ESC SAIR DO LOOP
+
+		exit
+
+	endif
+	if len(alltrim(CODIGO))=4
+		SET ORDER TO 3
+	elseif len(alltrim(CODIGO))=10
+		set order to 1
+	endif
+	seek CODIGO   							&& BUSCA O CODIGO DA FITA DIGITADA
+	if found()
+
+		select "TITULOS"				&& SELECIONA O ARQUIVO DE FITAS
+		seek _left( FITAS->CODFITA, 6 )		&& BUSCA O CODIGO DO TITULO DA FITA
+		if found()
+
+			IF FITAS->LOJA = NUM_LOJA 	&& checa se a fita e' da loja
+
+				&& se a fita estiver locada diminui o numero de copias
+				&& locadas no arquivo de titulos
+				if FITAS->COD_CLI # "000000" .and. TITULOS->N_COP_FORA >= 1
+
+					rlock( 15 )
+					replace 	TITULOS->N_COP_FORA with TITULOS->N_COP_FORA - 1
+					unlock
+					select "GENERO"
+					go TITULOS->T_GENERO
+					rlock( 15 )
+					replace GENERO->FITAS_FORA with GENERO->FITAS_FORA + 1
+					unlock
+
+				endif
+				&& seleciona o arquivo de fitas e coloca o codigo do cliente 
+				&& com 000000, o uso com espaco em branco, zera as datas  de 
+				&& retirada e de devolucao.
+				select  "FITAS"
+				rlock( 15 )
+				replace 	FITAS->COD_CLI 	WITH 	"000000",;
+							FITAS->USO			WITH 	" ",;
+							FITAS->DATA_RET	WITH	CTOD("  /  /  "),;
+							FITAS->DATA_PREV	WITH	CTOD("  /  /  ")
+				unlock			
+****************COLOCA NO CAIXA INDICACAO DE SOS FITA
+				&& mostra na tela o codigo da ultima fita passada com sucesso
+				@ 16,17 say space( 36 ) color "W/BG"
+				@ 16,17 say "Fita recolocada no acervo da loja "  color "W+*/BG"
+				inkey( 2 )
+				@ 16,17 		say space( 36 )                        color "W/BG"
+				@ 14,17 		say "Ultima fita passada :   "         color "W+/BG"
+				@ 14,col()	say CODIGO color "W+/BG"
+
+			else
+
+				@ 23,01 	SAY SPACE(78) COLOR "W/B"
+				@ 23,01 	SAY "Esta fita ‚ de outra loja - Opera‡„o n„o efetuada";
+	 						COLOR "W+*/B"
+				_bell()
+				CLEAR TYPEAHEAD
+				INKEY(20)
+				@ 23,01 	SAY SPACE(78) COLOR "W/B"
+
+			ENDIF
+
+		ELSE
+
+			@ 23,01 	SAY SPACE(78) COLOR "W/B"
+			@ 23,01 	SAY "Titulo n„o encontrado - Opera‡„o n„o efetuada";
+ 						COLOR "W+*/B"
+			_bell()
+			CLEAR TYPEAHEAD
+			INKEY(20)
+			@ 23,01 	SAY SPACE(78) COLOR "W/B"
+
+		ENDIF
+
+	ELSE
+
+		@ 23,01 SAY SPACE(78) COLOR "W/B"
+		@ 23,01 SAY "Fita n„o encontrada - Opera‡„o n„o efetuada" color "w+*/b"
+		_bell()
+		CLEAR TYPEAHEAD
+		INKEY(20)
+		@ 23,01 SAY SPACE(78) COLOR "W/B"
+
+	ENDIF			
+
+ENDDO
+close  "GENERO"
+select "FITAS"
+set order to 1
+select "TITULOS"
+set order to 1
+restscreen( 10, 15, 20, 58, SC_TELA )
+
+return
+

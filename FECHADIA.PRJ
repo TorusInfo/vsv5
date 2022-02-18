@@ -1,0 +1,1323 @@
+*******************
+procedure Fecha_dia 
+*******************
+
+commit
+AREA = _select()
+set deleted ON
+Mens_erro( " Realizando o fechamento do dia " )
+Fecha_dia1()
+Mens_erro(" ")
+Mens_erro(" ")
+Mens_erro("")
+_select( AREA )
+
+return
+
+*******************
+function Fecha_dia1 
+*******************
+
+set cursor  OFF
+private 		RETFITA,;  && para as fitas   retiradas
+				ESTFITA,;  && para as fitas   estornadas
+				AUTFITA,;  && para as fitas   autenticadas
+				DEVFITA,;  && para as fitas   devolvidas
+				RETBOLE,;  && para os boletos de reitrada
+				ESTBOLE,;  && para os boletos de estornadas
+				AUTBOLE,;  && para os boletos de autenticacao
+				DEVBOLE,;  && para os boletos de devolucao
+				RETVALO,;  && para os valores de retirada
+				ESTVALO,;  && para os valores de estorno
+				AUTVALO,;  && para os valores de autenticacao
+				DEVVALO,;  && para os valores de devolucao
+				VENQPRO,;  && para as vendas  de produtos quantidades
+				VENVPRO,;  && para as vendas  de produtos valores
+				LOOP_1 ,;  && controle do LOOP
+				SC_TEL ,;  && guarda tela para devolver
+				RE_ABER,;  && valor da abertura do caixa
+				RE_DES ,;  && valor das despesas 
+				RE_DEB ,;  && valor dos recebimentos de debitos
+				RE_OUT ,;  && valor dos outros recebimentos
+				SOMA_VC,;  && quantidade de video cheques recebidos
+				RE_TOT ,;  && valor total co caixa
+				TESTE      && variavel para teste se imprime ou nao
+store 0 to 	RETFITA, ESTFITA, AUTFITA, DEVFITA,;
+			  	RETVALO, ESTVALO, AUTVALO, DEVVALO,;
+			  	RETBOLE, ESTBOLE, AUTBOLE, DEVBOLE,;
+				VENQPRO, VENVPRO, RE_ABER, RE_DES ,;
+				RE_DEB , RE_OUT , SOMA_VC, NUM_GEN
+select   	2
+use     	  "GENERO.TPO"
+count to 	NUM_GEN
+for LOOP_1 = 2 to NUM_GEN
+
+	go LOOP_1
+	if upper( alltrim( GENERO->DADOS ) ) # "PRODUTOS"
+	
+		RETFITA += GENERO->RET_FIT
+		ESTFITA += GENERO->EST_FIT
+		AUTFITA += GENERO->AUT_FIT
+		DEVFITA += GENERO->DEV_FIT		
+		RETVALO += GENERO->RET_VAL
+		ESTVALO += GENERO->EST_VAL
+		AUTVALO += GENERO->AUT_VAL
+		DEVVALO += GENERO->DEV_VAL
+		
+	elseif upper( alltrim( GENERO->DADOS ) ) == "PRODUTOS"
+
+		VENQPRO = GENERO->RET_FIT
+		VENVPRO = GENERO->RET_VAL		
+		RE_DES  = GENERO->AUT_VAL
+		RE_DEB  = GENERO->DEV_VAL
+		RE_OUT  = GENERO->EST_VAL
+
+	endif
+	
+next
+go 1
+RETBOLE = GENERO->RET_BOL
+ESTBOLE = GENERO->EST_BOL
+AUTBOLE = GENERO->AUT_BOL
+DEVBOLE = GENERO->DEV_BOL
+SOMA_VC = GENERO->FITAS_TOT
+RE_VFAT = GENERO->RET_VAL
+RE_ABER = GENERO->AUT_VAL
+RE_VFATDESC = GENERO->EST_VAL
+MEDIA   = ( RETVALO + AUTVALO + DEVVALO ) / ;
+          iif( ( DEVFITA + AUTFITA + ESTFITA ) = 0, 1, ;
+          ( DEVFITA + AUTFITA + ESTFITA ) )
+MEDIA   = transform( MEDIA, "##,###,###.##" )
+RE_TOT = VENVPRO + RETVALO + DEVVALO + RE_DEB + RE_OUT - RE_DES + RE_ABER
+
+&& IMPRESSAO DO RELATORIO DE FECHAMENTO DO DIA
+
+restore from "SYSFILE" additive
+Abrir_Imp( NOM_TERM )
+
+VARNOME = IMP_REL
+if IMP_REL = "RELATOR.PRN"
+
+	VARNOME = "F" + _right( "00" + ltrim( str( day(   _date() ), 2, 0 ) ), 2 ) + ;
+	                _right( "00" + ltrim( str( month( _date() ), 2, 0 ) ), 2 ) + ;
+                   _right(        str( year(  _date() ), 4, 0 ), 2 ) + ".PRN"
+
+endif
+set printer to VARNOME && IMP_REL
+set margin  to IMP_LEFT
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say " Prepare a sua impressora e tecle <ENTER>" color "W+*/B"
+_bell()
+clear typeahead
+TESTE = inkey( 0 )
+if TESTE # 13
+
+	return
+	
+endif	
+@ 23,01 say " Aguarde a impress„o do relat¢rio ...    " color "W+*/B"
+lprint
+lprint "VSV 5.0 - Torus "+nom_loc+"   LOJA : "+num_loja
+lprint 
+lprint
+lprint
+DATA_FEC = dtoc( _date() )
+DATA_SEM = alltrim( upper( _raw( cdow( _date() ) ) ) )
+lprint "          FECHAMENTO DO DIA " + DATA_FEC + " - " + DATA_SEM + ;
+						" - " + _time()
+XX = len( DATA_SEM ) + len( _time() ) + 4
+lprint "----------------------------" + REPLICATE("-",xx)
+lprint
+lprint
+lprint "                      MOVIMENTO  DE  FITAS"
+lprint
+lprint
+lprint "GENERO          - RETIRADA - ESTORNO - AUTENTICADA - DEVOLVIDA - TOTAL"
+lprint "----------------------------------------------------------------------"
+go 2
+do while .not. eof()
+
+	if upper( alltrim( GENERO->DADOS ) ) # "PRODUTOS"
+
+   	TOT_GEN = GENERO->RET_FIT + GENERO->EST_FIT + ;
+		          GENERO->AUT_FIT + GENERO->DEV_FIT
+		if TOT_GEN > 0
+
+		   lprint GENERO->DADOS nolinefeed
+		   lprint "    " nolinefeed
+	   	lprint GENERO->RET_FIT picture "#######" nolinefeed
+	   	lprint "    " nolinefeed
+	   	lprint GENERO->EST_FIT picture "######" nolinefeed
+	   	lprint "    " nolinefeed
+	   	lprint GENERO->AUT_FIT picture "##########" nolinefeed
+	   	lprint "    " nolinefeed
+	   	lprint GENERO->DEV_FIT picture "########" nolinefeed
+	   	lprint "  " nolinefeed
+	   	lprint TOT_GEN picture "######"
+
+		endif
+
+	endif
+	if eof()
+	
+		exit
+		
+	endif	
+	skip
+	
+enddo
+lprint "----------------------------------------------------------------------"
+lprint "TOTAIS             " nolinefeed
+lprint RETFITA picture "#######" nolinefeed
+lprint "    " nolinefeed
+lprint ESTFITA picture "######" nolinefeed
+lprint "    " nolinefeed
+lprint AUTFITA picture "##########" nolinefeed
+lprint "    " nolinefeed
+lprint DEVFITA picture "########" nolinefeed
+lprint "  " nolinefeed
+TOT_GERAL = RETFITA + ESTFITA + AUTFITA + DEVFITA
+lprint TOT_GERAL picture "######"
+eject
+lprint
+lprint "VSV 5.0 - Torus "+nom_loc+"   LOJA : "+num_loja
+lprint 
+lprint
+lprint
+lprint "FECHAMENTO DO DIA " + data_fec + " - " + data_sem + ;
+						" - " + _time()
+XX = len( DATA_SEM ) + len( _time() ) + 4
+lprint "----------------------------" + replicate( "-", XX )
+lprint
+lprint
+lprint
+lprint "                       BOLETOS  E  VALORES"
+lprint
+lprint
+lprint "                  BOLETOS                VALORES"
+lprint "                  -------                -------"
+lprint
+lprint " RETIRADAS         " nolinefeed
+lprint RETBOLE picture "#####" nolinefeed
+lprint "  -------  " nolinefeed
+lprint RETVALO picture "##,###,###.##"
+lprint
+lprint " ESTORNADOS        " nolinefeed
+lprint ESTBOLE picture "#####" nolinefeed
+lprint "  -------  " nolinefeed
+lprint ESTVALO picture "##,###,###.##"
+lprint
+lprint " AUTENTICADOS      " nolinefeed
+lprint AUTBOLE picture "#####" nolinefeed
+lprint "  -------  " nolinefeed
+lprint AUTVALO picture "##,###,###.##"
+lprint
+lprint " DEVOLVIDAS        " nolinefeed
+lprint DEVBOLE picture "#####" nolinefeed
+lprint "  -------  " nolinefeed
+lprint DEVVALO picture "##,###,###.##"
+lprint
+lprint " TOTAL DE BOLETOS  " nolinefeed
+lprint RETBOLE + DEVBOLE + ESTBOLE + AUTBOLE picture "#####"
+lprint
+lprint
+lprint
+lprint " VALOR MEDIO DE LOCACAO = " + MEDIA
+lprint
+lprint
+lprint
+lprint "        TABELA DE PRODUCAO DOS FUNCIONARIOS"
+lprint "        -----------------------------------"
+lprint 
+lprint "COD.-NOME  DO FUNCIONARIO- RET.- EST.- AUT.- DEV.- TOTAL"
+lprint "--------------------------------------------------------"
+select "FUNCION"
+go top
+do while .not. eof()
+
+   if FUNCION->LOC_RET > 0 .or. FUNCION->LOC_EST > 0 .or. ;
+	   FUNCION->LOC_AUT > 0 .or. FUNCION->LOC_DEV > 0
+
+      lprint FUNCION->F_CODIGO nolinefeed
+      lprint " " + FUNCION->NOME nolinefeed
+      lprint " " nolinefeed
+      lprint FUNCION->LOC_RET picture "#####" nolinefeed
+      lprint " " nolinefeed
+      lprint FUNCION->LOC_EST picture "#####" nolinefeed
+      lprint " " nolinefeed
+      lprint FUNCION->LOC_AUT picture "#####" nolinefeed
+      lprint " " nolinefeed
+      lprint FUNCION->LOC_DEV picture "#####" nolinefeed
+      lprint " " nolinefeed
+      TOTAL_FUN = FUNCION->LOC_RET + FUNCION->LOC_EST + ;
+	               FUNCION->LOC_AUT + FUNCION->LOC_DEV
+      lprint TOTAL_FUN picture "######"
+
+   endif
+	if eof()
+		
+		exit
+		
+	endif
+	skip		
+
+enddo
+lprint "--------------------------------------------------------"
+lprint
+eject
+lprint
+lprint "RESUMO DO FECHAMENTO DO DIA " + dtoc( _date() )
+lprint "------------------------------------"
+lprint
+lprint
+lprint "ABERTURA DE CAIXA          (+): " nolinefeed
+lprint RE_ABER picture "###,###,###.##"
+lprint
+lprint "VENDA DE " + transform( VENQPRO, "##,###" ) + ;
+       " PRODUTOS   (+): " nolinefeed
+lprint VENVPRO picture "###,###,###.##"
+lprint
+lprint "RECEBIDO NA RETIRADA       (+): " nolinefeed
+lprint RETVALO picture "###,###,###.##"
+lprint
+lprint "RECEBIDO NA DEVOLUCAO      (+): " nolinefeed
+lprint DEVVALO picture "###,###,###.##" 
+lprint
+lprint "RECEBIMENTO DE DEBITOS     (+): " nolinefeed
+lprint RE_DEB  picture "###,###,###.##"
+lprint
+lprint "OUTROS RECEBIMENTOS        (+): " nolinefeed
+lprint RE_OUT  picture "###,###,###.##"
+lprint
+lprint "DESPESAS E VALES           (-): " nolinefeed
+lprint RE_DES  picture "###,###,###.##"
+lprint
+lprint 
+lprint "TOTAL DO DIA                  : " nolinefeed
+lprint RE_TOT picture "###,###,###.##"
+lprint
+lprint
+lprint
+lprint "INFORMATIVO DAS LOCACOES/DESCONTOS"
+lprint
+lprint "VALOR DAS LOCACOES SE NAO TIVESSE DESCONTO : " nolinefeed
+lprint RE_VFAT picture "###,###,###.##"
+lprint
+lprint "VALOR EFETIVAMENTE OBTIDO NAS LOCACOES     : " nolinefeed
+lprint RE_VFATDESC picture "###,###,###.##"
+lprint
+lprint "VALOR DOS DESCONTOS CONCEDIDOS             : " nolinefeed
+lprint RE_VFAT-RE_VFATDESC picture "###,###,###.##"
+lprint
+lprint "PORCENTAGEM DOS DESCONTOS                  : " nolinefeed
+lprint "        " nolinefeed
+if RE_VFATDESC # 0 .and. RE_VFAT # 0
+
+	POR_DESC = (1 - ( RE_VFATDESC / RE_VFAT ) ) * 100
+	lprint POR_DESC picture "###.##" nolinefeed
+	lprint " %"
+
+else
+
+	lprint " 00,00 %"	
+
+endif
+lprint
+lprint "QUANTIDADE DE VIDEO CHEQUES RECEBIDOS      : " nolinefeed
+lprint soma_vc PICTURE "##,###" nolinefeed
+lprint
+lprint
+lprint
+lprint "DISTRIBUICAO FINANCEIRA" 
+lprint
+lprint 
+lprint "__________________    : _____________"
+lprint
+lprint "CARTOES DE CREDITO    : _____________"
+lprint
+lprint "CHEQUES               : _____________"
+lprint
+lprint "DINHEIRO              : _____________"
+lprint
+lprint
+lprint "TOTAL                 : _____________"
+lprint
+lprint "DINHEIRO P/ DEPOSITO  : _____________"
+lprint
+lprint "TROCO P/ DIA SEGUINTE : _____________"
+lprint
+lprint
+eject
+select 2
+use "CODCLIV"
+go 2
+CLIENTESTOT = val( CODCLIV->COD_CLI )
+close "CODCLIV"
+select 2
+use "GENERO.TPO"
+sum TITULOS,FITAS_TOT,FITAS_FORA to T_TITULOS,T_FITAS,T_FITAS_FORA;
+	 for recno() > 1 .and. DADOS # "PRODUTOS"
+restore from "DEBCLI.MEM" additive
+lprint "SITUACAO GERAL DE CLIENTES, TITULOS E FITAS"
+lprint "-------------------------------------------"
+lprint
+lprint "CLIENTES = " + transform( CLIENTESTOT,  "##,###" )
+lprint
+lprint "TITULOS  = " + transform( T_TITULOS,    "##,###" )
+lprint
+lprint "FITAS    = " + transform( T_FITAS,      "##,###" )
+lprint
+lprint "NA LOJA  = " + transform( T_FITAS - T_FITAS_FORA, "##,###" )
+lprint
+lprint "LOCADAS  = " + transform( T_FITAS_FORA, "##,###" )
+lprint 
+lprint "Total em " + iif( TOTAL_DEB_CLIENTES < 0, "CREDITOS", "DEBITOS " ) + ;
+       " de clientes  =  "  nolinefeed
+lprint transform( _abs( TOTAL_DEB_CLIENTES ), "##,###,###.##" )
+lprint
+select "CAIXA"
+flock()
+index on CAIXA->OPERACAO to "CAIXA.K1"
+unlock
+set index to "CAIXA.K1" key CAIXA->OPERACAO
+go top
+if RE_DES # 0 .or. RE_OUT # 0 .or. RE_DEB # 0
+
+	lprint "             DIA : " + dtoc( _date() )
+	lprint
+
+endif
+if RE_DES # 0
+
+   lprint "          DESPESAS E VALES DE FUNCIONARIOS"
+	lprint "          --------------------------------"
+   lprint
+	NUM_ITEMS   = 0
+	TOTAL_ITEMS = 0
+	seek "D"
+   do while CAIXA->OPERACAO = "D" 
+
+      NUM_ITEMS += 1
+      TOTAL_ITEMS = TOTAL_ITEMS + CAIXA->VALOR
+      Imp_caixa()
+		if eof()
+		
+			exit
+			
+		endif
+		skip	
+
+   enddo
+	Imp_caixa_fim()
+
+endif
+if RE_DEB # 0
+
+   if prow() > 62
+
+      eject
+
+   endif
+   lprint "          RECEBIMENTO DE DEBITOS"
+	lprint "          ----------------------"
+   lprint
+	NUM_ITEMS   = 0
+	TOTAL_ITEMS = 0
+	seek "P"
+   do while CAIXA->OPERACAO = "P"
+
+      NUM_ITEMS += 1
+      TOTAL_ITEMS = TOTAL_ITEMS + CAIXA->VALOR
+      Imp_caixa()
+		if eof()
+		
+			exit
+		
+		endif
+		skip
+
+   enddo
+	Imp_caixa_fim()
+
+endif
+if RE_OUT # 0
+
+   if prow() > 62
+
+      eject
+
+   endif
+   lprint "          OUTROS RECEBIMENTOS"
+	lprint "          -------------------"
+   lprint
+	NUM_ITEMS   = 0
+	TOTAL_ITEMS = 0
+   seek "R"
+   do while CAIXA->OPERACAO = "R"
+
+      NUM_ITEMS += 1
+      TOTAL_ITEMS = TOTAL_ITEMS + CAIXA->VALOR
+      Imp_caixa()
+		if eof()
+		
+			exit
+
+		endif
+		skip
+
+   enddo
+	Imp_caixa_fim()
+
+ENDIF
+if RE_DES # 0 .or. RE_OUT # 0 .or. RE_DEB # 0
+
+	eject
+
+endif
+set printer to
+set margin  to
+
+return
+
+**********************
+function Imp_caixa_fim 
+**********************
+
+lprint replicate( "-", 65 )
+lprint "NUMERO DE LANCAMENTOS = " nolinefeed
+lprint NUM_ITEMS picture "###" nolinefeed 
+lprint "          VALOR TOTAL = " nolinefeed
+lprint TOTAL_ITEMS picture "###,###,###.##"
+lprint
+
+return
+
+******************
+function Imp_caixa 
+******************
+
+if prow() > 62
+
+   eject
+
+endif
+lprint CAIXA->HISTORICO + " " nolinefeed
+lprint CAIXA->CX_HORA   + " " + CAIXA->CODFUNC + " " nolinefeed
+lprint transform( CAIXA->VALOR, "##,###,###.##" )
+
+return
+*
+
+*
+PROCEDURE rel_mov                      && RELATORIO DA MOVIMENTACAO
+*
+area = _SELECT()
+SELECT "CLIENTES"
+ord_cli = INDEXORD()
+SET ORDER TO 3
+SELECT "TITULOS"
+ORD_TIT = indexord()
+set order to 1
+REL_TELA = savescreen(09,48,17,66)
+quadro( 09, 48, 16, 64, "N/BG,W+/BG,N,GR+/BG", "N+/N" )
+DO WHILE LASTKEY() # 27
+	pas = 0
+   @ 10,50 PROMPT "Autentica‡”es"
+   @ 11,50 PROMPT "Devolu‡”es   "
+   @ 12,50 PROMPT "Estornos     "
+   @ 13,50 PROMPT "Retiradas    "
+	@ 14,50 prompt "Produtos     "
+   @ 15,50 PROMPT "Todos        "
+     MENU TO op
+	if op > 0
+	
+		select "MOVIMEN"
+		if flock( 15 )
+		
+			if _file( "MOVIMEN.K1" )
+
+				private NOME1[1],TAMANHO1[1],DATA1[1],HORA1[1],ATRIBUTOS1[1],;
+				        NOME2[1],TAMANHO2[1],DATA2[1],HORA2[1],ATRIBUTOS2[1]
+				adir( "MOVIMEN.DBF",NOME1,TAMANHO1,DATA1,HORA1,ATRIBUTOS1 )		
+				adir( "MOVIMEN.K1", NOME2,TAMANHO2,DATA2,HORA2,ATRIBUTOS2 )		
+				if ( dtos( DATA1[1] ) + HORA1[1] ) > ( dtos( DATA2[1] ) + HORA2[1] ) 
+			
+					delete file "MOVIMEN.K1"
+					@ 23,01 say space( 78 )    color "W/B"
+					@ 23,01 say " Aguarde... " color "W+*/B"
+
+				endif
+
+			endif
+			set index to "MOVIMEN.K1" key MOVIMEN->OPERACAO   + ;
+			                              MOVIMEN->BOLETO_NUM + ;
+													MOVIMEN->ITEM
+			@ 23,01 say space( 78 )    color "W/B"
+	
+		else
+
+			Mens_rerro( " Arquivo em uso use por outro terminal", 4, "W+*/B" )
+			restscreen( 09, 48, 17, 66, REL_TELA )
+			set softseek ON
+			select "CLIENTES"
+			set order to ORD_CLI
+			select "TITULOS"
+			set order to ORD_TIT
+			select "MOVIMEN"
+			unlock
+			close index
+			select( AREA )
+			@ 23,01 say space( 78 ) color "W/B"
+			set printer to
+			set margin  to
+			return
+
+		endif
+
+	endif
+   IF op = 1
+
+      rel_imp("D","AUTENTICACOES    ",.T.)
+
+   ELSEIF op = 2  
+
+      rel_imp("D","DEVOLUCOES       ",.F.)
+
+   ELSEIF op = 3
+
+      rel_imp("E","ESTORNOS         ",.F.)
+
+   ELSEIF op = 4
+
+      rel_imp("R","RETIRADAS        ",.F.)
+
+	elseif op = 5
+
+		rel_imp("V","VENDA DE PRODUTOS",.F.)
+
+   ELSEIF op = 6
+
+      rel_imp("D","AUTENTICACOES    ",.T.)
+		pas = 1
+      rel_imp("D","DEVOLUCOES       ",.F.)
+      rel_imp("E","ESTORNOS         ",.F.)
+      rel_imp("R","RETIRADAS        ",.F.)
+		rel_imp("V","VENDA DE PRODUTOS",.F.)
+
+   ENDIF
+
+ENDDO
+restscreen( 09, 48, 17, 66, REL_TELA )
+set softseek ON
+select "CLIENTES"
+set order to ORD_CLI
+select "TITULOS"
+set order to ORD_TIT
+select "MOVIMEN"
+unlock
+close index
+select( AREA )
+@ 23,01 say space( 78 ) color "W/B"
+set printer to
+set margin  to
+return
+
+*
+FUNCTION rel_imp                       && IMPRESSAO DO RELATORIO
+*
+PARAMETERS rel_lista,rel_nome,rel_tipo
+*
+SET DELETED ON
+store 0 to QTD_FIT,QTD_BOL,QTD_VAL
+REL_PAG =1
+REL_LIN = 5
+
+restore from "SYSFILE" additive
+Abrir_Imp( NOM_TERM )
+
+set printer to IMP_REL
+set margin  to IMP_LEFT
+set softseek OFF
+select "MOVIMEN"
+seek REL_LISTA
+if .not. found()
+
+   mens_erro("N„o houve "+REL_NOME+" no dia "+dtoc(_date()))
+	_bell()
+	inkey( 02 )
+	@ 23,01 SAY SPACE(78) COLOR "W/B"
+	return
+
+endif	
+do while MOVIMEN->OPERACAO = REL_LISTA
+
+	checado = .T.
+	IF rel_lista = "D" .AND. MOVIMEN->CONCLUSAO # rel_tipo
+
+		checado = .F.
+
+	ENDIF
+	IF checado = .T.
+
+      num_bol = MOVIMEN->BOLETO_NUM
+      qtd_bol = qtd_bol + 1
+      SELECT "CLIENTES"
+      SEEK MOVIMEN->COD_CLI
+      IF .NOT. FOUND()
+
+         rel_cod = SPACE(6)
+         rel_cli = SPACE(32)
+
+      ELSE
+         rel_cod = CLIENTES->COD_CLI
+         rel_cli = CLIENTES->NOME
+
+      ENDIF
+      SELECT "MOVIMEN"
+      IF rel_lin = 5
+
+         rel_cab(rel_nome,rel_pag)
+
+      ENDIF
+      lprint " "+MOVIMEN->BOLETO_NUM+" - " nolinefeed
+      lprint rel_cod+" - " nolinefeed
+      lprint rel_cli+"           - " nolinefeed
+	   lprint MOVIMEN->CODFUNC+" -"
+    	rel_lin = rel_lin + 1
+    	IF rel_lin = 62
+
+       	EJECT
+			rel_pag = rel_pag + 1
+        	rel_cab(rel_nome,rel_pag)
+        	rel_lin = 6
+
+     	ENDIF
+      DO WHILE num_bol = MOVIMEN->BOLETO_NUM
+
+  	      SELECT "TITULOS"
+     	   SEEK _left( MOVIMEN->CODFITA, 6 )
+         IF .NOT. FOUND()
+
+  	         rel_tit = SPACE(40)
+
+     	   ELSE
+
+           rel_tit = TITULOS->T_PORT
+
+         ENDIF
+  	      select "MOVIMEN"
+  	      lprint "          " nolinefeed
+         lprint MOVIMEN->CODFITA picture "@R 99.9999.99.9-9" nolinefeed
+         QTD_FIT = QTD_FIT + 1
+  	      lprint " "+TITULOS->T_PORT+" " nolinefeed
+     	   if MOVIMEN->OPERACAO = "R"
+
+				if MOVIMEN->NUM_VC < 1
+
+					VAL_DESC = MOVIMEN->VALOR * ( 1 - ( MOVIMEN->DESCONTO/100 ) )
+
+				else
+
+					VAL_DESC = 0
+
+				endif
+
+         else
+
+				VAL_DESC = 	MOVIMEN->VALOR_PAGO
+
+  	      endif
+			if MOVIMEN->NUM_VC > 0 
+
+				lprint VAL_DESC picture "#,###,###.##" nolinefeed
+				lprint "V"
+
+			elseif MOVIMEN->OPERACAO = "V"
+			
+				VAL_DESC = MOVIMEN->VALOR
+			   lprint VAL_DESC picture "#,###,###.##"
+
+			else                        
+
+				if MOVIMEN->OPERACAO = "R" .and. MOVIMEN->CONCLUSAO = .T.
+
+				   lprint VAL_DESC picture "#,###,###.##" nolinefeed
+					lprint "P"
+
+				else
+
+				   lprint VAL_DESC picture "#,###,###.##"
+
+				endif
+
+			endif
+  	      QTD_VAL = QTD_VAL + VAL_DESC
+     	   REL_LIN = REL_LIN + 1
+         if REL_LIN = 62
+
+  	         eject
+     	      REL_PAG = REL_PAG + 1
+            Rel_cab( REL_NOME, REL_PAG )
+  	         REL_LIN = 6
+
+     	   endif
+			if eof()
+			
+				exit
+				
+			endif	
+        	skip
+
+	   ENDDO
+      lprint " ---------------------------------------------" nolinefeed
+      lprint "--------------------------------"
+		if .not. bof()
+		
+      	skip -1
+      
+		endif
+		rel_lin = rel_lin + 1
+  	   IF rel_lin = 62
+
+         EJECT
+  	      rel_pag = rel_pag + 1
+     	   rel_cab(rel_nome,rel_pag)
+         rel_lin = 6
+
+  	   ENDIF
+
+	ENDIF
+   if eof()
+  
+   	exit
+	
+   endif	
+   skip
+
+ENDDO
+IF qtd_bol > 0
+
+   lprint " BOLETOS = " nolinefeed
+   lprint qtd_bol PICTURE "####" nolinefeed
+   lprint "          FITAS = " nolinefeed
+   lprint qtd_fit PICTURE "####" nolinefeed
+   lprint "             VALOR TOTAL = " nolinefeed
+   lprint qtd_val PICTURE "###,###,###.##"
+   lprint " ---------------------------------------------" nolinefeed
+   lprint "--------------------------------"
+   lprint
+   EJECT
+
+ELSE 
+
+   mens_erro("NAO HOUVE "+rel_nome+" NO DIA "+DTOC(_DATE()))
+
+ENDIF
+_bell()
+@ 23,01 SAY SPACE(78) COLOR "W/B"
+
+return
+*
+
+*
+FUNCTION rel_cab                       && IMPRIME CABECALHO
+*
+PARAMETERS rel_nome_f,rel_pag_f
+*
+lprint " RELATORIO DE "+rel_nome_f+" DO DIA "+DTOC(_DATE()) nolinefeed
+lprint "                PAGINA = " nolinefeed
+lprint rel_pag_f PICTURE "###"
+lprint
+lprint " BOLETO - CODIGO - NOME                                       -FUNC-"
+lprint "          FITAS          TITULO" nolinefeed
+lprint "                                          VALOR"
+lprint " ---------------------------------------------" nolinefeed
+lprint "--------------------------------"
+
+RETURN
+*
+
+*******************
+procedure Fecha_mes
+*******************
+
+commit
+AREA = _select()
+set deleted ON
+Mens_erro( " Realizando o fechamento do mes " )
+Fecha_mes1()
+set printer to
+set margin  to
+Mens_erro(" ")
+Mens_erro(" ")
+Mens_erro("")
+_select( AREA )
+
+return
+
+*******************
+function Fecha_mes1 
+*******************
+
+set cursor  OFF
+private 		RETFITA,;  && para as fitas   retiradas
+				ESTFITA,;  && para as fitas   estornadas
+				AUTFITA,;  && para as fitas   autenticadas
+				DEVFITA,;  && para as fitas   devolvidas
+				RETBOLE,;  && para os boletos de reitrada
+				ESTBOLE,;  && para os boletos de estornadas
+				AUTBOLE,;  && para os boletos de autenticacao
+				DEVBOLE,;  && para os boletos de devolucao
+				RETVALO,;  && para os valores de retirada
+				ESTVALO,;  && para os valores de estorno
+				AUTVALO,;  && para os valores de autenticacao
+				DEVVALO,;  && para os valores de devolucao
+				VENQPRO,;  && para as vendas  de produtos quantidades
+				VENVPRO,;  && para as vendas  de produtos valores
+				LOOP_1 ,;  && controle do LOOP
+				SC_TEL ,;  && guarda tela para devolver
+				RE_ABER,;  && valor da abertura do caixa
+				RE_DES ,;  && valor das despesas 
+				RE_DEB ,;  && valor dos recebimentos de debitos
+				RE_OUT ,;  && valor dos outros recebimentos
+				SOMA_VC,;  && quantidade de video cheques recebidos
+				RE_TOT ,;  && valor total co caixa
+				TESTE      && variavel para teste se imprime ou nao
+store 0 to 	RETFITA, ESTFITA, AUTFITA, DEVFITA,;
+			  	RETVALO, ESTVALO, AUTVALO, DEVVALO,;
+			  	RETBOLE, ESTBOLE, AUTBOLE, DEVBOLE,;
+				VENQPRO, VENVPRO, RE_ABER, RE_DES ,;
+				RE_DEB , RE_OUT , SOMA_VC, NUM_GEN
+select   	18
+use     	  "MES.DBF"
+count to 	NUM_GEN
+for LOOP_1 = 2 to NUM_GEN
+
+	go LOOP_1
+	if upper( alltrim( MES->DADOS ) ) # "PRODUTOS"
+	
+		RETFITA += MES->RET_FIT
+		ESTFITA += MES->EST_FIT
+		AUTFITA += MES->AUT_FIT
+		DEVFITA += MES->DEV_FIT		
+		RETVALO += MES->RET_VAL
+		ESTVALO += MES->EST_VAL
+		AUTVALO += MES->AUT_VAL
+		DEVVALO += MES->DEV_VAL
+		
+	elseif upper( alltrim( MES->DADOS ) ) == "PRODUTOS"
+
+		VENQPRO = MES->RET_FIT
+		VENVPRO = MES->RET_VAL		
+		RE_DES  = MES->AUT_VAL
+		RE_DEB  = MES->DEV_VAL
+		RE_OUT  = MES->EST_VAL
+
+	endif
+	
+next
+go 1
+RETBOLE = MES->RET_BOL
+ESTBOLE = MES->EST_BOL
+AUTBOLE = MES->AUT_BOL
+DEVBOLE = MES->DEV_BOL
+SOMA_VC = MES->FITAS_TOT
+RE_VFAT = MES->RET_VAL
+RE_ABER = 0 && MES->AUT_VAL
+RE_VFATDESC = MES->EST_VAL
+MEDIA   = ( RETVALO + AUTVALO + DEVVALO ) / ;
+          iif( ( DEVFITA + AUTFITA + ESTFITA ) = 0, 1, ;
+          ( DEVFITA + AUTFITA + ESTFITA ) )
+MEDIA   = transform( MEDIA, "###,###.##" )
+RE_TOT = VENVPRO + RETVALO + DEVVALO + RE_DEB + RE_OUT - RE_DES + RE_ABER
+
+&& IMPRESSAO DO RELATORIO DE FECHAMENTO DO DIA
+
+restore from "SYSFILE" additive
+Abrir_Imp( NOM_TERM )
+
+VARNOME = IMP_REL
+if IMP_REL = "RELATOR.PRN"
+
+   VARNOME = upper( _left( alltrim( cmonth( _date() ) ), 3 ) ) + ;
+            _right( str( year( _date() ), 4, 0 ), 2 ) + ".PRN"
+
+endif
+set printer to VARNOME && IMP_REL
+set margin  to IMP_LEFT
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say " Prepare a sua impressora e tecle <Enter>" color "W+*/B"
+_bell()
+clear typeahead
+TESTE = inkey( 0 )
+if TESTE # 13
+
+	return
+	
+endif	
+MES_FEC = _date()
+ANO_FEC = _left( dtos( _date() ), 4 )
+@ 23,01 say " Aguarde a impress„o do relat¢rio ...    " color "W+*/B"
+lprint
+lprint "VSV 5.0 - Torus " + NOM_LOC + "   LOJA : " + NUM_LOJA
+lprint 
+lprint
+lprint
+lprint "FECHAMENTO DO MES DE " nolinefeed
+lprint upper( cmonth( MES_FEC ) ) + " DE " + ANO_FEC
+lprint "---------------------" nolinefeed
+lprint replicate( "-", len( cmonth( MES_FEC ) ) + 8 )
+lprint
+lprint
+lprint "                      MOVIMENTO  DE  FITAS"
+lprint
+lprint
+lprint "GENERO          - RETIRADA - ESTORNO - AUTENTICADA - DEVOLVIDA - TOTAL"
+lprint "----------------------------------------------------------------------"
+go 2
+do while .not. eof()
+
+	if upper( alltrim( MES->DADOS ) ) # "PRODUTOS"
+
+   	TOT_GEN = MES->RET_FIT + MES->EST_FIT + ;
+		          MES->AUT_FIT + MES->DEV_FIT
+		if TOT_GEN > 0
+
+		   lprint MES->DADOS nolinefeed
+		   lprint "    " nolinefeed
+	   	lprint MES->RET_FIT picture "#######" nolinefeed
+	   	lprint "    " nolinefeed
+	   	lprint MES->EST_FIT picture "######" nolinefeed
+	   	lprint "    " nolinefeed
+	   	lprint MES->AUT_FIT picture "##########" nolinefeed
+	   	lprint "    " nolinefeed
+	   	lprint MES->DEV_FIT picture "########" nolinefeed
+	   	lprint "  " nolinefeed
+	   	lprint TOT_GEN picture "######"
+
+		endif
+
+	endif
+	if eof()
+	
+		exit
+		
+	endif	
+	skip
+	
+enddo
+lprint "----------------------------------------------------------------------"
+lprint "TOTAIS             " nolinefeed
+lprint RETFITA picture "#######" nolinefeed
+lprint "    " nolinefeed
+lprint ESTFITA picture "######" nolinefeed
+lprint "    " nolinefeed
+lprint AUTFITA picture "##########" nolinefeed
+lprint "    " nolinefeed
+lprint DEVFITA picture "########" nolinefeed
+lprint "  " nolinefeed
+TOT_GERAL = RETFITA + ESTFITA + AUTFITA + DEVFITA
+lprint TOT_GERAL picture "######"
+eject
+lprint
+lprint "VSV 5.0 - Torus " + NOM_LOC + "   LOJA : " + NUM_LOJA
+lprint 
+lprint
+lprint
+lprint "FECHAMENTO DO MES DE " nolinefeed
+lprint upper( cmonth( MES_FEC ) ) + " DE " + ANO_FEC
+lprint "---------------------" nolinefeed
+lprint replicate( "-", len( cmonth( MES_FEC ) ) + 8 )
+lprint
+lprint
+lprint
+lprint "                      BOLETOS  E  VALORES"
+lprint
+lprint
+lprint "                  BOLETOS                  VALORES"
+lprint "                  -------                  -------"
+lprint
+lprint " RETIRADAS         " nolinefeed
+lprint RETBOLE picture "#####" nolinefeed
+lprint "  --------  " nolinefeed
+lprint RETVALO picture "###,###,###.##"
+lprint
+lprint " ESTORNADOS        " nolinefeed
+lprint ESTBOLE picture "#####" nolinefeed
+lprint "  --------  " nolinefeed
+lprint ESTVALO PICTURE "###,###,###.##"
+lprint
+lprint " AUTENTICADOS      " nolinefeed
+lprint AUTBOLE picture "#####" nolinefeed
+lprint "  --------  " nolinefeed
+lprint AUTVALO picture "###,###,###.##"
+lprint
+lprint " DEVOLVIDAS        " nolinefeed
+lprint DEVBOLE picture "#####" nolinefeed
+lprint "  --------  " nolinefeed
+lprint DEVVALO picture "###,###,###.##"
+lprint
+lprint " TOTAL DE BOLETOS  " nolinefeed
+lprint RETBOLE + DEVBOLE + ESTBOLE + AUTBOLE picture "#####"
+lprint
+lprint
+lprint
+lprint " VALOR MEDIO DE LOCACAO = " + MEDIA
+lprint
+lprint
+lprint
+lprint "        TABELA DE PRODUCAO DOS FUNCIONARIOS"
+lprint "        -----------------------------------"
+lprint 
+lprint "COD.-NOME  DO FUNCIONARIO- RET.- EST.- AUT.- DEV.- TOTAL"
+lprint "--------------------------------------------------------"
+close  "MES"
+select "FUNCION"
+go top
+do while .not. eof()
+
+   if FUNCION->MES_RET > 0 .or. FUNCION->MES_EST > 0 .or. ;
+	   FUNCION->MES_AUT > 0 .or. FUNCION->MES_DEV > 0
+
+      lprint FUNCION->F_CODIGO nolinefeed
+      lprint " " + FUNCION->NOME nolinefeed
+      lprint " " nolinefeed
+      lprint FUNCION->MES_RET picture "#####" nolinefeed
+      lprint " " nolinefeed
+      lprint FUNCION->MES_EST picture "#####" nolinefeed
+      lprint " " nolinefeed
+      lprint FUNCION->MES_AUT picture "#####" nolinefeed
+      lprint " " nolinefeed
+      lprint FUNCION->MES_DEV picture "#####" nolinefeed
+      lprint " " nolinefeed
+      TOTAL_FUN = FUNCION->MES_RET + FUNCION->MES_EST + ;
+	               FUNCION->MES_AUT + FUNCION->MES_DEV
+      lprint TOTAL_FUN picture "######"
+
+   endif
+	if eof()
+		
+		exit
+		
+	endif
+	skip		
+
+enddo
+lprint "--------------------------------------------------------"
+lprint
+eject
+lprint
+lprint "RESUMO DO FECHAMENTO DO MES DE " nolinefeed
+lprint upper( cmonth( MES_FEC ) ) + " DE " + ANO_FEC
+lprint
+lprint
+lprint nolinefeed    && "ABERTURA DE CAIXA          (+): " nolinefeed
+lprint               && RE_ABER picture "###,###,###.##"
+lprint
+lprint "VENDA DE " + transform( VENQPRO, "##,###" ) + ;
+       " PRODUTOS   (+): " nolinefeed
+lprint VENVPRO picture "###,###,###.##"
+lprint
+lprint "RECEBIDO NA RETIRADA       (+): " nolinefeed
+lprint RETVALO picture "###,###,###.##"
+lprint
+lprint "RECEBIDO NA DEVOLUCAO      (+): " nolinefeed
+lprint DEVVALO picture "###,###,###.##" 
+lprint
+lprint "RECEBIMENTO DE DEBITOS     (+): " nolinefeed
+lprint RE_DEB  picture "###,###,###.##"
+lprint
+lprint "OUTROS RECEBIMENTOS        (+): " nolinefeed
+lprint RE_OUT  picture "###,###,###.##"
+lprint
+lprint "DESPESAS E VALES           (-): " nolinefeed
+lprint RE_DES  picture "###,###,###.##"
+lprint
+lprint 
+lprint "TOTAL DO MES                  : " nolinefeed
+lprint RE_TOT picture "###,###,###.##"
+lprint
+lprint
+lprint
+lprint "INFORMATIVO DAS LOCACOES/DESCONTOS"
+lprint
+lprint "VALOR DAS LOCACOES SE NAO TIVESSE DESCONTO : " nolinefeed
+lprint RE_VFAT picture "###,###,###.##"
+lprint
+lprint "VALOR EFETIVAMENTE OBTIDO NAS LOCACOES     : " nolinefeed
+lprint RE_VFATDESC picture "###,###,###.##"
+lprint
+lprint "VALOR DOS DESCONTOS CONCEDIDOS             : " nolinefeed
+lprint RE_VFAT-RE_VFATDESC picture "###,###,###.##"
+lprint
+lprint "PORCENTAGEM DOS DESCONTOS                  : " nolinefeed
+lprint "        " nolinefeed
+if RE_VFATDESC # 0 .and. RE_VFAT # 0
+
+	POR_DESC = (1 - ( RE_VFATDESC / RE_VFAT ) ) * 100
+	lprint POR_DESC picture "###.##" nolinefeed
+	lprint " %"
+
+else
+
+	lprint " 00,00 %"	
+
+endif
+lprint
+lprint "QUANTIDADE DE VIDEO CHEQUES RECEBIDOS      :" nolinefeed
+lprint soma_vc PICTURE "###,###" nolinefeed
+eject
+
+*****************
+procedure Rel_deb
+*****************
+
+private PAGINA, AREA, TOTCRD, TOTDEB, TTOTAL, ESTAORDEM
+commit
+AREA   = _select()
+PAGINA = 1
+TOTCRD = 0
+TOTDEB = 0
+TTOTAL = 0
+set deleted ON
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say " Prepare a sua impressora e tecle <ENTER>" color "W+*/B"
+_bell()
+clear typeahead
+TESTE = inkey( 0 )
+if TESTE # 13
+
+	@ 23,01 say space( 78 ) color "W/B"
+	return
+	
+endif	
+@ 23,01 say " Aguarde a impress„o do relat¢rio ...    " color "W+*/B"
+
+restore from  "SYSFILE" additive
+Abrir_Imp( NOM_TERM )
+
+set printer to IMP_REL
+set margin  to IMP_LEFT
+select "CLIENTES"
+ESTAORDEM = indexord()
+set order to 1
+set filter to CLIENTES->DEBITOS # 0
+go top
+Deb_cabec( PAGINA )
+do while .not. eof()
+
+	lprint chr( 15 ) + space( 10 )                 nolinefeed
+	lprint CLIENTES->COD_CLI  picture "######"     nolinefeed
+	lprint space( 02 )                             nolinefeed
+	lprint CLIENTES->NOME     picture "@!"         nolinefeed
+	lprint space( 02 )                             nolinefeed
+	lprint CLIENTES->TEL_RES  picture "@!"         nolinefeed	
+	lprint space( 02 )                             nolinefeed
+	lprint CLIENTES->TEL_COM  picture "@!"         nolinefeed	
+	lprint space( 02 )                             nolinefeed
+	VALOR = _abs( CLIENTES->DEBITOS )
+	if CLIENTES->DEBITOS < 0
+	
+		TOTCRD = TOTCRD + _abs( VALOR )
+		
+	elseif CLIENTES->DEBITOS > 0
+	
+		lprint space( 16 )                          nolinefeed
+		TOTDEB = TOTDEB + _abs( VALOR )
+		
+	endif	
+	lprint "  " + transform( VALOR, "@R ###,###,###.##" )  + chr( 18 )
+	TTOTAL = TTOTAL + CLIENTES->DEBITOS
+	if .not. eof()
+	
+		skip
+		
+	endif
+	if prow() > 57
+	
+		eject
+		PAGINA+=1
+		Deb_cabec( PAGINA )
+		
+	endif	
+	
+enddo
+lprint  
+lprint   chr( 15 ) + space( 10 ) + "SUB - TOTAIS"                nolinefeed
+lprint space( 67 ) + transform( TOTCRD, "@R ###,###,###.##" )    nolinefeed
+lprint space( 02 ) + transform( TOTDEB, "@R ###,###,###.##" )
+lprint   chr( 18 )
+lprint   chr( 15 ) + space( 10 ) + "TOTAL GERAL EM "             nolinefeed
+lprint iif( TOTCRD > TOTDEB, "CREDITOS = ", "DEBITOS  = " )      nolinefeed
+lprint transform( _abs( TTOTAL ), "@R ###,###,###.##" ) + chr( 18 )
+lprint
+eject
+set filter to
+set order  to ESTAORDEM
+go top
+_select( AREA )
+set printer to
+set margin  to
+@ 23,01 say space( 78 ) color "W/B"
+
+******************
+function Deb_cabec
+******************
+
+parameters PG
+lprint _date()                               nolinefeed
+lprint space( 16 ) + "V.S.V. - 5.0 - TORUS"  nolinefeed
+lprint space( 16 ) + "PAGINA: "              nolinefeed
+lprint transform( PG, "####" )
+lprint replicate( "-", 72 )
+lprint space( 19 ) + NOM_LOC
+lprint replicate( "-", 72 )
+lprint space( 19 ) + "RELATORIO DE CLIENTES COM DEBITOS"
+lprint replicate( "-", 72 )
+lprint chr( 15 ) + space( 10 )               nolinefeed
+lprint "CODIGO  NOME                             TELEFONE RES.     TELEFONE COM.              CREDITO          DEBITO" + chr( 18 )
+
+******************
+procedure Qt_devol
+******************
+
+private AREA, QTFITA, QDATA, QTFITA_atra
+AREA   = _select()
+QTFITA = 0
+qtfita_atra = 0
+QDATA  = _date()
+@ 23,01    say space( 78 ) color "W/B"
+@ 23,02    say "Para qual data devo calcular ? " color "W+/B"
+@ 23,col() get QDATA picture "@E"
+read
+if lastkey() # 27
+	
+	@ 23,01 say space( 78 ) color "W/B"
+	@ 23,02 say " Aguarde... Estou calculando a quantidade de fitas" color "W+*/B"
+	select "FITAS"
+   locate for FITAS->COD_CLI #"000000"
+   do while .not. eof()
+      if fitas->cod_cli # "000000" 
+         if FITAS->DATA_PREV = QDATA
+            qtfita = qtfita+1
+         endif
+         if fitas->data_prev < qdata
+            qtfita_atra= qtfita_atra+1
+         endif
+      endif
+      continue
+   enddo
+   @ 23,01 say space( 78 ) color "W/B"
+	@ 23,02    say transform( QTFITA, "@R ###,###" )        color "W+/B"
+   @ 23,col() say " fitas para devolu‡„o no dia " + ;
+	                dtoc( QDATA ) color "W+/B"
+   if qtfita_atra >0
+      @ 23,50 say "mas "+ transform( QTFITA_atra, "@R ###,###" )        color "W+/B"
+      @ 23,col() say " est„o atrasadas" color "W+/B"
+   endif
+	inkey( 50 )
+	@ 23,01 say space( 78 ) color "W/B"
+	_select( AREA )
+
+endif
+@ 23,01 say space( 78 ) color "W/B"

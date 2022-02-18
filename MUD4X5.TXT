@@ -1,0 +1,4 @@
+Mudan‡as p/ transferˆncia de versÆo 4.0 -> 5.0
+
+acrescentada variavel IMP_FILMET no arquivo sysfile.mem
+

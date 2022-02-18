@@ -1,0 +1,8 @@
+vartel = savescreen( 00, 00, 24, 79 )
+nomtel = "E" + ;
+			 str( day( _date() ), 2, 0, "0" ) + ;
+			 mid( _time(), 1, 2 ) + ;
+			 mid( _time(), 4, 2 ) + ;
+			".ERR"
+save to nomtel all like "VARTEL*"
+			 

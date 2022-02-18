@@ -1,0 +1,714 @@
+*******************************************************************************
+*                                                                             *
+*	   PARA CALCULO DE INDICE DE PERFORMANCE DO TITULO DURANTE UM PERIDO       *
+*                                                                             *
+*     FAGZ - 15/01/91                                                         *
+*                                                                             *
+*******************************************************************************
+***************
+procedure Estat 
+***************
+
+restore from "DADLOC.MEM" additive
+private SC_MES, M_ORDEM, QTDE, QUEM
+SC_MES  = savescreen( 03, 01, 21, 78 )
+Mens_erro( " Relat¢rio de titulos ou clientes por indice de quantidades" )
+commit
+set deleted ON
+X = 1
+do while X = 1
+
+	@ 03,01 clear to 21,78 color "W/B"
+	Quadro( 03, 02, 09, 14, "W+/R,W+*/R,N,W+/R", "N+/N" )
+	ONDE_SAI = 1
+	QUEM	   = 1
+	@ 04,04 say "Listar os"
+	@ 05,02 say "Ì" + replicate( "Í", 11 ) + "¹"
+	@ 06,04 prompt "Titulos "
+	@ 08,04 prompt "Clientes"
+	menu to QUEM
+	if QUEM < 1
+
+		restscreen( 03, 01, 21, 78, SC_MES )
+		@ 23,01 say space( 78 ) color "W/B"
+		return
+
+	endif
+	M_ORDEM = 1
+	Quadro( 03, 27, 07, 75, "W+/R,W+*/R,N,W+/R", "N+/N" )
+	if QUEM = 1
+
+		@ 05,29 say "Vocˆ quer os   MAIS  ou   MENOS  locados   "
+		@ 05,44 prompt "MAIS"
+		@ 05,55 prompt "MENOS"
+
+	else
+
+		@ 05,29 say "Vocˆ quer as   MAIORES ou MENORES retiradas"
+		@ 05,44 prompt "MAIORES"
+		@ 05,55 prompt "MENORES"
+
+	endif
+	menu to M_ORDEM
+	if M_ORDEM < 1
+
+		loop
+
+	endif
+	QTDE	  = 10
+	Quadro( 10, 22, 14, 42, "W+/R,W+/N,N,W+*/R", "N+/N" )
+	@ 12,24 say "Os quantos : " get QTDE picture "999" 
+	set cursor ON
+	read
+	set cursor OFF
+	QTDE = _abs( QTDE )
+	if QTDE = 0 .or. lastkey() = 27
+
+		loop
+
+	endif
+	QUAL    = 2
+	if QUEM = 1
+	
+		Quadro( 17, 03, 19, 62, "W+/R,W+*/R,N,W+/R", "N+/N" )
+		@ 18,05 say "Por qual ordem deve ser o relatorio ? "
+		@ 18,col()+1 prompt "INDICE"
+		@ 18,col()+2 prompt "RETIRADAS"
+		MENU TO qual
+		if QUAL < 1
+
+			loop
+
+		endif
+
+	endif
+	if QUEM = 1
+
+		if QUAL = 1
+	
+			Titulo_indice()
+
+		else
+	
+			Titulo_retirada()
+
+		endif
+
+	else
+
+		Cliente_retirada()
+
+	endif
+
+enddo
+
+return
+
+*************************
+function Cliente_retirada 
+*************************
+
+select "CLIENTES"
+set index to
+@ 23,01 say space( 78 )    color "W/B"
+@ 23,01 say " Aguarde... " color "W+*/B"
+flock( 15 )
+if _file( "CLIENTES.K16" )
+
+	private NOME1[1], TAMANHO1[1], DATA1[1], HORA1[1], ATRIBUTOS1[1],;
+	        NOME2[1], TAMANHO2[1], DATA2[1], HORA2[1], ATRIBUTOS2[1]
+	adir( "CLIENTES.DBF", NOME1, TAMANHO1, DATA1, HORA1, ATRIBUTOS1 )		
+	adir( "CLIENTES.K16", NOME2, TAMANHO2, DATA2, HORA2, ATRIBUTOS2 )		
+	if ( dtos( DATA1[1] ) + HORA1[1] ) > ( dtos( DATA2[1] ) + HORA2[1] ) 
+		
+		delete file "CLIENTES.K16"
+
+	endif
+
+endif
+if .not. _file( "CLIENTES.K16" )
+
+	if _memory() > 46000
+
+		index on str( CLIENTES->RET_MES,   4, 0, "0" ) +  ;
+		         str( CLIENTES->RET_TOTAL, 6, 0, "0" ) to "CLIENTES.K16"
+
+	else
+	
+		Mens_rerro( " Mem¢ria Insuficiente para esta tarefa ", 5, "W+*/B" )
+		return
+
+	endif
+
+endif
+set index to "CLIENTES.K16" key str( CLIENTES->RET_MES,   4, 0, "0" ) + ;
+                                str( CLIENTES->RET_TOTAL, 6, 0, "0" )
+unlock
+@ 23,01 say space( 78 ) color "W/B"
+Decide()
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say " Aguarde... " color "W+*/B"
+if     ONDE_SAI = 1     &&  Saida na tela
+
+	Cliente_tela()
+
+elseif ONDE_SAI = 2     && Saida na impressora	
+
+	Cliente_impressora()
+
+endif
+flock( 15 )
+set index to
+SET INDEX TO "CLIENTES.K1" KEY CLIENTES->NOME,;
+  	          "CLIENTES.K2" KEY CLIENTES->CPF_CLI ,;
+     	       "CLIENTES.K3" KEY CLIENTES->COD_CLI 
+unlock
+* Reabrir_indices( "CLIENTES" )
+Mens_erro( " Relat¢rio de titulos ou clientes por indice de quantidades" )
+
+return
+
+*********************
+function Cliente_tela 
+*********************
+
+private ANDA, E_CONTADOR, MT_MOSTRA[ QTDE ]
+if M_ORDEM = 2
+
+	ANDA = 1
+	go top
+
+else
+
+	ANDA = -1
+	go bottom
+
+endif
+E_CONTADOR = 1
+do while .not. eof() .or. .not. bof()
+
+	MT_MOSTRA [ E_CONTADOR ] = str( E_CONTADOR, 7, 0 ) +"§"      + "  " +;
+					   	         CLIENTES->COD_CLI                + "   " +;
+	                           CLIENTES->NOME                   + "   " +;
+	                           str( CLIENTES->RET_MES,   4, 0 ) + "   " +;
+           	                  str( CLIENTES->RET_TOTAL, 6, 0 )
+	if E_CONTADOR >= QTDE
+	
+		exit
+		
+	endif	
+	E_CONTADOR += 1
+	skip ANDA
+
+enddo
+if E_CONTADOR < QTDE
+
+	QTDE = E_CONTADOR
+	
+endif	
+POS_LINHA = iif( QTDE > 14, 19, QTDE + 5 )
+_bell()
+@ 03,01 clear to 21,78 color "W/B"
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say " Use as setas para se mover e <Esc> para retornar " color "W+/B"
+Quadro( 03, 03, POS_LINHA + 1, 72, "W+/R,N/W,N,W+/R", "N+/N" )
+@ 04,05 say "Posi‡„o   C¢digo   Nome do Cliente                   Ret. " + ;
+            "   Total" color "W+/R"
+@ 05,03 say "Ì" + replicate(  "Í", 68 ) + "¹"
+popup window   06, 05, POS_LINHA, 70;
+      to       OP_MOSTRA;
+		options  MT_MOSTRA;
+		hilite   MT_MOSTRA, "W+/R";
+		color    "W+/R,N/W,W+/R,W+/R"
+@ 03,01 clear  to 21,78 color "W/B"
+
+return
+
+************************
+function Titulo_retirada 
+************************
+
+select "TITULOS"
+set index to
+flock( 15 )
+@ 23,01 say space( 78 )    color "W/B"
+@ 23,01 say " Aguarde... " color "W+*/B"
+if _file( "TITULOS.K16" )
+
+	private NOME1[1], TAMANHO1[1], DATA1[1], HORA1[1], ATRIBUTOS1[1],;
+	        NOME2[1], TAMANHO2[1], DATA2[1], HORA2[1], ATRIBUTOS2[1]
+	adir( "TITULOS.DBF", NOME1, TAMANHO1, DATA1, HORA1, ATRIBUTOS1 )		
+	adir( "TITULOS.K16", NOME2, TAMANHO2, DATA2, HORA2, ATRIBUTOS2 )		
+	if ( dtos( DATA1[1] ) + HORA1[1] ) > ( dtos( DATA2[1] ) + HORA2[1] ) 
+		
+		delete file "TITULOS.K16"
+
+	endif
+
+endif
+if .not. _file( "TITULOS.K16" )
+
+	if _memory() > 46000
+
+		index on str( TITULOS->RET_MES,   3, 0, "0" ) +  ;
+		         str( TITULOS->RET_TOTAL, 5, 0, "0" ) to "TITULOS.K16"
+
+	else
+	
+		Mens_rerro( " Mem¢ria Insuficiente para esta tarefa ", 5, "W+*/B" )
+		return
+
+	endif
+
+endif
+set index to "TITULOS.K16" key str( TITULOS->RET_MES,   3, 0, "0" ) + ;
+		                         str( TITULOS->RET_TOTAL, 5, 0, "0" ) 
+unlock
+@ 23,01 say space( 78 ) color "W/B"
+Decide()
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say " Aguarde... " color "W+*/B"
+if     ONDE_SAI = 1     &&  Saida na tela
+
+	Titulo_retirada_tela()
+
+elseif ONDE_SAI = 2     && Saida na impressora	
+
+	Titulo_retirada_impressora()
+
+endif
+flock( 15 )
+set index to
+SET INDEX TO "TITULOS.K1" KEY TITULOS->T_CODIGO  ,;
+	          "TITULOS.K2" KEY TITULOS->T_PORT    ,;
+				 "TITULOS.K3" KEY TITULOS->T_ORIGINAL,;
+				 "TITULOS.K4" KEY TITULOS->T_IDIOMA + TITULOS->T_PORT    ,;
+				 "TITULOS.K5" KEY _descend( dtos(TITULOS->T_DATA_ENT) + TITULOS->T_CODIGO )
+unlock
+* Reabrir_indices( "TITULOS" )
+Mens_erro( " Relat¢rio de titulos ou clientes por indice de quantidades" )
+
+return
+
+**********************
+function Titulo_indice 
+**********************
+
+select "TITULOS"
+set index to
+@ 23,01 say space( 78 )    color "W/B"
+@ 23,01 say " Aguarde... " color "W+*/B"
+flock( 15 )
+if _file( "TITULOS.K17" )
+
+	private NOME1[1], TAMANHO1[1], DATA1[1], HORA1[1], ATRIBUTOS1[1],;
+	        NOME2[1], TAMANHO2[1], DATA2[1], HORA2[1], ATRIBUTOS2[1]
+	adir( "TITULOS.DBF", NOME1, TAMANHO1, DATA1, HORA1, ATRIBUTOS1 )		
+	adir( "TITULOS.K17", NOME2, TAMANHO2, DATA2, HORA2, ATRIBUTOS2 )		
+	if ( dtos( DATA1[1] ) + HORA1[1] ) > ( dtos( DATA2[1] ) + HORA2[1] ) 
+		
+		delete file "TITULOS.K17"
+
+	endif
+
+endif
+if .not. _file( "TITULOS.K17" )
+
+	if _memory() > 46000
+
+		index on str( TITULOS->RET_MES /;
+			   iif( TITULOS->N_COP_LOJA > 0, TITULOS->N_COP_LOJA,1 ),6,2,"0" ) + ;
+   	   	str( TITULOS->RET_TOTAL, 5, 0, "0" ) to "TITULOS.K17"
+
+	else
+	
+		Mens_rerro( " Mem¢ria Insuficiente para esta tarefa ", 5, "W+*/B" )
+		return
+
+	endif
+
+endif
+set index to "TITULOS.K17" key str( TITULOS->RET_MES / ;
+			    iif( TITULOS->N_COP_LOJA > 0, TITULOS->N_COP_LOJA,1 ),6,2,"0") + ;
+				 str( TITULOS->RET_TOTAL, 5, 0, "0" )
+unlock
+@ 23,01 say space( 78 ) color "W/B"
+Decide()
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say " Aguarde... " color "W+*/B"
+if     ONDE_SAI = 1     &&  Saida na tela
+
+	Titulo_indice_tela()
+
+elseif ONDE_SAI = 2     && Saida na impressora	
+
+	Titulo_indice_impressora()
+
+endif
+flock( 15 )
+set index to
+SET INDEX TO "TITULOS.K1" KEY TITULOS->T_CODIGO  ,;
+	          "TITULOS.K2" KEY TITULOS->T_PORT    ,;
+				 "TITULOS.K3" KEY TITULOS->T_ORIGINAL,;
+				 "TITULOS.K4" KEY TITULOS->T_IDIOMA + TITULOS->T_PORT    ,;
+				 "TITULOS.K5" KEY _descend( dtos(TITULOS->T_DATA_ENT) + TITULOS->T_CODIGO )
+unlock
+* Reabrir_indices( "TITULOS" )
+Mens_erro( " Relat¢rio de titulos ou clientes por indice de quantidades" )
+
+return
+
+*****************************
+function Titulo_retirada_tela 
+*****************************
+
+private ANDA, E_CONTADOR, MT_MOSTRA[ QTDE ]
+if M_ORDEM = 2
+
+	ANDA = 1
+	go top
+
+else
+
+	ANDA = -1
+	go bottom
+
+endif
+E_CONTADOR = 1
+do while .not. eof() .or. .not. bof()
+
+	MT_MOSTRA [ E_CONTADOR ] = str( E_CONTADOR, 3, 0 ) + "§"     + " " +;
+					   	         TITULOS->T_CODIGO                 + " " +;
+	                           TITULOS->T_PORT                   + " " +;
+	                           str( TITULOS->RET_MES,    3, 0 )  + " " +;
+           	                  str( TITULOS->RET_TOTAL,  5, 0 )  + " " +;
+										str( TITULOS->N_COP_LOJA, 6, 0 )
+	if E_CONTADOR >= QTDE
+	
+		exit
+		
+	endif	
+	E_CONTADOR += 1
+	skip ANDA
+
+enddo
+if E_CONTADOR < QTDE
+
+	QTDE = E_CONTADOR
+	
+endif	
+POS_LINHA = iif( QTDE > 14, 19, QTDE + 5 )
+_bell()
+@ 03,01 clear to 21,78 color "W/B"
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say " Use as setas para se mover e <Esc> para retornar " color "W+/B"
+Quadro( 03, 02, POS_LINHA + 1, 74, "W+/R,N/W,N,W+/R", "N+/N" )
+@ 04,04 say "Pos. C¢digo Titulo em portugues                      Ret "+;
+            "Total C¢pias" color "W+/R"
+@ 05,02 say "Ì" + replicate(  "Í", 71 ) + "¹"
+popup window   06, 04, POS_LINHA, 73;
+      to       OP_MOSTRA;
+		options  MT_MOSTRA;
+		hilite   MT_MOSTRA, "W+/R";
+		color    "W+/R,N/W,W+/R,W+/R"
+@ 03,01 clear  to 21,78 color "W/B"
+return
+
+***************************
+function Titulo_indice_tela 
+***************************
+
+private ANDA, E_CONTADOR, MT_MOSTRA[ QTDE ]
+if M_ORDEM = 2
+
+	ANDA = 1
+	go top
+
+else
+
+	ANDA = -1
+	go bottom
+
+endif
+E_CONTADOR = 1
+do while .not. eof() .or. .not. bof()
+
+	MT_MOSTRA [ E_CONTADOR ] = str( E_CONTADOR, 3, 0 ) + "§"    + " " +;
+					   	         TITULOS->T_CODIGO                + " " +;
+	                           TITULOS->T_PORT                  + " " +;
+	                           str( TITULOS->RET_MES,   3, 0 )  + " " +;
+          	                  str( TITULOS->RET_MES /       ;
+			                     iif( TITULOS->N_COP_LOJA > 0 ,;
+										     TITULOS->N_COP_LOJA, 1 ), 6, 2 ) + " " +;
+										str( TITULOS->N_COP_LOJA, 4, 0 )	  
+	if E_CONTADOR >= QTDE
+	
+		exit
+		
+	endif	
+	E_CONTADOR += 1
+	skip ANDA
+
+enddo
+if E_CONTADOR < QTDE
+
+	QTDE = E_CONTADOR
+	
+endif	
+POS_LINHA = iif( QTDE > 14, 19, QTDE + 5 )
+_bell()
+@ 03,01 clear to 21,78 color "W/B"
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say " Use as setas para se mover e <Esc> para retornar " color "W+/B"
+Quadro( 03, 02, POS_LINHA + 1, 75, "W+/R,N/W,N,W+/R", "N+/N" )
+@ 04,04 say "Pos. C¢digo Titulo em portugues                      Ret "+;
+            "Indice C¢pias" color "W+/R"
+@ 05,02 say "Ì" + replicate(  "Í", 72 ) + "¹"
+popup window   06, 04, POS_LINHA, 73;
+      to       OP_MOSTRA;
+		options  MT_MOSTRA;
+		hilite   MT_MOSTRA, "W+/R";
+		color    "W+/R,N/W,W+/R,W+/R"
+@ 03,01 clear  to 21,78 color "W/B"
+
+return
+
+***************
+function Decide 
+***************
+
+_bell()
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say " Relatorio na <T>ela ou na <I>mpressora" color "W+/B"
+@ 23,16 prompt "T" color "W+/B,W+*/B,N,W+/B"
+@ 23,29 prompt "I" color "W+/B,W+*/B,N,W+/B"
+menu to ONDE_SAI
+
+return
+
+*********************************
+function Titulo_indice_impressora 
+*********************************
+
+private ANDA, E_CONTADOR, MT_MOSTRA[ QTDE ], PG_INI
+if M_ORDEM = 2
+
+	ANDA = 1
+	go top
+
+else
+
+	ANDA = -1
+	go bottom
+
+endif
+E_CONTADOR = 1
+PG_INI = 0
+
+restore from "SYSFILE.MEM" additive
+Abrir_Imp( NOM_TERM )
+
+set printer to IMP_REL
+Cabec_titulos_ind()
+do while .not. eof() .or. .not. bof()
+
+	if prow() = 60
+		
+		eject
+		Cabec_titulos_ind()
+		
+	endif
+	lprint  str( E_CONTADOR, 3, 0 ) + " "    + " " +;
+					  TITULOS->T_CODIGO                + " " +;
+	              TITULOS->T_PORT                  + " " +;
+	              str( TITULOS->RET_MES,   3, 0 )  + " " +;
+          	     str( TITULOS->RET_MES /       ;
+			        iif( TITULOS->N_COP_LOJA > 0 ,;
+					       TITULOS->N_COP_LOJA, 1 ), 6, 2 ) + "   " +;
+					  str( TITULOS->N_COP_LOJA, 4, 0 )	    + " " +;
+					  dtoc(TITULOS->T_DATA_ENT)
+
+	if E_CONTADOR >= QTDE
+	
+		exit
+		
+	endif	
+	E_CONTADOR += 1
+	skip ANDA
+
+enddo
+eject
+set printer to
+
+return
+
+***********************************
+function Titulo_retirada_impressora 
+***********************************
+
+private ANDA, E_CONTADOR, MT_MOSTRA[ QTDE ], PG_INI
+if M_ORDEM = 2
+
+	ANDA = 1
+	go top
+
+else
+
+	ANDA = -1
+	go bottom
+
+endif
+E_CONTADOR = 1
+PG_INI = 0
+
+restore from "SYSFILE.MEM" additive
+Abrir_Imp( NOM_TERM )
+
+set printer to IMP_REL
+Cabec_titulos()
+do while .not. eof() .or. .not. bof()
+
+	if prow() = 60
+		
+		eject
+		Cabec_titulos()
+		
+	endif
+	lprint str( E_CONTADOR, 4, 0 )           + " " +;
+			        TITULOS->T_CODIGO                 + " " +;
+	              TITULOS->T_PORT                   + " " +;
+	              str( TITULOS->RET_MES,    3, 0 )  + " " +;
+                 str( TITULOS->RET_TOTAL,  5, 0 )  + " " +;
+			        str( TITULOS->N_COP_LOJA, 3, 0 )  + "  " +;
+					  dtoc(TITULOS->T_DATA_ENT)
+	if E_CONTADOR >= QTDE
+	
+		exit
+		
+	endif	
+	E_CONTADOR += 1
+	skip ANDA
+
+enddo
+eject
+set printer to
+
+return
+
+***************************
+function Cliente_impressora 
+***************************
+
+private ANDA, E_CONTADOR, MT_MOSTRA[ QTDE ], PG_INI
+if M_ORDEM = 2
+
+	ANDA = 1
+	go top
+
+else
+
+	ANDA = -1
+	go bottom
+
+endif
+E_CONTADOR = 1
+PG_INI = 0
+
+restore from "SYSFILE.MEM" additive
+Abrir_Imp( NOM_TERM )
+
+set printer to IMP_REL
+Cabec_clientes()
+do while .not. eof() .or. .not. bof()
+
+	if prow() = 60
+		
+		eject
+		Cabec_clientes()
+		
+	endif
+	lprint  "  " +  str( E_CONTADOR, 7, 0 )          + "   " +;
+					    CLIENTES->COD_CLI                + "   " +;
+	                CLIENTES->NOME                   + "   " +;
+	                str( CLIENTES->RET_MES,   4, 0 ) + "   " +;
+           	       str( CLIENTES->RET_TOTAL, 6, 0 )
+	if E_CONTADOR >= QTDE
+	
+		exit
+		
+	endif	
+	E_CONTADOR += 1
+	skip ANDA
+
+enddo
+eject
+set printer to
+
+return
+
+***********************
+function Cabec_clientes 
+***********************
+
+PG_INI += 1
+lprint
+lprint "V.S.V - 3.0 " nolinefeed
+lprint NOM_LOC column 40
+lprint
+lprint "Data : " + dtoc( _date() ) nolinefeed
+lprint "Pagina : " + str( PG_INI, 4, 0 ) column 64
+lprint
+lprint "Relatorio dos  CLIENTES  com as " + str( QTDE, 4, 0 )  + "  " + ;
+       iif( ANDA = 1, "MENORES", "MAIORES" ) + "  retiradas "
+lprint
+lprint "Posicao   Codigo   Nome do Cliente                   Ret. " + ;
+       "   Total"
+lprint "----------------------------------------------------------" + ;
+       "---------------"
+
+return
+
+**********************
+function Cabec_titulos 
+**********************
+
+PG_INI += 1
+lprint
+lprint "V.S.V - 3.0 " nolinefeed
+lprint NOM_LOC column 40
+lprint
+lprint "Data : " + dtoc( _date() ) nolinefeed
+lprint "Pagina : " + str( PG_INI, 4, 0 ) column 64
+lprint
+lprint "Relatorio dos  TITULOS   com os " + str( QTDE, 4, 0 )  + "  " + ;
+       iif( ANDA = 1, "MENOS  ", "MAIS   " ) + "  locados   "
+lprint
+lprint "Pos. Codigo Titulo em portugues                      Ret " + ;
+       "Total Cop. Data ent."
+lprint "---------------------------------------------------------" + ;
+       "--------------------"
+
+return
+
+**************************
+function Cabec_titulos_ind  
+**************************
+
+PG_INI += 1
+lprint
+lprint "V.S.V - 3.0 " nolinefeed
+lprint NOM_LOC column 40
+lprint
+lprint "Data : " + dtoc( _date() ) nolinefeed
+lprint "Pagina : " + str( PG_INI, 4, 0 ) column 64
+lprint
+lprint "Relatorio dos TITULOS com os INDICES dos " + str( QTDE, 4, 0 ) + ;
+       "  " + iif( ANDA = 1, "MENOS  ", "MAIS   " ) + "  locados   "
+lprint
+lprint "Pos. Codigo Titulo em portugues                      Ret " + ;
+       "  Ind. Copias Data ent."
+lprint "---------------------------------------------------------" + ;
+       "-----------------------"
+
+return
+

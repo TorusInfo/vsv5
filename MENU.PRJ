@@ -1,0 +1,88 @@
+**************
+function Pmenu 
+**************
+
+parameters REG_STR
+private MENU_PRINCIPAL[9],M_LETRA[9],REG
+private SCM,LIN,COL_INI,MENU_TITULO,A,INDICE_MENU,COL_FIM,X
+REG = val( REG_STR )
+GO reg
+LIN         = LIN_MENU
+COL_INI     = COL_MENU
+MENU_TITULO = trim( DESCRICAO   )
+COL_FIM     = len(  MENU_TITULO )
+skip
+A = 0
+for A=1 to 9
+
+    menu_principal[a]=TRIM(descricao)
+    m_letra[a]=letra
+    col_fim=IIF(LEN(menu_principal[a])>col_fim,LEN(menu_principal[a]),col_fim)
+    SKIP
+    indice_menu=a
+    IF _left(descricao,1)=" "
+
+       A = 9
+
+    ENDIF
+
+NEXT 
+SCM = savescreen( LIN-3, COL_INI-1, LIN+INDICE_MENU+1, COL_INI+COL_FIM+2+2 )
+Quadro(LIN-3,COL_INI-1,LIN+INDICE_MENU,COL_INI+COL_FIM+2,"w+/r,n/r","n+/n")
+@ LIN-2,COL_INI+1 say space(_int((COL_FIM-len(MENU_TITULO))/2))+MENU_TITULO
+@ LIN-1,COL_INI-1 say "Ì"+replicate("Í",COL_FIM+2)+"¹"
+X = 0
+do while .T.   
+
+   set color to 	"W+/R,N/W,N,W+/R"
+   popup window 	LIN, COL_INI + 1, LIN + INDICE_MENU, COL_INI + COL_FIM;
+         to 		X;
+         options 	MENU_PRINCIPAL;
+         hilite 	M_LETRA,"GR+/R";
+         color 	"W/R,N/W,N,W/R"
+
+   if X = 0                              && encerramento
+
+      if REG # 1
+
+         restscreen(LIN-3,COL_INI-1,LIN+INDICE_MENU+1,COL_INI+COL_FIM+2+2,SCM)
+
+      endif
+      return
+
+   endif
+   go REG + X
+   if M->ACESSO < SEGURANCA
+
+      Mens_rerro( " Acesso negado - Tecle algo..." , 05, "W+*/B" )
+      loop
+
+   endif
+   if len( trim( PROCEDIMEN ) ) # 0
+
+		p_reg	=	MENU->PARAM_REG
+      if trim( PROCEDIMEN ) = "pmenu"
+
+         Pmenu( P_REG )
+
+      else
+
+			ult_reg_aces = recno()
+			set key -20 to
+         do trim( PROCEDIMEN ) with P_REG
+         select 50
+ 			go ult_reg_aces
+			set key -20 to Ativa_fun()
+
+      endif 
+
+   else
+
+      Mens_rerro( " Op‡„o n„o dispon¡vel - Tecle algo...", 05, "W+*/B" )
+
+   endif   
+
+enddo
+
+return
+

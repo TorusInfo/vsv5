@@ -1,0 +1,555 @@
+set color to "W+/B"
+clear screen
+
+*
+* desenhando o nunero 0 e gravando na variavel NUM_P_0
+*
+@ 11,11 say "ЫЫЫЫЫЫ" color "W+/B"
+@ 12,11 say "ЫЫ  ЫЫ" color "W+/B"
+@ 13,11 say "ЫЫ  ЫЫ" color "W+/B"
+@ 14,11 say "ЫЫ  ЫЫ" color "W+/B"
+@ 15,11 say "ЫЫЫЫЫЫ" color "W+/B"
+                    
+NUM_P_0 = savescreen( 11 , 11 , 15 , 16 )
+
+*
+* desenhando o nunero 1 e gravando na variavel NUM_P_1
+*
+@ 11,11 say "ЫЫЫЫ  " color "W+/B"
+@ 12,11 say "  ЫЫ  " color "W+/B"
+@ 13,11 say "  ЫЫ  " color "W+/B"
+@ 14,11 say "  ЫЫ  " color "W+/B"
+@ 15,11 say "ЫЫЫЫЫЫ" color "W+/B"
+                    
+NUM_P_1 = savescreen( 11 , 11 , 15 , 16 )
+
+*
+* desenhando o nunero 2 e gravando na variavel NUM_P_2
+*
+@ 11,11 say "ЫЫЫЫЫЫ" color "W+/B"
+@ 12,11 say "    ЫЫ" color "W+/B"
+@ 13,11 say "ЫЫЫЫЫЫ" color "W+/B"
+@ 14,11 say "ЫЫ    " color "W+/B"
+@ 15,11 say "ЫЫЫЫЫЫ" color "W+/B"
+                    
+NUM_P_2 = savescreen( 11 , 11 , 15 , 16 )
+
+*
+* desenhando o nunero 3 e gravando na variavel NUM_P_3
+*
+@ 11,11 say "ЫЫЫЫЫЫ" color "W+/B"
+@ 12,11 say "    ЫЫ" color "W+/B"
+@ 13,11 say "ЫЫЫЫЫЫ" color "W+/B"
+@ 14,11 say "    ЫЫ" color "W+/B"
+@ 15,11 say "ЫЫЫЫЫЫ" color "W+/B"
+                    
+NUM_P_3 = savescreen( 11 , 11 , 15 , 16 )
+
+*
+* desenhando o nunero 4 e gravando na variavel NUM_P_4
+*
+@ 11,11 say "ЫЫ  ЫЫ" color "W+/B"
+@ 12,11 say "ЫЫ  ЫЫ" color "W+/B"
+@ 13,11 say "ЫЫЫЫЫЫ" color "W+/B"
+@ 14,11 say "    ЫЫ" color "W+/B"
+@ 15,11 say "    ЫЫ" color "W+/B"
+                    
+NUM_P_4 = savescreen( 11 , 11 , 15 , 16 )
+
+*
+* desenhando o nunero 5 e gravando na variavel NUM_P_5
+*
+@ 11,11 say "ЫЫЫЫЫЫ" color "W+/B"
+@ 12,11 say "ЫЫ    " color "W+/B"
+@ 13,11 say "ЫЫЫЫЫЫ" color "W+/B"
+@ 14,11 say "    ЫЫ" color "W+/B"
+@ 15,11 say "ЫЫЫЫЫЫ" color "W+/B"
+                    
+NUM_P_5 = savescreen( 11 , 11 , 15 , 16 )
+
+*
+* desenhando o nunero 6 e gravando na variavel NUM_P_6
+*
+@ 11,11 say "ЫЫЫЫЫЫ" color "W+/B"
+@ 12,11 say "ЫЫ    " color "W+/B"
+@ 13,11 say "ЫЫЫЫЫЫ" color "W+/B"
+@ 14,11 say "ЫЫ  ЫЫ" color "W+/B"
+@ 15,11 say "ЫЫЫЫЫЫ" color "W+/B"
+                    
+NUM_P_6 = savescreen( 11 , 11 , 15 , 16 )
+
+*
+* desenhando o nunero 7 e gravando na variavel NUM_P_7
+*
+@ 11,11 say "ЫЫЫЫЫЫ" color "W+/B"
+@ 12,11 say "    ЫЫ" color "W+/B"
+@ 13,11 say "    ЫЫ" color "W+/B"
+@ 14,11 say "    ЫЫ" color "W+/B"
+@ 15,11 say "    ЫЫ" color "W+/B"
+                    
+NUM_P_7 = savescreen( 11 , 11 , 15 , 16 )
+
+*
+* desenhando o nunero 8 e gravando na variavel NUM_P_8
+*
+@ 11,11 say "ЫЫЫЫЫЫ" color "W+/B"
+@ 12,11 say "ЫЫ  ЫЫ" color "W+/B"
+@ 13,11 say "ЫЫЫЫЫЫ" color "W+/B"
+@ 14,11 say "ЫЫ  ЫЫ" color "W+/B"
+@ 15,11 say "ЫЫЫЫЫЫ" color "W+/B"
+                    
+NUM_P_8 = savescreen( 11 , 11 , 15 , 16 )
+
+*
+* desenhando o nunero 9 e gravando na variavel NUM_P_9
+*
+@ 11,11 say "ЫЫЫЫЫЫ" color "W+/B"
+@ 12,11 say "ЫЫ  ЫЫ" color "W+/B"
+@ 13,11 say "ЫЫЫЫЫЫ" color "W+/B"
+@ 14,11 say "    ЫЫ" color "W+/B"
+@ 15,11 say "ЫЫЫЫЫЫ" color "W+/B"
+                    
+NUM_P_9 = savescreen( 11 , 11 , 15 , 16 )
+
+*
+* desenhando a primeira tela do atendimento
+*
+SET COLOR TO
+CLEAR
+SET COLOR TO "W+/B"
+@ 0,0 SAY "Й"+replicate('Н',15)+"Л"+replicate('Н',46)+"Л"+replicate('Н',15)+"»"
+@ 1,0 SAY "є     V S V 5.0 є"+space(18)+"Atendimento"+space(17)+"є ESC - Retorna є"
+@ 2,0 SAY "М"+replicate('Н',15)+"К"+replicate('Н',46)+"К"+replicate('Н',15)+"№"
+@ 3,0 SAY "є   "
+SET COLOR TO "N/BG"
+@ 3,4 SAY "Й"+replicate('Н',31)+"»"
+SET COLOR TO "W+/B"
+@ 3,37 SAY space(7)
+SET COLOR TO "W+/R"
+@ 3,44 SAY "Й"+replicate('Н',26)+"»"
+SET COLOR TO "W+/B"
+@ 3,72 SAY space(7)+"є"
+@ 4,0 SAY "є   "
+SET COLOR TO "N/BG"
+@ 4,4 SAY "є"+space(6)
+SET COLOR TO "W+/BG"
+@ 4,11 SAY "FUNЂ™ES DISPONIVEIS"
+SET COLOR TO "N/BG"
+@ 4,30 SAY space(6)+"є"
+SET COLOR TO "W+/B"
+@ 4,39 SAY "     "
+SET COLOR TO "W+/R"
+@ 4,44 SAY "є "
+SET COLOR TO "GR+/R"
+@ 4,46 SAY "    FUNЂ™ES DE TELA"
+SET COLOR TO "W+/R"
+@ 4,65 SAY space(6)+"є"
+SET COLOR TO "W+/B"
+@ 4,74 SAY "     є"
+@ 5,0 SAY "є   "
+SET COLOR TO "N/BG"
+@ 5,4 SAY "М"+replicate('Н',31)+"№"
+SET COLOR TO "W+/B"
+@ 5,39 SAY "     "
+SET COLOR TO "W+/R"
+@ 5,44 SAY "є"+space(26)+"є"
+SET COLOR TO "W+/B"
+@ 5,74 SAY "     є"
+@ 6,0 SAY "є   "
+SET COLOR TO "N/BG"
+@ 6,4 SAY "є  "
+SET COLOR TO "W+/BG"
+@ 6,7 SAY " H"
+SET COLOR TO "N/BG"
+@ 6,9 SAY "ora e data do sistema"+space(6)+"є"
+SET COLOR TO "W+/B"
+@ 6,39 SAY "     "
+SET COLOR TO "W+/R"
+@ 6,44 SAY "є Letra ou Tecla de fun‡„o є"
+SET COLOR TO "W+/B"
+@ 6,74 SAY "     є"
+@ 7,0 SAY "є   "
+SET COLOR TO "N/BG"
+@ 7,4 SAY "є  "
+SET COLOR TO "W+/BG"
+@ 7,7 SAY " R"
+SET COLOR TO "N/BG"
+@ 7,9 SAY "etira d‚bitos de clientes  є"
+SET COLOR TO "W+/B"
+@ 7,39 SAY "     "
+SET COLOR TO "W+/R"
+@ 7,44 SAY "З"+replicate('Д',26)+"¶"
+SET COLOR TO "W+/B"
+@ 7,74 SAY "     є"
+@ 8,0 SAY "є   "
+SET COLOR TO "N/BG"
+@ 8,4 SAY "є  "
+SET COLOR TO "W+/BG"
+@ 8,7 SAY " C"
+SET COLOR TO "N/BG"
+@ 8,9 SAY "lientes - pesquisa r pida  є"
+SET COLOR TO "W+/B"
+@ 8,39 SAY "     "
+SET COLOR TO "W+/R"
+@ 8,44 SAY "є "
+SET COLOR TO "GR+/R"
+@ 8,46 SAY "     PARA RETIRADA"
+SET COLOR TO "W+/R"
+@ 8,64 SAY space(7)+"є"
+SET COLOR TO "W+/B"
+@ 8,74 SAY "     є"
+@ 9,0 SAY "є   "
+SET COLOR TO "N/BG"
+@ 9,4 SAY "є  "
+SET COLOR TO "W+/BG"
+@ 9,7 SAY " T"
+SET COLOR TO "N/BG"
+@ 9,9 SAY "Ўtulos  - pesquisa r pida  є"
+SET COLOR TO "W+/B"
+@ 9,39 SAY "     "
+SET COLOR TO "W+/R"
+@ 9,44 SAY "є"+space(26)+"є"
+SET COLOR TO "W+/B"
+@ 9,74 SAY "     є"
+@ 10,0 SAY "є   "
+SET COLOR TO "N/BG"
+@ 10,4 SAY "є  "
+SET COLOR TO "W+/BG"
+@ 10,7 SAY " O"
+SET COLOR TO "N/BG"
+@ 10,9 SAY "utros recebimentos"+space(9)+"є"
+SET COLOR TO "W+/B"
+@ 10,39 SAY "     "
+SET COLOR TO "W+/R"
+@ 10,44 SAY "є Cўdigo do cliente ou CPF є"
+SET COLOR TO "W+/B"
+@ 10,74 SAY "     є"
+@ 11,0 SAY "є   "
+SET COLOR TO "N/BG"
+@ 11,4 SAY "є  "
+SET COLOR TO "W+/BG"
+@ 11,7 SAY " A"
+SET COLOR TO "N/BG"
+@ 11,9 SAY "utentica‡„o de boletos     є"
+SET COLOR TO "W+/B"
+@ 11,39 SAY "     "
+SET COLOR TO "W+/R"
+@ 11,44 SAY "З"+replicate('Д',26)+"¶"
+SET COLOR TO "W+/B"
+@ 11,74 SAY "     є"
+@ 12,0 SAY "є   "
+SET COLOR TO "N/BG"
+@ 12,4 SAY "є  "
+SET COLOR TO "W+/BG"
+@ 12,7 SAY " "
+SET COLOR TO "N/BG"
+@ 12,8 SAY "im"
+SET COLOR TO "W+/BG"
+@ 12,10 SAY "P"
+SET COLOR TO "N/BG"
+@ 12,11 SAY "ressoras - sele‡„o"+space(7)+"є"
+SET COLOR TO "W+/B"
+@ 12,39 SAY "     "
+SET COLOR TO "W+/R"
+@ 12,44 SAY "є "
+SET COLOR TO "GR+/R"
+@ 12,46 SAY "PARA DEVOLUЂЋO / ESTORNO"
+SET COLOR TO "W+/R"
+@ 12,70 SAY " є"
+SET COLOR TO "W+/B"
+@ 12,74 SAY "     є"
+@ 13,0 SAY "є   "
+SET COLOR TO "N/BG"
+@ 13,4 SAY "є  "
+SET COLOR TO "W+/BG"
+@ 13,7 SAY " "
+SET COLOR TO "N/BG"
+@ 13,8 SAY "vales e "
+SET COLOR TO "W+/BG"
+@ 13,16 SAY "D"
+SET COLOR TO "N/BG"
+@ 13,17 SAY "espesas"+space(12)+"є"
+SET COLOR TO "W+/B"
+@ 13,39 SAY "     "
+SET COLOR TO "W+/R"
+@ 13,44 SAY "є"+space(26)+"є"
+SET COLOR TO "W+/B"
+@ 13,74 SAY "     є"
+@ 14,0 SAY "є   "
+SET COLOR TO "N/BG"
+@ 14,4 SAY "є   "
+SET COLOR TO "W+/BG"
+@ 14,8 SAY "V"
+SET COLOR TO "N/BG"
+@ 14,9 SAY "enda de video cheques"+space(6)+"є"
+SET COLOR TO "W+/B"
+@ 14,39 SAY "     "
+SET COLOR TO "W+/R"
+@ 14,44 SAY "є     Cўdigo da fita"+space(7)+"є"
+SET COLOR TO "W+/B"
+@ 14,74 SAY "     є"
+@ 15,0 SAY "є   "
+SET COLOR TO "N/BG"
+@ 15,4 SAY "є   reimpress„o de "
+SET COLOR TO "W+/BG"
+@ 15,23 SAY "B"
+SET COLOR TO "N/BG"
+@ 15,24 SAY "oletos"+space(6)+"є"
+SET COLOR TO "W+/B"
+@ 15,39 SAY "     "
+SET COLOR TO "W+/R"
+@ 15,44 SAY "З"+replicate('Д',26)+"¶"
+SET COLOR TO "W+/B"
+@ 15,74 SAY "     є"
+@ 16,0 SAY "є   "
+SET COLOR TO "N/BG"
+@ 16,4 SAY "є   resu"
+SET COLOR TO "W+/BG"
+@ 16,12 SAY "M"
+SET COLOR TO "N/BG"
+@ 16,13 SAY "o do dia"+space(15)+"є"
+SET COLOR TO "W+/B"
+@ 16,39 SAY "     "
+SET COLOR TO "W+/R"
+@ 16,44 SAY "є"+space(26)+"є"
+SET COLOR TO "W+/B"
+@ 16,74 SAY "     є"
+@ 17,0 SAY "є   "
+SET COLOR TO "N/BG"
+@ 17,4 SAY "є   ator, dir"
+SET COLOR TO "W+/BG"
+@ 17,17 SAY "E"
+SET COLOR TO "N/BG"
+@ 17,18 SAY "tor ou ref€rencia є"
+SET COLOR TO "W+/B"
+@ 17,39 SAY "     "
+SET COLOR TO "W+/R"
+@ 17,44 SAY "є"+space(7)
+@ 17,63 SAY space(8)+"є"
+SET COLOR TO "W+/B"
+@ 17,74 SAY "     є"
+@ 18,0 SAY "є   "
+SET COLOR TO "N/BG"
+@ 18,4 SAY "є  "
+SET COLOR TO "W+/BG"
+@ 18,7 SAY "F4"
+SET COLOR TO "N/BG"
+@ 18,9 SAY " - Cadastro de Clientes    є"
+SET COLOR TO "W+/B"
+@ 18,39 SAY "     "
+SET COLOR TO "W+/R"
+@ 18,44 SAY "є"+space(26)+"є"
+SET COLOR TO "W+/B"
+@ 18,74 SAY "     є"
+@ 19,0 SAY "є   "
+SET COLOR TO "N/BG"
+@ 19,4 SAY "є  "
+SET COLOR TO "W+/BG"
+@ 19,7 SAY "F5"
+SET COLOR TO "N/BG"
+@ 19,9 SAY " - Cadastro de TЎtulos     є"
+SET COLOR TO "W+/B"
+@ 19,39 SAY "     "
+SET COLOR TO "W+/R"
+@ 19,44 SAY "И"+replicate('Н',26)+"ј"
+SET COLOR TO "W+/B"
+@ 19,74 SAY "     є"
+@ 20,0 SAY "є   "
+SET COLOR TO "N/BG"
+@ 20,4 SAY "И"+replicate('Н',31)+"ј"
+SET COLOR TO "W+/B"
+@ 20,39 SAY space(7)
+@ 20,74 SAY "     є"
+@ 21,0 SAY "є     "
+@ 21,39 SAY space(40)+"є"
+@ 22,0 SAY "М"+replicate('Н',78)+"№"
+@ 23,0 SAY "є"+space(78)+"є"
+@ 24,0 SAY "И"+replicate('Н',78)+"ј"
+
+NUM_A_1 = savescreen( 00,00,24,79 )
+
+*
+* desenhando a segunda tela do atendimento
+*
+set color to "W+/N"
+clear
+@ 00,00 say "Й" + replicate( "Н" , 15 ) + "Л" + replicate( "Н" , 46 ) + ;
+				"Л" + replicate( "Н" ,15 ) + "»"
+@ 01,00 say "єVSV 5.0 - Torusє" + space( 18 ) + "           " + space( 17 ) + ;
+				"є ESC - Retorna є"
+@ 02,00 say "М" + replicate( "Н" , 15 ) + "К" + replicate( "Н" , 27 ) + ;
+				"С" + replicate( "Н" , 18 ) + "К" + replicate("Н",15)+"№"
+@ 03,00 say "є" + space( 18 ) + "Cliente" + space( 18 ) + "і" + space( 7 ) + ;
+				"Pessoas  Autorizadas" + space( 7 ) + "є"
+@ 04,00 say "є Nome :" + space( 36 ) + "і" + space( 34 ) + "є"
+@ 05,00 say "є" + space( 43 ) + "і" + space( 34 ) + "є"
+@ 06,00 say "є Cўdigo:" + space( 11 ) + "C.P.F.:    .   .   -    і" + ;
+				space( 34 ) + "є"
+@ 07,00 say "є" + space( 43 ) + "і" + space( 34 ) + "є"
+@ 08,00 say "З" + replicate( "Д" , 24 ) + "В" + replicate( "Д" , 18 ) + ;
+				"Е" + replicate( "Д" , 34 ) + "¶"
+@ 09,00 say "є Tipo de cliente :" + space( 6 ) + "і Fita:" + space( 12 ) + ;
+				"і Func.:" + space( 27 ) + "є"
+@ 10,00 say "є Ult.Visita:" + space( 12 ) + "Г" + replicate( "Д" , 18 ) + ;
+				"Б" + replicate( "Д" , 34 ) + "¶"
+@ 11,00 say "є D‚bitos :" + space( 14 ) + "і" + space( 53 ) + "є"
+@ 12,00 say "З" + replicate( "Д" , 24 ) + "ґ" + space( 53 ) + "є"
+@ 13,00 say "є Retirada do mes:" + space( 7 ) + "і" + space( 53 ) + "є"
+@ 14,00 say "є Retirada total :" + space( 7 ) + "і" + space( 53 ) + "є"
+@ 15,00 say "є Video cheque   :" + space( 7 ) + "і" + space( 53 ) + "є"
+@ 16,00 say "З" + replicate( "Д" , 24 ) + "ґ" + space( 53 ) + "є"
+@ 17,00 say "є" + space( 9 ) + replicate( "Ы" , 6 ) + "  " + ;
+				replicate( "Ы" , 6 ) + " і" + space( 53 ) + "є"
+@ 18,00 say "є N§ de   " + replicate( "Ы" , 2 ) + "  " + ;
+				replicate( "Ы" , 2 ) + "  " + replicate( "Ы" , 2 ) + "  " + ;
+				replicate( "Ы" , 2 ) + " і" + space( 53 ) + "є"
+@ 19,00 say "є" + space( 9 ) + replicate( "Ы" , 2 ) + "  " + ;
+				replicate( "Ы" , 2 ) + "  " + replicate( "Ы" , 2 ) + "  " + ;
+				replicate( "Ы" , 2 ) + " і" + space( 53 ) + "є"
+@ 20,00 say "є Fitas   " + replicate( "Ы" , 2 ) + "  " + ;
+				replicate( "Ы" , 2 ) + "  " + replicate( "Ы" , 2 ) + "  " + ;
+				replicate( "Ы" , 2 ) + " Г" + replicate( "Д" ,24 ) + ;
+				replicate( "В" , 2 ) + replicate( "Д" , 27 ) + "¶"
+@ 21,00 say "є" + space( 9 ) + replicate( "Ы" , 6 ) + "  " + ;
+				replicate( "Ы" , 6 ) + " і Valor Fita =" + space( 11 ) + ;
+				replicate( "і" , 2 ) + " Valor Boleto =" + space( 12 ) + "є"
+@ 22,00 say "М" + replicate( "Н" , 24 ) + "П" + replicate( "Н" , 24 ) + ;
+				replicate( "П" , 2 ) + replicate( "Н" , 27 ) + "№"
+@ 23,00 say "є" + space( 78 ) + "є"
+@ 24,00 say "И" + replicate( "Н" , 78 ) + "ј"
+set color to "W+/B"
+@ 00,00 say "Й" + replicate( "Н" , 15 ) + "Л" + replicate( "Н" , 46 ) + ;
+				"Л" + replicate( "Н" , 15 ) + "»"
+@ 01,00 say "єVSV 5.0 - Torusє" + space( 18 ) + "           " + ;
+				space( 17 ) + "є ESC - Retorna є"
+@ 02,00 say "М" + replicate( "Н" , 15 ) + "К" + replicate( "Н" , 27 ) + ;
+				"С" + replicate( "Н" , 18 ) + "К" + replicate( "Н" , 15) + "№"
+@ 03,00 say "є" + space( 18 ) + "Cliente" + space( 18 ) + "і" + space( 7 ) + ;
+				"Pessoas  Autorizadas" + space( 7 ) + "є"
+@ 04,00 say "є Nome :   "
+@ 04,42 say "  і  "
+@ 04,77 say "  є"
+@ 05,00 say "є" + space( 43 ) + "і  "
+@ 05,77 say "  є"
+@ 06,00 say "є Cўdigo:  "
+@ 06,17 say "   C.P.F.: "
+@ 06,42 say "  і  "
+@ 06,77 say "  є"
+@ 07,00 say "є" + space( 43 ) + "і  "
+@ 07,77 say "  є"
+@ 08,00 say "З" + replicate( "Д" , 24 ) + "В" + replicate( "Д" , 18 ) + "Е" + ;
+				replicate( "Д" , 34 ) + "¶"
+@ 09,00 say "є Tipo de cliente :  "
+@ 09,22 say "   і Fita: "
+@ 09,43 say " і Func.: "
+@ 09,57 say " "
+@ 09,78 say " є"
+*@ 10,00 say "є Ultima Visita:"
+@ 10,00 say "є Ult. Visita:"
+@ 10,24 say " Г" + replicate( "Д" , 18 ) + "Б" + replicate( "Д" , 34 ) + "¶"
+@ 11,00 say "є D‚bitos : "
+@ 11,24 say " і "
+@ 11,78 say " є"
+@ 12,00 say "З" + replicate( "Д" , 24 ) + "ґ "
+@ 12,78 say " є"
+@ 13,00 say "є Retirada do mes: "
+@ 13,24 say " і "
+@ 13,78 say " є"
+@ 14,00 say "є Retirada total : "
+@ 14,24 say " і "
+@ 14,78 say " є"
+@ 15,00 say "є Video cheque   : "
+@ 15,24 say " і "
+@ 15,78 say " є"
+@ 16,00 say "З" + replicate( "Д" , 24 ) + "ґ "
+@ 16,78 say " є"
+@ 17,00 say "є" + space( 9 ) + replicate( "Ы" , 6 ) + "  " + ;
+				replicate( "Ы" , 6 ) + " і "
+@ 17,78 say " є"
+@ 18,00 say "є N§ de   " + replicate( "Ы" , 2 ) + "  " + ;
+				replicate( "Ы" , 2 ) + "  " + replicate( "Ы" , 2 ) + "  " + ;
+				replicate( "Ы" , 2 ) + " і "
+@ 18,78 say " є"
+@ 19,00 say "є" + space( 9 ) + replicate( "Ы" , 2 ) + "  " + ;
+				replicate( "Ы" , 2 ) + "  " + replicate( "Ы" , 2 ) + "  " + ;
+				replicate( "Ы" , 2 ) + " і "
+@ 19,78 say " є"
+@ 20,00 say "є Fitas   " + replicate( "Ы" , 2 ) + "  " + ;
+				replicate( "Ы" , 2 ) + "  " + replicate( "Ы" , 2 ) + "  " + ;
+				replicate( "Ы" , 2 ) + " Г" + replicate( "Д" ,24 ) + ;
+				replicate( "В" , 2 ) + replicate( "Д" , 27 ) + "¶"
+@ 21,00 say "є" + space( 9 ) + replicate( "Ы" , 6 ) + "  " + ;
+				replicate( "Ы" , 6 ) + " і Valor Fita = "
+@ 21,49 say " " + replicate( "і" , 2 ) + " Valor Boleto = "
+@ 21,78 say " є"
+@ 22,00 say "М" + replicate( "Н" , 24 ) + "П" + replicate( "Н" , 24 ) + ;
+				replicate( "П" , 2 ) + replicate( "Н" , 27 ) + "№"
+@ 23,00 say "є" + space( 78 ) + "є"
+@ 24,00 say "И" + replicate( "Н" , 78 ) + "ј"
+
+NUM_A_2 = savescreen( 00,00,24,79 )
+
+inkey( 0 )
+
+save to "TELATEND.TEL" all like "NUM_?_?"
+
+set color to
+clear
+quit
+
+
+*
+* desenhando parte da primeira tela do atendimento
+*
+set color to "W+/N"
+clear
+@ 03,44 say "Й" + replicate( "Н" , 26 ) + "»"
+@ 04,44 say "є     FUNЂ™ES DE TELA" + space( 6 ) + "є"
+@ 05,44 say "є" + space( 26 ) + "є"
+@ 06,44 say "є Letra ou Tecla de fun‡„o є"
+@ 07,44 say "З" + replicate( "Д" , 26 ) + "¶"
+@ 08,44 say "є" + space( 6 ) + "PARA RETIRADA" + space( 7 ) + "є"
+@ 09,44 say "є" + space( 26 ) + "є"
+@ 10,44 say "є Cўdigo do cliente ou CPF є"
+@ 11,44 say "З" + replicate( "Д" , 26 ) + "¶"
+@ 12,44 say "є PARA DEVOLUЂЋO / ESTORNO є"
+@ 13,44 say "є" + space( 26 ) + "є"
+@ 14,44 say "є     Cўdigo da fita" + space( 7 ) + "є"
+@ 15,44 say "З" + replicate( "Д" , 26 ) + "¶"
+@ 16,44 say "є" + space( 26 ) + "є"
+@ 17,44 say "є" + space( 26 ) + "є"
+@ 18,44 say "є" + space( 26 ) + "є"
+@ 19,44 say "И" + replicate( "Н" , 26 ) + "ј"
+set color to "W+/R"
+@ 03,44 say "Й" + replicate( "Н" , 26 ) + "»"
+@ 04,44 say "є "
+set color to "GR+/R"
+@ 04,46 say "    FUNЂ™ES DE TELA"
+set color to "W+/R"
+@ 04,65 say space( 6 ) + "є"
+@ 05,44 say "є" + space( 26 ) + "є"
+@ 06,44 say "є Letra ou Tecla de fun‡„o є"
+@ 07,44 say "З" + replicate( "Д" , 26 ) + "¶"
+@ 08,44 say "є "
+set color to "GR+/R"
+@ 08,46 say "     PARA RETIRADA"
+set color to "W+/R"
+@ 08,64 say space( 7 ) + "є"
+@ 09,44 say "є" + space( 26 ) + "є"
+@ 10,44 say "є Cўdigo do cliente ou CPF є"
+@ 11,44 say "З" + replicate( "Д" , 26 ) + "¶"
+@ 12,44 say "є "
+set color to "GR+/R"
+@ 12,46 say "PARA DEVOLUЂЋO / ESTORNO"
+set color to "W+/R"
+@ 12,70 say " є"
+@ 13,44 say "є" + space( 26 ) + "є"
+@ 14,44 say "є     Cўdigo da fita" + space( 7 ) + "є"
+@ 15,44 say "З" + replicate( "Д" , 26 ) + "¶"
+@ 16,44 say "є" + space( 26 ) + "є"
+@ 17,44 say "є" + space( 7 )
+@ 17,63 say space( 8 ) + "є"
+@ 18,44 say "є" + space( 26 ) + "є"
+@ 19,44 say "И" + replicate( "Н" , 26 ) + "ј"
+
+NUM_A_1 = savescreen( 03,44,19,71 )

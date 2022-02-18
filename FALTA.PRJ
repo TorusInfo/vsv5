@@ -1,0 +1,150 @@
+*-------------------------------------------------------------------------------
+*
+*   jREPORT 2.00  -  Copyright (c) Tuxon Software, Agosto 1992.
+*
+*   PROGRAMA: FALTA.PRJ
+*
+*-------------------------------------------------------------------------------
+
+procedure falta_prod
+
+private    I          ,;
+           COL_NO     ,;
+           ERRO       ,;
+           ELEMENTO   ,;
+           LINE_COUNT ,;
+           PAGE_COUNT
+
+I          = 0
+COL_NO     = 0
+LINE_COUNT = 58
+PAGE_COUNT = 0
+ver_printer()
+restore from "SYSFILE.MEM" ADDITIVE
+ABRIR_IMP (NOM_TERM)
+@ 23,01 			say space( 78 ) color "W/B"
+*set printer to imp_rel
+mens_erro("Aguarde a impressÆo ...")
+lprint chr(imp_comp) nolinefeed
+select "TITULOS"
+*set filter to titulos->T_GENERO=REGISTRO_PRODUTO
+SET ORDER TO 1
+go top
+
+do while !eof()
+
+*   LINE_COUNT += 1
+
+   IF TITULOS->T_COPIAS <= TITULOS->T_EST_MIN.and.titulos->T_GENERO=REGISTRO_PRODUTO
+      LINE_COUNT += 1
+
+      if LINE_COUNT > 57
+   
+         Header_Report_Falta ()
+
+      endif
+
+      lprint pad ( transform ( evaluate ( [T_CODIGO], ERRO, ELEMENTO ) ), 6 ) column 1 nolinefeed
+      if ERRO != 0
+         ? "Erro na Avaliacao da Expressao: " | ELEMENTO
+         quit
+      endif
+
+      lprint pad ( transform ( evaluate ( [T_PORT], ERRO, ELEMENTO ) ), 40 ) column 8 nolinefeed
+      if ERRO != 0
+         ? "Erro na Avaliacao da Expressao: " | ELEMENTO
+         quit
+      endif
+
+      lprint pad ( transform ( evaluate ( [T_DATA_ENT], ERRO, ELEMENTO ) ), 10 ) column 49 nolinefeed
+      if ERRO != 0
+         ? "Erro na Avaliacao da Expressao: " | ELEMENTO
+         quit
+      endif
+
+      lprint pad ( transform ( evaluate ( [T_COMPRA], ERRO, ELEMENTO ), "@E 9999999.99" ), 10 ) column 60 nolinefeed
+      if ERRO != 0
+         ? "Erro na Avaliacao da Expressao: " | ELEMENTO
+         quit
+      endif
+
+      lprint pad ( transform ( evaluate ( [T_CUSTO], ERRO, ELEMENTO ), "@E 9999999.99" ), 10 ) column 71 nolinefeed
+      if ERRO != 0
+         ? "Erro na Avaliacao da Expressao: " | ELEMENTO
+         quit
+      endif
+
+      lprint pad ( transform ( evaluate ( [T_COPIAS], ERRO, ELEMENTO ) ), 7 ) column 82 nolinefeed
+      if ERRO != 0
+         ? "Erro na Avaliacao da Expressao: " | ELEMENTO
+         quit
+      endif
+
+      lprint pad ( transform ( evaluate ( [T_EST_MIN], ERRO, ELEMENTO ) ), 7 ) column 90 nolinefeed
+      if ERRO != 0
+         ? "Erro na Avaliacao da Expressao: " | ELEMENTO
+         quit
+      endif
+
+      lprint pad ( transform ( evaluate ( [T_EST_MAX], ERRO, ELEMENTO ) ), 7 ) column 98 nolinefeed
+      if ERRO != 0
+         ? "Erro na Avaliacao da Expressao: " | ELEMENTO
+         quit
+      endif
+
+      lprint
+   ENDIF
+   skip
+
+enddo
+
+if PAGE_COUNT != 0
+
+   Footer_Report_Falta ()
+
+endif
+
+lprint chr(imp_c_comp)
+
+@ 23,01 			say space( 78 ) color "W/B"
+
+return
+
+*********
+function Header_Report_Falta
+*********
+
+PAGE_COUNT += 1
+
+if PAGE_COUNT != 1
+
+   Footer_Report_Falta ()
+
+endif
+
+LINE_COUNT  = 9
+
+lprint " P gina  : " + str( PAGE_COUNT, 5, 0, "" )
+lprint " Emiss„o : " + dtoc( _date() ) + " - " + jtime() 
+lprint " "+nom_sistema +"  Reg. n. : "+ NUM_SERIE+"      "+nom_loc 
+lprint "                                                    PRODUTOS EM FALTA NO ESTOQUE                                                    "
+lprint
+lprint
+lprint " CODIGO DISCRIMINACAO                            DATA ULT.  ULTIMO     VALOR DE   QT. EM  ESTOQUE ESTOQUE"
+lprint "                                                 COMPRA     CUSTO      VENDA      ESTOQUE MINIMO  MAXIMO"
+lprint
+
+*********
+function Footer_Report_Falta
+*********
+
+for I = LINE_COUNT to 57
+   lprint
+next
+eject
+
+*-------------------------------------------------------------------------------
+*
+*   >>> FALTA.PRJ <<<   -  FIM DO PROGRAMA
+*
+*-------------------------------------------------------------------------------

@@ -1,0 +1,20 @@
+set color to
+clear
+@ 01,07 say "ษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป" color "W+/B"
+@ 02,07 say "บ                                                          บ" color "W+/B"
+@ 03,07 say "บ   Sistema  Video Sempre Video  para  Video  Locadoras    บ" color "W+/B"
+@ 04,07 say "บ                                                          บ" color "W+/B"
+@ 05,07 say "ฬออออออออออออออออออออออออออออออออออออออออออออออออออออออออออน" color "W+/B"
+@ 06,07 say "บ                  Comercializao                         บ" color "W+/B"
+@ 07,07 say "บ                                                          บ" color "W+/B"
+@ 08,07 say "บ      Desenvolvimento - Garantia e Suporte Tcnico        บ" color "W+/B"
+@ 09,07 say "บ                                                          บ" color "W+/B"
+@ 10,07 say "บ                 TORUS INFORMATICA                        บ" color "W+/B"
+@ 11,07 say "บ                                                          บ" color "W+/B"
+@ 12,07 say "ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ" color "W+/B"
+@ 20,00 say " "
+tone( 1308, 10 )
+tone( 1468, 10 )
+tone( 1648, 10 )
+tone( 1746, 10 )
+

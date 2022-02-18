@@ -1,0 +1,114 @@
+clear
+select 1
+use "clientes.dbf"
+*        SELECT 4
+USE "CLIENTES.DBF"
+if flock( 15 )
+      do while .not. eof()
+            if clientes->cod_cli # "000000"
+               replace clientes->FZ with 0
+               replace clientes->fzc with " "
+            endif
+            skip
+      enddo
+
+     SET INDEX TO "CLIENTES.K1" KEY CLIENTES->NOME,;
+              "CLIENTES.K2" KEY CLIENTES->CPF_CLI ,;
+              "CLIENTES.K3" KEY CLIENTES->COD_CLI 
+              unlock
+              set autolock on
+
+else
+
+*     Mens_rerro( "Erro de acesso na rede, opera‡„o cancelada", 4, "W+*/B" )
+     close all
+     quit 
+
+endif
+				 
+
+select 2
+use "fitas.dbf"
+*        SELECT 6
+USE "FITAS.DBF"
+if flock( 15 )
+    SET INDEX TO "FITAS.K1" KEY FITAS->CODFITA,;
+    "FITAS.K2" KEY FITAS->COD_CLI + FITAS->CODFITA,;
+    "FITAS.K3" KEY FITAS->SEQUENCIAL
+     unlock
+     set autolock on
+
+else
+
+*     Mens_rerro( "Erro de acesso na rede, opera‡„o cancelada", 4, "W+*/B" )
+     close all
+     quit 
+
+endif
+
+codclim=space(6)
+select 1
+set order to 3
+select 2
+set order to 0
+locate for fitas->cod_cli # "000000"
+n=0
+do while.not. eof()
+            @ 10,10 say "ACERTANDO FITAS LOCADAS "
+            @ 10,COL()+1 SAY FITAS->CODFITA
+       
+       if fitas->cod_cli # "000000" &&.and.fitas->num_fitas_vol1
+                select 1
+                codclim=fitas->cod_cli
+                seek codclim
+                if found()
+                        @ 15,10 say "trocado"
+                       n=n+1
+                         @ 15,col()+1 say n
+                        replace clientes->FZ with clientes->fz+1
+                        replace clientes->fzc with "þ"
+                endif
+       endif
+         select 2
+         continue
+        @ 10,10 SAY "                       "
+enddo
+close all
+*acerto de titulos T_PORT com brancos
+clear
+use "titulos.dbf"
+
+*        SELECT 5
+	USE "TITULOS.DBF"
+        do while .not. eof()
+                @ 5,10 say "Acertando "
+                @ 5,col()+1 SAY TITULOS->T_CODIGO
+                if len(alltrim(TITULOS->T_ORIGINAL))=0
+                        replace TITULOS->T_ORIGINAL with TITULOS->T_PORT
+                endif
+                @ 5,10 SAY SPACE(40)
+                skip
+        enddo
+
+	if flock( 15 )
+
+		SET INDEX TO "TITULOS.K1" KEY TITULOS->T_CODIGO  ,;
+   		          "TITULOS.K2" KEY TITULOS->T_PORT    ,;
+						 "TITULOS.K3" KEY TITULOS->T_ORIGINAL,;
+						 "TITULOS.K4" KEY TITULOS->T_IDIOMA + TITULOS->T_PORT    ,;
+						 "TITULOS.K5" KEY _descend( dtos(TITULOS->T_DATA_ENT) + TITULOS->T_CODIGO )
+		unlock
+		set autolock on
+
+	else
+
+*                Mens_rerro( "Erro de acesso na rede, opera‡„o cancelada", 4, "W+*/B" )
+		close all
+		quit 
+
+	endif
+
+
+
+quit
+

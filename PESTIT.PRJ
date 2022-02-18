@@ -1,0 +1,301 @@
+*****************
+PROCEDURE pes_tit 
+*****************
+
+private AREA, S_CURS, S_SOFT, PEGA_CLI, LOOP_1
+AREA   = _select()
+S_CURS = _set( "CURSOR"   ) == "ON"
+S_SOFT = _set( "SOFTSEEK" ) == "ON"
+set softseek ON
+PEGA_CLI = space( 40 )
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01		say "Pesquisa de titulo : " 	color "W+/B"
+@ 23,col() 	get PEGA_CLI picture "@!" 		color "W+/B,W+/N,N,W+/N"
+set cursor ON
+read
+set cursor OFF
+set precedence to FIELDS
+select "TITULOS"
+PEGA_CLI = alltrim( PEGA_CLI )
+T_PEGA   = len( PEGA_CLI )
+if T_PEGA # 0
+
+	TESTA_LETRA = .T.
+	if T_PEGA >= 6 ;
+
+		for LOOP_1 = 1 TO 6
+
+*			TESTA_LETRA = iif( isalpha( mid( PEGA_CLI, LOOP_1, 1 ) ) .or. ;
+*			                   mid( PEGA_CLI, LOOP_1, 1 ) = " ", .T., .F. )
+			TESTA_LETRA = iif( asc( mid( PEGA_CLI, LOOP_1, 1 ) ) > 47  .and. ;
+			                   asc( mid( PEGA_CLI, LOOP_1, 1 ) ) < 58, .F., .T. )
+
+		next
+
+	endif
+	if TESTA_LETRA = .F.
+
+		select "TITULOS"
+		set order to 1
+		PEGA_CLI = _left( PEGA_CLI, 6 )
+		seek PEGA_CLI
+		if .not. found()
+
+			Ult_linha( " Titulo no encontrado" )
+			_bell()
+			inkey( 10 )
+			@ 23,01 say space( 78 ) color "W+/B"
+
+		else
+
+			Zoom_tit()
+			inkey()
+
+		endif
+
+	else
+
+		select "TITULOS"
+		set order to 2
+		seek PEGA_CLI
+		if _left( TITULOS->T_PORT, T_PEGA ) # PEGA_CLI
+
+			Ult_linha( " Titulo no encontrado" )
+			_bell()
+			inkey( 10 )
+			@ 23,01 say space( 78 ) color "W+/B"
+
+		else
+
+		   private  CAMPOS [ 2 ], CABECA [ 2 ], MASCAR [ 2 ], EDICAO [ 2 ]
+			CAMPOS [ 1 ] = "TITULOS->T_CODIGO"
+			CAMPOS [ 2 ] = "TITULOS->T_PORT"
+			CABECA [ 1 ] = " CODIGO "
+			CABECA [ 2 ] = "TITULO EM PORTUGUES                  "
+			MASCAR [ 1 ] = "@R 99.9999"
+			MASCAR [ 2 ] = "@!"
+			Ult_linha( "Alt Z - Ficha completa -  F7 - Ver as Fitas  - " + ;
+			           "Use as setas para se posicionar" )
+			clear typeahead
+			@ 20,10 fill to 20,61 color "N+/N"
+			@ 05,60 fill to 19,61 color "N+/N"
+			set key 300 to Muleta_zoom()
+			set key  -6 to Muleta()
+			keyboard 9
+			browse   while    _left( TITULOS->T_PORT, T_PEGA) = PEGA_CLI;
+						window   04, 08, 19, 59;
+						color    "W+/B,N/W,W+/B,W+/B";
+						frame    double;
+	           		fields   CAMPOS;
+						picture  MASCAR;
+						heading  CABECA;
+						edit     .F.   ;
+						noappend       ;
+						nodelete
+			set key 300 to
+			set key  -6 to			
+
+		endif
+
+	endif
+
+endif
+select "TITULOS"
+set order to 1
+select "FITAS"
+set order to 1
+select "CLIENTES"
+set order to 3
+set cursor   S_CURS
+set softseek S_SOFT
+select AREA
+restscreen( 00, 00, 24, 79, NUM_A_1 )
+set precedence to VARIABLES
+
+return
+
+*****************
+function Zoom_tit 
+*****************
+
+restore from "TELATIT.TEL" additive
+restscreen( 00, 00, 24, 79, TELA1 )
+release TELA1
+Ult_linha( "                          F7 - Ver as Fitas  - " + ;
+           "Use as setas para se posicionar" )
+@ 05,03 SAY TITULOS->T_CODIGO   PICTURE "@R 99.9999"	COLOR "W+/N"
+@ 03,38 SAY TITULOS->T_PORT     PICTURE "@!"				COLOR "W+/N"
+@ 05,38 SAY TITULOS->T_ORIGINAL PICTURE "@!"				COLOR "W+/N"
+@ 07,12 SAY TITULOS->T_DIRETOR  PICTURE "@!"				COLOR "W+/N"
+@ 07,50 SAY TITULOS->T_QUEM     PICTURE "@!"				COLOR "W+/N"
+@ 09,12 SAY TITULOS->T_ATOR1    PICTURE "@!"				COLOR "W+/N"
+@ 09,35 SAY TITULOS->T_ATOR2    PICTURE "@!"				COLOR "W+/N"
+@ 09,58 SAY TITULOS->T_ATOR3    PICTURE "@!"				COLOR "W+/N"
+@ 11,19 SAY TITULOS->T_ANO_PROD PICTURE "99"				COLOR "W+/N"
+@ 11,44 SAY TITULOS->T_DURACAO  PICTURE "9999"			COLOR "W+/N"
+@ 11,68 SAY TITULOS->T_DATA_ENT PICTURE "@E"				COLOR "W+/N"
+@ 13,19 SAY TITULOS->T_IDADE    PICTURE "99"				COLOR "W+/N"
+@ 13,37 SAY TITULOS->T_COPIAS   PICTURE "9999"			COLOR "W+/N"
+@ 13,58 SAY TITULOS->T_SINOPSE  PICTURE "A" 				COLOR "W+/N"
+@ 13,77 SAY TITULOS->T_DUBLADO  PICTURE "A"				COLOR "W+/N"
+@ 15,12 SAY TITULOS->T_LEGENDA  PICTURE "@!"				COLOR "W+/N"
+@ 15,40 SAY TITULOS->T_PAIS     PICTURE "@!"				COLOR "W+/N"
+@ 15,68 SAY TITULOS->T_IDIOMA   PICTURE "@!"				COLOR "W+/N"
+@ 17,12 SAY TITULOS->T_PREMIOS  PICTURE "@!"				COLOR "W+/N"
+@ 17,42 SAY TITULOS->T_DISTRIB  PICTURE "@!"				COLOR "W+/N"
+@ 17,72 SAY TITULOS->T_TIPO     PICTURE "@!"				COLOR "W+/N"
+@ 19,14 SAY TITULOS->T_QUALID   PICTURE "@!"				COLOR "W+/N"
+T_CLASSE = TITULOS->T_CLASSE
+CT_CLASSE = SPACE(80)
+MAKE_TPO1("T_CLASSE")
+@ 19,40 SAY CT_CLASSE   PICTURE "@!"				COLOR "W+/N"
+T_GENERO = TITULOS->T_GENERO
+CT_GENERO = SPACE(80)
+MAKE_TPO1("T_GENERO")
+@ 19,63 SAY CT_GENERO   PICTURE "@!"				COLOR "W+/N"
+T_CATEGOR = TITULOS->T_CATEGOR
+CT_CATEGOR = SPACE(80)
+MAKE_TPO1("T_CATEGOR")
+@ 21,14 SAY CT_CATEGOR  PICTURE "@!"				COLOR "W+/N"
+if TITULOS->N_COP_LOJA = 0 .and. TITULOS->T_COPIAS > 0
+
+	@ 21,36 say space( 36 ) color "W+/B"
+	@ 21,36 say "Fitas disponiveis em outra loja" color "W+/B"
+
+else
+
+	QT_COPIAS = TITULOS->N_COP_LOJA - TITULOS->N_COP_FORA
+	if QT_COPIAS = 0
+
+		@ 21,36 say space( 36 ) color "W+/B"
+		@ 21,36 say "Todas as fitas locadas" color "W+/B"
+
+	else
+
+		@ 21,36 say space( 36 ) color "W+/B"
+		@ 21,36 say QT_COPIAS picture "###" color "W+/B"
+		MEU_TEXTO = iif( QT_COPIAS = 1, "  Cขpia disponivel",;
+		                                "  Cขpias disponiveis" )
+		@ 21,39 SAY meu_texto + " na Loja" color "W+/B"
+
+	endif
+
+endif
+clear typeahead
+inkey( 0 )
+if lastkey() = -6
+
+	Fit_most()
+
+endif	
+
+*****************
+function Fit_most 
+*****************
+
+select "FITAS"
+set order to 1
+seek TITULOS->T_CODIGO
+IF found() .and. TITULOS->T_CODIGO = FITAS->T_CODIGO
+
+   SELECT "CLIENTES"
+   SET ORDER TO 3
+   SELECT "FITAS"
+	SET RELATION TO FITAS->COD_CLI INTO "CLIENTES"
+*	SET RELATION TO FITAS->CLI_RESERV INTO "CLIENTES"
+   private CAMPOS[9], CABECA[9], MASCAR[9], EDICAO [9]
+	CAMPOS[4] = "FITAS->CODFITA"
+	CAMPOS[5] = "FITAS->SEQUENCIAL"
+	CAMPOS[6] = "FITAS->COD_CLI"
+	CAMPOS[7] = "CLIENTES->NOME"
+	CAMPOS[8] = "FITAS->LOJA"
+	CAMPOS[9] = "FITAS->DATA_PREV"
+	campos[1] = "SPACE(3)+FITAS->RESERVA+SPACE(3)"
+	campos[2] = "FITAS->CLI_RESERV"
+	campos[3] = "FITAS->D_RESERVA"
+
+	CABECA[4] = "CODIGO DA FITA"
+	CABECA[5] = "N.SEQ"
+	CABECA[6] = "CODIGO"
+	CABECA[7] = "NOME DO CLIENTE"
+	CABECA[8] = "LOJA"
+	CABECA[9] = "DEVOLVER"
+	cabeca[1] = "RESERVADA"
+	cabeca[2] = "PARA"
+	cabeca[3] = "  EM "
+
+	MASCAR[4] = "@R 99.9999.99.9-9"
+	MASCAR[5] = "#####"
+	MASCAR[6] = "@R 999999"
+	MASCAR[7] = "@!"
+	MASCAR[8] = "999"
+	MASCAR[9] = "@E"
+	mascar[1] = "@!"
+	mascar[2] = "@!"
+	mascar[3] = "@E"
+
+
+*	@ 23,01 say "cheguei"
+*	inkey(0)
+	@ 23,01 say space( 47 ) color "W/B"
+	@ 20,04 fill to 20,78   color "N+/N"
+	@ 09,77 fill to 19,78   color "N+/N"
+	keyboard 5, 9, 9, 9
+*	set filter to FITAS->RESERVA # "S"
+	browse   while 	FITAS->T_CODIGO = TITULOS->T_CODIGO ;
+				window 	08,02,19,76                         ;
+				color   	"N/BG,W+/R,W+/BG,N/BG"              ;
+				frame    double ;
+            fields   CAMPOS ;
+				picture  MASCAR ;
+				heading  CABECA ;
+				edit 		.F.    ;
+				noappend;
+				nodelete
+	set relation to
+*	set filter to
+	return
+
+ENDIF
+select "TITULOS"
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say " No existe fita deste tกtulo " color "W+*/B"
+inkey( 5 )
+Ult_linha( " " )
+
+***************
+function Muleta  
+***************
+
+set key 219  to  Muleta1()
+keyboard 27, 219 && Alt 1
+
+****************
+function Muleta1 
+****************
+
+set key 219 to
+@ 05,02 say "ษออออออออหออออออออออออออออออออออออออออออออออออออออออป" color "W+/BG"
+@ 06,02 say "บ        บ                                          บ" color "W+/BG"
+@ 07,02 say "ศออออออออสออออออออออออออออออออออออออออออออออออออออออผ" color "W+/BG"
+@ 08,04 fill to 08,56 color "N+/N"
+@ 06,55 fill to 07,56 color "N+/N"
+@ 06,04 say TITULOS->T_CODIGO color "N/BG"
+@ 06,13 say TITULOS->T_PORT   color "N/BG"
+Fit_most()
+keyboard 32
+
+********************
+function Muleta_zoom 
+********************
+
+set key 220  to  Muleta_zoom1()
+keyboard 27, 220 && Alt 2
+
+*********************
+function Muleta_zoom1 
+*********************
+
+set key 220 to  
+Zoom_tit()
+keyboard 32

@@ -1,0 +1,299 @@
+*
+PROCEDURE retdeb
+*
+restore from "DEBCLI.MEM" additive
+SELECT 2
+USE "GENERO.TPO"
+SCDH     = savescreen( 04, 09, 19, 46 )
+COR_ANT  = setcolor()
+cx_cur   = _set( "CURSOR"  ) == "ON"
+cx_con   = _set( "CONFIRM" ) == "ON"
+CX_FUNCI = space( 04 )
+quadro(04,09,18,44,"N/BG,W+/N,N,N/BG","N+/N")
+@ 05,15 SAY "CLIENTES CREDITO/DEBITO "
+SELECT "CLIENTES"
+SET ORDER TO 3
+CODIGO  = space(06)
+TEMP_TOT_DEB = 0
+RET_DEB = 0
+
+DO WHILE .T.
+
+SET CURSOR ON
+@ 07,12 SAY "C¢digo do Cliente " GET codigo PICTURE "999999"
+read
+IF LEN(ALLTRIM(codigo)) = 0
+
+   exit
+
+endif
+seek CODIGO
+if .not. found() .or. CLIENTES->COD_CLI # CODIGO
+
+   @ 23,01 say space( 78 ) color "W+/B"
+   @ 23,02 say "Cliente n„o encontrado" color "w+/b"
+	inkey( 10 )
+	exit
+
+endif   
+@ 08,12 SAY CLIENTES->NOME
+M_VALOR = CLIENTES->DEBITOS
+if M_VALOR >=0
+
+   @ 10,12 say "Valor em D‚bito "
+
+else
+
+   @ 10,12 say "Valor em Cr‚dito"
+	M_VALOR = M_VALOR * -1
+
+ENDIF
+@ 10,29 	SAY m_valor PICTURE "##,###,###.##"
+@ 12,12 	SAY "Digite o valor "
+@ 12,29 	GET ret_deb PICTURE "##,###,###.##"
+set key 43 to Menos()
+read 
+set key 43 to
+IF ret_deb = 0
+
+	EXIT
+
+ENDIF
+SET CURSOR OFF
+s_cor = SETCOLOR()
+SET COLOR TO "W+/BG,W+*/BG,N,W+/BG"
+cr_db = 1
+@ 14,17 			PROMPT "Credita"
+@ 14,COL()+3 	PROMPT "Debita "
+MENU TO cd
+SETCOLOR(s_cor)
+deb_ante = CLIENTES->DEBITOS
+IF LASTKEY() = 27
+
+	EXIT
+
+ENDIF
+if CD = 1
+
+	CR_DB = "C"
+	TEMP_TOT_DEB -= RET_DEB
+   DEB_NOVO = CLIENTES->DEBITOS - RET_DEB
+
+else 
+
+	CR_DB = "D"
+	TEMP_TOT_DEB += RET_DEB
+   DEB_NOVO = CLIENTES->DEBITOS + RET_DEB
+
+endif
+M_VALOR = DEB_NOVO
+if M_VALOR >=0
+
+   @ 10,12 SAY "Valor em D‚bito "
+
+else
+
+   @ 10,12 SAY "Valor em Cr‚dito"
+	M_VALOR = M_VALOR * -1
+
+endif
+@ 10,29 SAY m_valor PICTURE "##,###,###.##"
+do while .T.
+
+	CD_FUN = .F.
+   select "FUNCION"
+	clear typeahead
+	set cursor ON
+	@ 16,12 SAY "Funcion rio : " GET cx_funci PICTURE "@!"
+	READ
+	SET CURSOR OFF
+	IF LASTKEY() = 27
+
+		EXIT
+
+	ENDIF
+	seek CX_FUNCI
+	if .not. found()
+
+   	mens_erro("Funcion rio n„o cadastrado")
+      LOOP
+
+   ELSE
+
+      @ 17,12 SAY FUNCION->NOME
+		cx_func_nome = FUNCION->NOME
+		cd_fun = .T.
+		EXIT
+
+   ENDIF 
+
+ENDDO
+IF cd_fun = .T. .AND. ret_deb # 0
+
+   cx_histo = CLIENTES->COD_CLI+"-"+CLIENTES->NOME
+   cx_op = "P"
+   SELECT "CAIXA"
+
+	** DETERMINA NUMERO DO BOLETO DE CAIXA **
+
+	if flock( 15, "REDE")
+		restore from "ULT_BOL.MEM" additive
+		PRIM_CXNUM   += 1
+		save to "ULT_BOL" all like "PRIM_*"
+		unlock in "REDE"
+	else	
+		Mens_rerro( "Erro de espera na rede, oper‡„o n„o efetuada",  3, "W+*/B" )
+		Limpa()
+		return
+	endif
+	flock( 15 )
+   APPEND BLANK
+	unlock
+	rlock( 15 )
+	replace CAIXA->NUMERO    with str(PRIM_CXNUM - 1,6,0,"0")
+   replace CAIXA->OPERACAO  WITH cx_op
+   replace CAIXA->HISTORICO WITH cx_histo
+   replace CAIXA->CX_DATA   WITH _date()
+   replace CAIXA->CX_HORA   WITH _time()
+   replace CAIXA->CODFUNC   WITH cx_funci && COLOCAR O FUNCIONARIO m_func
+	if CR_DB = "C"
+
+		VALDEB = RET_DEB
+
+	ELSE
+
+		VALDEB = (ret_deb * -1)
+
+	ENDIF
+	replace CAIXA->VALOR with VALDEB
+	unlock
+
+	select "GENERO"
+	go REGISTRO_PRODUTO
+	if GENERO->DADOS = "PRODUTOS"
+
+		rlock( 15 )
+		replace GENERO->DEV_VAL with GENERO->DEV_VAL + VALDEB
+		replace GENERO->DEV_FIT with GENERO->DEV_FIT + 1
+		unlock
+
+	endif
+   select "CLIENTES"
+	rlock( 15 )
+	replace CLIENTES->DEBITOS with DEB_NOVO
+	unlock
+
+	if flock( 15, "REDE")
+		restore from "DEBCLI.MEM" additive
+		TOTAL_DEB_CLIENTES += TEMP_TOT_DEB
+		save to "DEBCLI" all like "TOTAL_DEB_CLIENTES*"
+		unlock in "REDE"
+	else	
+		Mens_rerro( "Erro de espera na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+		Limpa()
+		return
+	endif
+
+	Imprime_ret_deb()
+	inkey( 1 )
+
+endif
+exit
+
+enddo
+
+@ 23,01 SAY SPACE(78) COLOR "W+/B"
+
+select "GENERO"
+close  "GENERO"
+set cursor 	CX_CUR
+set confirm CX_CON
+setcolor(COR_ANT)
+restscreen(04,09,19,46,SCDH)
+
+return
+*
+
+*
+PROCEDURE imprime_ret_deb
+*
+
+if IMP_DEV = "BOLETO.PRN"
+	do while .t.
+		IMP_DEV1 = "B" + STR( _RAND()*1000000, 6 )
+		if _file(IMP_DEV1)
+			loop
+		else
+			set printer to IMP_DEV1
+			exit
+		endif
+	enddo
+else
+	set printer to IMP_DEV
+endif
+
+lprint NOM_LOC
+lprint
+lprint "LOJA : "+NUM_LOJA
+lprint
+lprint _time()+"h  -     "+DTOC(DIA_ATUAL)+"   -   "+_raw(CDOW(DIA_ATUAL))
+lprint
+lprint "BOLETO NUMERO ................... "+CAIXA->NUMERO
+lprint
+lprint "CLIENTES CREDITOS / DEBITOS    "
+lprint
+lprint CX_HISTO
+lprint
+if DEB_ANTE >=0
+
+	lprint space( 07 ) + "DEBITO ANTERIOR  : " nolinefeed
+	lprint DEB_ANTE picture "##,###,###.##"
+
+else
+
+	lprint space( 07 ) + "CREDITO ANTERIOR : " nolinefeed
+	lprint DEB_ANTE * -1  picture "##,###,###.##"
+
+endif
+if CR_DB = "D"
+
+	lprint space( 07 ) + "VALOR DEBITADO   : " nolinefeed
+	lprint RET_DEB picture "##,###,###.##"
+
+else
+
+	lprint space( 07 ) + "VALOR CREDITADO  : " nolinefeed
+	lprint RET_DEB picture "##,###,###.##"
+
+endif
+if DEB_NOVO > 0
+
+	lprint space( 07 ) + "DEBITO ATUAL     : " nolinefeed
+	lprint DEB_NOVO picture "##,###,###.##"
+
+else
+
+	lprint space( 07 ) + "CREDITO ATUAL    : " nolinefeed
+	M_VALOR = DEB_NOVO * -1
+	lprint M_VALOR picture "##,###,###.##"
+
+endif
+lprint 
+lprint CX_FUNCI + " - " + CX_FUNC_NOME
+for A = 1 to IMP_LIND
+
+	lprint 
+
+next
+set printer to
+if IMP_DEV = "BOLETO.PRN"
+
+	Boleto_tela(IMP_DEV1)
+
+endif
+
+return
+*
+**************
+function Menos
+**************

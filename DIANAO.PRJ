@@ -1,0 +1,88 @@
+*
+ PROCEDURE dia_nao
+*
+scdia    = SAVESCREEN(12,30,21,42)
+dia_conf = _set("CONFIRM") == "ON"
+
+SET CONFIRM ON
+
+DECLARE dia[7],cor[7]
+
+dia[1] = " DOMINGO "
+dia[2] = " SEGUNDA "
+dia[3] = " TERCA   "
+dia[4] = " QUARTA  "
+dia[5] = " QUINTA  "
+dia[6] = " SEXTA   "
+dia[7] = " SABADO  "
+cor[1] = " "
+cor[2] = " "
+cor[3] = " "
+cor[4] = " "
+cor[5] = " "
+cor[6] = " "
+cor[7] = " "
+
+IF _file("DIANAO.MEM")
+
+	RESTORE FROM "DIANAO.MEM" ADDITIVE
+	IF nao_dia # 0
+
+		dia[nao_dia] = STUFF(dia[nao_dia],1,1,"þ")
+
+	ENDIF
+
+ENDIF
+quadro(12,30,20,40,"N/BG,W+/BG,N,N/BG","N/N")
+DO WHILE LASTKEY() # 27
+
+	POPUP	WINDOW	13,31,19,39;
+			TO			op_dia;
+			OPTIONS	dia;
+			HILITE	cor,"N/BG";
+			COLOR		"N/BG,W+/BG,N/BG,N/BG"
+
+	IF op_dia # 0
+
+		IF _left(dia[op_dia],1) = "þ"
+
+			dia[op_dia] = STUFF(dia[op_dia],1,1," ")
+			LOOP
+
+		ELSE
+
+			dia[op_dia] = STUFF(dia[op_dia],1,1,"þ")
+
+		ENDIF			
+		FOR a = 1 TO 7
+
+			IF _left(dia[a],1) = "þ" .AND. op_dia # a
+
+				dia[a] = STUFF(dia[a],1,1," ")
+
+			ENDIF
+
+		NEXT
+
+	ENDIF
+
+ENDDO
+nao_dia = 0
+FOR a = 1 TO 7
+
+	IF _left(dia[a],1) = "þ"
+
+		nao_dia = a
+
+	ENDIF
+
+NEXT
+if flock( 15, "GREDE" )
+	SAVE TO "dianao.mem" ALL LIKE "nao_dia"
+	unlock in "GREDE"
+else
+	Mens_rerro( " Erro de espera na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+endif
+RESTSCREEN(12,30,21,42,scdia)
+SET CONFIRM dia_conf
+RETURN

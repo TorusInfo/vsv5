@@ -1,0 +1,34 @@
+clear
+set color to "W+/B"
+codigo=space(6)
+n_troca=0
+select 1
+use "c:\podium\pod_04.1"
+select 2
+      USE "CLIENTES.DBF"
+      SET INDEX TO "CLIENTES.K1" KEY CLIENTES->NOME,;
+               "CLIENTES.K2" KEY CLIENTES->CPF_CLI ,;
+               "CLIENTES.K3" KEY CLIENTES->COD_CLI 
+set order to 3
+select 1
+locate for codclie # "000000"
+do while .not. eof()
+        codigo = pod_04->codclie
+        select 2
+        seek codigo
+        if found()
+                if clientes->cod_cli == codigo
+                        if pod_04->debito >0
+                                replace clientes->debitos_p with pod_04->deb_loc
+                                n_troca = n_troca+1
+                        endif
+                endif
+         endif
+         select 1
+        @ 10,10 say "Acrescentado "
+        @ 10,col()+1 say n_troca picture "9999999"
+        @ 10,35 say "d‚bitos "
+         continue
+ enddo
+ quit
+

@@ -1,0 +1,18 @@
+CLEAR
+set century on
+set date "dd/mm/yyyy"
+@ 10,20 SAY "Aguarde... fazendo corre‡äes" color "W+*/N"
+select 1
+use "clientes"
+pack nobackup
+use
+select 1
+use "fto"
+dele all for fto->data_mov < CTOD("01/05/2000")
+pack nobackup
+run "del clientes.k* >nul"
+@ 10,20 say "Procedimento encerrado"
+@ 11,20 say "pode retornar ao programa"
+inkey(3)
+quit
+

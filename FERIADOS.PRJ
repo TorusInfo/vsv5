@@ -1,0 +1,448 @@
+*****************
+procedure Feriado
+*****************
+
+private SCFER, SEM_ELES, SC_SOFT
+SC_SOFT = _set( "SOFTSEEK" ) == "ON"
+set deleted  ON
+set softseek ON
+*close "feriados"
+area=_select()
+select 10
+use "FERIADOS.DBF"
+if flock( 15 )
+
+	set index to "FERIADOS.K1" key FERIADOS->DATA_FER
+
+else
+
+	close "FERIADOS"
+   select area
+	set softseek SC_SOFT
+	Mens_rerro( " Rotina em uso por outro terminal, opera‡„o n„o efetuada", 4, "W+*/B" )
+	return
+	
+endif
+count for .not. _deleted() to SEM_ELES
+if SEM_ELES = 0
+
+	append blank
+
+else
+
+	go bottom
+	if empty( FERIADOS->DATA_FER )
+
+		delete
+
+	endif
+
+endif
+SC_FER = savescreen( 03, 01, 21, 78 )
+set precedence to FIELDS
+private CABEC[ 2 ], CAMPO[ 2 ], MASCARA[ 2 ], EDICAO[ 2 ]
+CABEC   [ 1 ] = "  Data  "
+CABEC   [ 2 ] = "    Comemora‡„o     "
+CAMPO   [ 1 ] = "DATA_FER"
+CAMPO   [ 2 ] = "FERIADO"
+MASCARA [ 1 ] = "@E"
+MASCARA [ 2 ] = "@!"
+EDICAO  [ 1 ] = .T.
+EDICAO  [ 2 ] = .T.
+Teclaedit()
+seek _date()
+@ 19,04 fill  to 19,35 color "N+/N"
+@ 06,34 fill  to 18,35 color "N+/N"
+browse 	window 	05, 02, 18, 33;
+       	frame 	double  ;
+       	color 	"W/R,W+/N,W+/R,W/R";
+       	fields 	CAMPO   ;
+  	    	picture 	MASCARA ;
+     	 	heading 	CABEC   ;
+			edit		EDICAO 
+close "FERIADOS"
+select area
+restscreen( 03, 01, 21, 78, SC_FER )
+set softseek SC_SOFT
+set precedence to VARIABLES
+return
+
+***********************
+procedure Fitas_locadas 
+***********************
+
+private AREA, ORD_CLI, ORD_FIT, ORD_TIT
+AREA = _select()
+set softseek ON
+set deleted  ON
+
+restore from "SYSFILE.MEM" additive
+Abrir_Imp( NOM_TERM )
+
+select "FITAS"
+ORD_FIT = indexord()
+set order to 2
+select "CLIENTES"
+ORD_CLI = indexord()
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say "Por ordem <A>lfabetica ou <C>¢digo de clientes ? " color "W+/B"
+clear typeahead
+TT = inkey( 0 )
+if TT = 65 .or. TT = 97
+
+	@ 21,01 say "Relat¢rio por ordem alfab‚tica" color "W+/B"
+	_bell()
+	Alfabeto()
+	
+elseif TT = 67 .or. TT = 99
+
+	@ 21,01 say "Relat¢rio por ordem de c¢digo" color "W+/B"
+	_bell()
+	Codigo()
+	
+endif
+set printer to
+set cursor  ON
+select "FITAS"
+set order to ORD_FIT
+select "CLIENTES"
+set order to ORD_CLI
+_select( AREA )
+@ 21,01 say space( 78 ) color "W/B"
+@ 23,01 say space( 78 ) color "W/B"
+_bell()
+
+return
+
+*****************
+function Alfabeto
+*****************
+
+ver_printer()
+@ 23,01 			say space( 78 ) color "W/B"
+@ 23,01 			say "<End>" color "W+*/B"
+@ 23,col()+2 	say "-  Interrompe a impress„o " color "W+/B"
+PG = 1
+clear typeahead
+Cabecalho()
+select "CLIENTES"
+set order to 1
+go top
+do while .not. eof()
+
+	inkey()
+	if lastkey() = 6 .or. nextkey() = 6
+
+		return
+
+	endif
+	if CLIENTES->COD_CLI # "000000"
+
+		select "FITAS"
+		seek CLIENTES->COD_CLI
+		if FITAS->COD_CLI == CLIENTES->COD_CLI
+
+			do while FITAS->COD_CLI == CLIENTES->COD_CLI
+		
+				inkey()
+				if lastkey() = 6 .or. nextkey() = 6
+
+					return
+
+				endif
+				Imprime_relat()
+				if eof()
+				
+					exit
+					
+				endif	
+				skip
+		
+			enddo
+		
+		endif
+	
+	endif
+	select "CLIENTES"
+	if eof()
+				
+		exit
+				
+	endif	
+	skip
+	
+enddo
+inkey()
+if lastkey() = 6 .or. nextkey() = 6
+	return
+endif
+lprint chr(18) nolinefeed
+eject
+set printer to
+@ 21,01 say "                              " color "W+/B"
+_bell()
+
+return
+*
+
+FUNCTION cabecalho 
+*
+inkey()
+if lastkey() = 6 .or. nextkey() = 6
+	return
+endif
+LPRINT SPACE(05)  NOLINEFEED
+LPRINT _DATE()    NOLINEFEED
+LPRINT SPACE(23) + NOM_LOC + SPACE(10) + "LOJA : " + NUM_LOJA NOLINEFEED
+LPRINT SPACE(26) + "HORA  :  " NOLINEFEED
+LPRINT _TIME() PICTURE "##:##"
+LPRINT
+LPRINT SPACE(36) + "RELATORIOS   DAS  FITAS  LOCADAS   " + SPACE(42) NOLINEFEED
+LPRINT "PAGINA : " NOLINEFEED
+LPRINT pg PICTURE "#####"
+LPRINT
+LPRINT SPACE(05) + "NOME                            - CODIGO - V.C - " NOLINEFEED
+LPRINT "CODIGO DA FITA - N.SEQ -     VALOR  - DESC - PAGO - RETIRADA - DEVOLVER"
+RETURN
+*
+
+*
+FUNCTION ver_printer 
+*
+set printer to IMP_REL
+@ 23,01	 	SAY SPACE(78) COLOR "W/B"
+@ 23,01 		SAY "Ligue e posicione o papel da sua impressora " COLOR "W+/B"
+@ 23,COL()	SAY "e tecle algo " COLOR "W+/B"
+INKEY(0)
+LPRINT CHR(15) NOLINEFEED
+@ 23,01	 	SAY SPACE(78) COLOR "W/B"
+
+RETURN
+*
+
+*
+FUNCTION imprime_relat 
+*
+IF PROW() > 59
+	pg = pg + 1
+	EJECT
+	cabecalho()
+ENDIF
+inkey()
+if lastkey() = 6 .or. nextkey() = 6
+
+	return
+
+endif
+lprint space( 05 ) nolinefeed
+lprint CLIENTES->NOME + " - " + CLIENTES->COD_CLI + " - " nolinefeed
+lprint transform( CLIENTES->VC_QTDE, "###" ) + " - "      nolinefeed
+lprint FITAS->CODFITA PICTURE "@R ##.####.##.#-#"         nolinefeed
+lprint " - "                                              nolinefeed
+lprint FITAS->SEQUENCIAL PICTURE "#####"                  nolinefeed
+lprint " - "                                              nolinefeed
+lprint transform( FITAS->VALOR, "###,###.##")             nolinefeed
+lprint " -  "                                             nolinefeed
+lprint transform( FITAS->DESCONTO, "###" )                nolinefeed
+lprint " -  " + FITAS->PAGTO + "   - "                    nolinefeed
+lprint dtoc( FITAS->DATA_RET )                            nolinefeed
+lprint " - "                                              nolinefeed
+lprint dtoc( FITAS->DATA_PREV )
+
+return
+*
+
+***************
+function Codigo
+***************
+
+set softseek ON
+select "CLIENTES"
+set order to 3
+select "FITAS"
+set order to 2
+set relation to FITAS->COD_CLI into "CLIENTES"
+go top
+seek "000001"
+ver_printer()
+@ 23,01 			SAY SPACE(78) COLOR "W/B"
+@ 23,01 			SAY "<End>" COLOR "W+*/B"
+@ 23,COL()+2 	SAY "-  Interrompe a impress„o " COLOR "W+/B"
+PG = 1
+Cabecalho()
+if .not. eof()
+
+	do while .not. eof()
+
+		inkey()
+		if lastkey() = 6 .or. nextkey() = 6
+
+			return
+
+		endif
+		Imprime_relat()
+		if .not. eof()
+	
+			skip
+
+		endif
+		
+	enddo
+
+endif
+inkey()
+if lastkey() = 6 .or. nextkey() = 6
+
+	return
+
+endif
+lprint chr( 18 ) nolinefeed
+eject
+_bell()
+
+return
+
+******************
+procedure Rel_alex 
+******************
+
+private ORD_TIT, CT_CATEGOR, NUM_REC,   SC_SOFT,;
+        CONTA_PAG, CONTA_LIN, CT_PRECO, SC_TELA
+
+restore from "SYSFILE.MEM" additive
+Abrir_Imp( NOM_TERM )
+
+restore from "DADLOC.MEM" additive
+SC_TELA     = savescreen( 03, 01, 21, 78 )
+CT_CATEGOR  = space( 12 )
+T_CATEGOR   = 1
+@ 16,10 say "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»";
+		  color "W+/R"
+@ 17,10 say "º                                                          º";
+color "W+/R"
+@ 18,10 say "º  Escolha a categoria para o relat¢rio :                  º"; 
+		  color "W+/R"
+@ 19,10 say "º                                                          º";
+		  color "W+/R"
+@ 20,10 say "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼";
+		  color "W+/R"
+@ 21,12 fill to 21,71 color "N+/N"
+@ 17,70 fill to 20,71 color "N+/N"
+@ 18,53 get CT_CATEGOR  picture "XXXXXXXXXXXX"  function Make_tpo1();
+                                                color "W+/R,W+/N,N,W+/N"
+set cursor ON
+read
+if .not. Pergunta( " Confirma ? ( S / N ) " )
+
+	set cursor OFF
+	@ 23,01 say space( 78 )    color "W/B"
+	restscreen( 03, 01, 21, 78, SC_TELA )
+	return
+
+endif
+set cursor OFF
+SC_SOFT = _set( "SOFTSEEK" ) == "ON"
+set softseek ON
+select 1
+use "CATEGOR.TPO"
+locate for CATEGOR->DADOS = CT_CATEGOR 
+NUM_REC  = recno()
+CT_PRECO = CATEGOR->PRECO_1
+close "CATEGOR"
+select "TITULOS"
+if _file( "TITULOS.K15" )
+
+	private NOME1[1], TAMANHO1[1], DATA1[1], HORA1[1], ATRIBUTOS1[1],;
+	        NOME2[1], TAMANHO2[1], DATA2[1], HORA2[1], ATRIBUTOS2[1]
+	adir( "TITULOS.DBF", NOME1, TAMANHO1, DATA1, HORA1, ATRIBUTOS1 )		
+	adir( "TITULOS.K15", NOME2, TAMANHO2, DATA2, HORA2, ATRIBUTOS2 )		
+	if  ( dtos( DATA1[1] ) + HORA1[1] ) > ( dtos( DATA2[1] ) + HORA2[1] ) 
+		
+		delete file "TITULOS.K15"
+
+	endif
+
+endif
+@ 23,01 say space( 78 )    color "W/B"
+@ 23,01 say " Aguarde... " color "W+*/B"
+set index to "TITULOS.K15" key str( TITULOS->T_CATEGOR, 4, 0, "0" ) + ;
+                               str( TITULOS->RET_MES,   3, 0, "0" )
+@ 23,01    say space( 78 )    color "W/B"
+@ 23,01    say " <End> "      color "W+*/B"
+@ 23,col() say " - Interrompe a impress„o " color "W+/B"
+seek str( NUM_REC, 4, 0, "0" )
+if TITULOS->T_CATEGOR = NUM_REC
+
+	CONTA_PAG = 00
+	CONTA_LIN = 11
+	set printer to IMP_REL
+	Alex_cabec()
+	do while TITULOS->T_CATEGOR = NUM_REC .and. .not. eof() 
+
+		inkey()
+		if lastkey() = 6 .or. nextkey() = 6
+
+			exit
+
+		endif
+		if TITULOS->N_COP_LOJA > 0
+
+			lprint "  " + TITULOS->T_CODIGO + " - " + TITULOS->T_PORT + " - " + ;
+   	          transform( TITULOS->RET_MES,   "###,###" ) + "   " + ;
+   	          transform( TITULOS->RET_TOTAL, "###,###" ) + "   " + ;
+   	          transform( TITULOS->N_COP_LOJA, "##,###" )
+			CONTA_LIN += 1
+			if CONTA_LIN = 61
+
+				lprint "  ----------------------------------------------------" + ;
+   	    			 "--------------------------"
+				Alex_cabec()
+
+			endif
+	
+		endif
+		skip                              
+
+	enddo
+
+endif
+lprint "  ----------------------------------------------------" + ;
+       "--------------------------"
+eject
+set printer to
+Open( "TITULOS" )
+restscreen( 03, 01, 21, 78, SC_TELA )
+@ 23,01 say space( 78 ) color "W/B"
+
+return
+
+*******************
+function Alex_cabec 
+*******************
+
+if CONTA_PAG  > 0
+
+	eject
+	CONTA_LIN = 11
+
+endif
+CONTA_PAG += 1
+lprint
+lprint "  V.S.V."
+lprint "  " + dtoc( _date() ) nolinefeed
+lprint NOM_LOC column 20      nolinefeed
+lprint "Pagina : " + transform( CONTA_PAG, "###" )     column 68
+lprint
+lprint "RELATORIO DE RETIRADAS NO MES POR CATEGORIA"   column 20
+lprint
+lprint "  CATEGORIA = " + CT_CATEGOR  nolinefeed
+lprint "PRECO = " + transform( CT_PRECO, "##,###.##" ) column 63
+lprint "  ----------------------------------------------------" + ;
+       "--------------------------"
+lprint "  CODIGO - TITULO                                   - " + ;
+       "RET.MES - RET.TOT - COPIAS"
+lprint "  ----------------------------------------------------" + ;
+       "--------------------------"
+
+return
+

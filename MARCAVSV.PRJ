@@ -1,0 +1,933 @@
+*
+********************************************************************
+*                                                                  *
+*         ROTACIONAL INFORMATICA - FONE 52.3253                    *
+*                                                                  *
+*         PROGRAMA DE ETIQUETAS DE CODIGOS DE FITAS E GENERO       *
+*                                                                  *
+*         PARA O PROGRAMA VSV                                      *
+*                                                                  *
+********************************************************************
+*
+PUBLIC ni,nf,comp,nm,i1,i2,i3,cod_help,imp1
+if .not. _file( "\DOS\RAMBOOT.COM" ) .or.;
+   .not. _file( "DADLOC.MEM"  ) .or.;
+   .not. _file( "GENERO.TPO"  ) .or.;
+   .not. _file( "TITULOS.DBF" ) .or.;
+   .not. _file( "FITAS.DBF"   )
+
+*        Nautoriza()
+
+endif	
+* SET TALK OFF
+* SET SCORE OFF
+* SET STATUS OFF
+*-------------------------------------
+* SET PRINTER TO "ROTA.PRN"
+*-------------------------------------
+set color to "W+/B,B/W"
+set softseek OFF
+set exclusive OFF
+scroll( 00, 00, 24, 79, 0 )
+NM = " TARCISIO "
+*DO CHECA
+COMP = "rotacional" && usar uma variavel de ate 10 caracters
+@ 0,0 TO 24,79 DOUBLE
+@ 2,2 TO 22,77 DOUBLE
+Boxtexto( 01, 01, 23, 78, " " + COMP )
+@ 3,12 say "PROGRAMA PARA IMPRIMIR ETIQUETAS GENERO E CODIGO DA FITA"
+@ 20,2 say "Ì" + REPLICATE( "Í", 74 ) + "¹"
+@ 04,2 say "Ì" + REPLICATE( "Í", 74 ) + "¹"
+set cursor OFF
+@ 21,20 say chr( 82 ) + chr( 79 )
+  tone( 2000, 1 )
+@ 21,22 SAY CHR(84)+CHR(65)
+  TONE(2000,1)
+@ 21,24 SAY CHR(67)+CHR(73)
+  TONE(2000,1)
+@ 21,26 SAY CHR(79)+CHR(78)
+  TONE(2000,1)
+@ 21,28 SAY CHR(65)+CHR(76)
+  TONE(2000,1)
+@ 21,30 SAY CHR(32)+CHR(73)
+  TONE(2000,1)
+@ 21,32 SAY CHR(78)+CHR(70)
+  TONE(2000,1)
+@ 21,34 SAY CHR(79)+CHR(82)
+  TONE(2000,1)
+@ 21,36 SAY CHR(77)+CHR(65)
+  TONE(2000,1)
+@ 21,38 SAY CHR(84)+CHR(73)
+  TONE(2000,1)
+@ 21,40 SAY CHR(67)+CHR(65)
+  TONE(2000,1)
+@ 21,42 SAY CHR(32)+CHR(45)
+  TONE(2000,1)
+@ 21,44 SAY CHR(32)+CHR(70)
+  TONE(2000,1)
+@ 21,46 SAY CHR(79)+CHR(78)
+  TONE(2000,1)
+@ 21,48 SAY CHR(69)+CHR(58)
+  TONE(2000,1)
+@ 21,50 SAY CHR(32)+CHR(53)
+  TONE(2000,1)
+@ 21,52 SAY CHR(53)+CHR(46)
+  TONE(2000,1)
+@ 21,54 SAY CHR(52)+CHR(49)
+  TONE(2000,1)
+@ 21,56 SAY CHR(57)+CHR(57)
+use "GENERO.TPO"
+count to TTOT
+declare GENERO_PRG[ TTOT - 1 ]
+for A = 2 to TTOT
+
+    go A
+    GENERO_PRG [ A - 1 ] = upper( GENERO->DADOS )
+
+next
+sc1=SAVESCREEN( 01, 01, 23, 78 )
+scroll( 08, 05, 12, 27, 0 )
+TIT_PRG = "000000"
+TIMP = 0
+select 1
+use "FITAS"
+flock( 15 )
+set index to "FITAS.K1" key FITAS->CODFITA
+unlock
+select 2
+USE "TITULOS"
+flock( 15 )
+set index to "TITULOS.K1" key TITULOS->T_CODIGO
+unlock
+do while .T.
+
+   IMPSAI = 0
+   set color to "W+/B,B/W"
+   restscreen( 01, 01, 23, 78, SC1 )
+   set message to 17 center
+   set cursor ON
+   Quadro( 08,35,13,45,"N/GR,GR+/N","N/N" )
+   Quadro( 16,13,18,65,"N/GR,GR+/N","N/N" )
+   set color to "N/GR,GR+/N,N,N/GR"
+   @ 09,36 prompt " C¢digo  " MESSAGE " Imprime 1  ou mais etiquetas pelo c¢digo completo "
+   @ 10,36 prompt " T¡tulo  " MESSAGE " Imprime todas as etiquetas de um t¡tulo escolhido "
+   @ 11,36 prompt " Gˆnero  " MESSAGE " Imprime todas as etiquetas de um gˆnero escolhido "
+   @ 12,36 prompt " Encerra " MESSAGE " Termina o programa e volta ao sistema operacional "
+   menu to X
+   if X = 1                            && ROTINA DE CODIGO
+
+		select "FITAS"
+      set cursor ON
+      COD_HELP = "CODIGO"
+      Ativa()
+      declare CODIGO[ 2000 ], COD2[ 2000 ]
+      set color to "W+/B,B/W"
+      scroll( 01, 01, 23, 78, 0 )
+      I1 = 1
+      II = 1
+      I2 = 1                           && linha do achoice
+      Quem()
+      Telinha()
+      SAI   = 0
+      CERTO = 0
+		set softseek OFF
+      do while .T.
+         
+         IMP1 = 0
+         I2   = iif( I2 > 7, 7, I2 )
+         I3   = iif( I2 > 1, 1,  0 )
+         Quadro( 14-I2-I3,09,17,26,"N/GR,W+/N","N/N")
+         @ 15-I2-I3,15 say "CODIGO"
+         @ 16-I2-I3,09 say "Ì"+replicate("Í",16)+"¹"
+         @ 15,09 say "Ì"+replicate("Í",16)+"¹"
+         if I2 > 1
+
+            keyboard chr( 6 ) + chr( 24 ) + chr( 13 )
+				popup window  16-I2, 11, 14, 24;
+				      to      YY;
+						options COD2;
+						hilite  COD2, "N/GR"
+
+         endif   
+         if CERTO = 0
+
+            COD="0000000000"
+
+         endif   
+         set key 27 to
+         clear typeahead
+         @ 16,11 get COD picture "@R 99.9999.99.9-9"
+         read
+         if lastkey() = 27
+
+            release CODIGO
+            exit
+
+         endif
+         if IMP1 = 1
+
+            loop
+
+         endif   
+         if SAI = 1
+
+            release CODIGO
+				keyboard 27
+            exit
+
+         endif
+         seek COD
+         if .not. found()
+
+            MENSAG="Este  c¢digo  n„o  existe"
+            Naoacho()
+            CERTO=1
+            loop
+
+         endif            
+         AS = ascan( CODIGO, COD )
+         if AS # 0
+
+            MENSAG="Este c¢digo j  foi digitado"
+            Naoacho()
+            CERTO=1
+            loop
+
+         endif            
+         CODIGO[I1] = COD
+			COD2[I1]   = transform( COD, "@R 99.9999.99.9-9" )
+         set color to "N/N"
+         scroll(21,05,23,35,0)
+         set color to "N/GR,W+/N"
+         scroll(20,03,22,33,0)
+         @ 20,03 to 22,33 double
+         @ 21,04 say "N§ de c¢digos digitados = "+alltrim(str(I1))
+         I1=I1+1
+         I2=I2+1
+         II=iif(I1>4,I1-3,I1) 
+         CERTO=0
+
+      enddo
+
+   endif   
+   IF x=2                              && ROTINA DE TITULO
+
+      SET CURSOR ON
+		select "TITULOS"
+      SET SOFTSEEK OFF
+      COD_HELP="TITULO"
+      Ativa()
+      declare CODIGO[2000]
+      declare TITULO[150], TIT2[150]
+      SET COLOR TO "W+/B,B/W"
+      SCROLL(01,01,23,78,0)
+      QT_TIT=1
+      II=1
+      I2=1                           && linha do achoice
+      I1=1
+      Quem()
+      Telinha()
+      sai=0
+      certo=0
+      DO WHILE .T.
+         
+         imp1=0
+         i2=IIF(i2>7,7,I2)
+         i3=IIF(i2>1,1,0)
+	      set key 27 to Sair()
+         Quadro( 14-i2-i3,09,17,19,"N/GR,W+/N","N/N")
+         @ 15-i2-i3,11 SAY "TITULOS"
+         @ 16-i2-i3,09 SAY "Ì"+REPLICATE("Í",9)+"¹"
+         @ 15,09 SAY "Ì"+REPLICATE("Í",9)+"¹"
+         IF i2>1
+
+            KEYBOARD CHR(6)+CHR(24)+CHR(13)
+				POPUP WINDOW  16-I2, 11, 14, 17;
+				      TO      Y;
+						OPTIONS TIT2;
+						HILITE  TIT2, "N/GR"
+
+         ENDIF   
+         IF certo=0
+
+            cod="000000"
+
+         ENDIF   
+         CLEAR TYPEAHEAD
+         @ 16,11 GET cod PICTURE "@R 99.9999"
+         READ
+         IF lastkey() = 27
+
+            RELEASE codigo
+            Desativa()
+				keyboard 27, 5
+            exit
+
+         ENDIF
+         IF sai = 1
+
+            RELEASE codigo
+            Desativa()
+            exit
+
+         ENDIF
+         IF imp1=1
+
+            LOOP
+
+         ENDIF   
+         seek COD
+         IF .NOT. FOUND()
+
+            mensag="Este  t¡tulo  n„o  existe"
+            Naoacho()
+            certo=1
+            LOOP
+
+         ENDIF            
+         AS = ascan( TITULO, COD )
+         if AS # 0
+
+            MENSAG = "Este t¡tulo j  foi digitado"
+            Naoacho()
+            CERTO = 1
+            loop
+
+         endif            
+         TITULO[QT_TIT] = COD
+			TIT2[QT_TIT]   = transform( COD, "@R 99.9999" )
+			select "FITAS"
+			seek COD
+			do while FITAS->T_CODIGO == COD .and. .not. eof()
+			
+            CODIGO[I1] = FITAS->CODFITA
+            I1 = I1 + 1
+				skip
+			
+			enddo	
+			select "TITULOS"
+         Quadro( 20,03,22,33,"N/GR,W+/N","N/N")
+         @ 21,04 say "N§ de t¡tulos digitados = " + alltrim( str( QT_TIT ) )
+         QT_TIT=QT_TIT+1
+         i2=i2+1
+         ii=IIF(QT_TIT>4,QT_TIT-3,QT_TIT) 
+         certo=0
+      ENDDO
+        
+   ENDIF   
+   if X = 3                            && ROTINA DE GENERO
+
+      set cursor ON
+		select "TITULOS"
+      COD_HELP = "GENERO"
+      Desativa()
+      declare CODIGO [ 2000 ]
+      set color to "W+/B,W+/B"
+      scroll( 01, 01, 23, 78, 0 )
+      Quem()
+      SC5 = savescreen( 07, 25, 23, 77 )
+      Quadro( 07,25,21,75,"W+/R","N/N")
+      @ 08,27 say "Utilize  <>  <>  <Home>  <End>  ou a 1¦ letra"
+      @ 09,27 say "do gˆnero para se movimentar pelos seus gˆneros"
+      @ 10,27 say "e tecle <ENTER>  para  confirmar a sua escolha."
+      @ 11,27 say "Tecle <ESC> <ESC> para voltar ao menu anterior."
+      @ 12,27 say "Ser  necess rio que vocˆ confirme sua  escolha."
+      @ 13,27 say "Ap¢s uma pesquisa ser  mostrado um quadro com a"
+      @ 14,27 say "quantidade de t¡tulos encontrados com o  gˆnero"
+      @ 15,27 say "escolhido e a quantidade de etiquetas que ser„o"
+      @ 16,27 say "impressas,  que ser  maior,  de  acordo  com  a"
+      @ 17,27 say "quantidade  de c¢pias e fitas duplas ou triplas"
+      @ 18,27 say "do seu arquivo. O programa, ir  em seguida para"
+      @ 19,27 say "a rotina de impress„o.  Verifique bem, se a sua"
+      @ 20,27 say "impressora est  ligada e com papel de etiquetas."
+      Quadro( 07,02,22,22,"N/GR,GR+/N","N/N" )
+		MCONF = 0
+		Q = 0
+		POPUP WINDOW  08, 04, 21, 21;
+		      TO      Q;
+				OPTIONS GENERO_PRG;
+				HILITE  GENERO_PRG, "N/GR"
+      restscreen( 07, 25, 23, 77, SC5 )      
+      if Q # 0
+
+         GENERO_ETI = GENERO_PRG [ Q ]     
+         Quadro( 06,26,10,68,"N/G+,W+*/G+","N/N" )
+         @ 07,28 say "O gˆnero escolhido foi " + GENERO_ETI
+         @ 08,26 say "Ì" + replicate( "Í", 41 ) + "¹"
+         @ 09,28 say "Por favor, confirme"
+         @ 09,52 prompt "Sim"
+         @ 09,57 prompt "N„o"
+         menu to MCONF
+			if MCONF = 0
+
+            Desativa()
+            release CODIGO
+            keyboard "G"
+				MCONF = 0
+
+			endif
+         if MCONF = 2
+
+            Desativa()
+            release CODIGO
+            keyboard "G"
+
+         endif   
+
+      else
+
+  	      Desativa()
+     	   release CODIGO
+			MCONF = 0
+
+      endif
+  	   if MCONF = 1
+
+         restscreen( 06, 26, 13, 77, SC5 )
+  	      SC5 = savescreen( 06, 26, 11, 77 )
+     	   Quadro( 06, 26, 10, 65, "N/GR", "N/N" )
+        	CORANTERIOR = setcolor()
+         set color to "N*/GR"
+  	      set cursor OFF
+     	   @ 08,28 say "Aguarde, estou fazendo a pesquisa..."
+        	setcolor( CORANTERIOR )
+         set softseek ON
+         ASC_GEN = _right( "0" + alltrim( str( Q ) ), 2 )
+         I1 = 0
+         CONT_TITULO = 1 
+			select "FITAS"
+         set order to 1
+         go top
+			seek ASC_GEN
+         if .not. eof()
+         
+			   do while _left( FITAS->CODFITA, 2 ) == ASC_GEN .and. .not. eof()
+						
+              	I1 += 1
+              	CODIGO [ I1 ] = FITAS->CODFITA
+					skip
+	
+				enddo
+
+         endif
+         restscreen( 06, 26, 11, 77, SC5 )
+         SC0 = savescreen( 13, 24, 19, 77 )
+         Quadro( 13, 24, 18, 74, "N/GR", "N/N" )
+         @ 14,26 say "S„o "
+         @ 14,30 say I1 picture "9999"
+         @ 14,35 say " fitas  com  o  gˆnero " + GENERO_ETI
+         @ 15,26 say "S„o "
+         @ 15,30 say I1 picture "9999"
+         @ 15,35 say "etiquetas com o gˆnero " + GENERO_ETI
+         @ 16,24 say "Ì"+replicate("Í",49)+"¹" 
+         @ 17,26 say "<ENTER> para continuar  <ESC> para retornar"
+         clear typeahead
+         XFR = inkey( 0 )         
+         set cursor ON
+         restscreen( 13, 24, 19, 77, SC0 )
+         if XFR # 27
+	
+            Rotimp()
+	
+  	      endif   
+	
+  	   endif
+     	Desativa()
+      release CODIGO
+		set softseek OFF
+		loop
+	
+   endif   
+   IF X=0 .OR. x=4                         && ROTINA DE ENCERRAMENTO
+
+      Encerra()
+
+   ENDIF
+
+ENDDO
+*
+
+*
+FUNCTION encerra
+     coranterior=SETCOLOR()
+     asdf=SAVESCREEN(09,14,14,27)
+     Quadro( 09,14,13,25,"W+/R,W+*/R","N/N" )
+     @ 10,16 SAY "ENCERRAR"
+     @ 11,14 SAY "Ì"+REPLICATE("Í",10)+"¹"
+     KEYBOARD CHR(4)
+     @ 12,16 PROMPT "Sim"
+     @ 12,21 PROMPT "N„o"
+     MENU TO qwer
+     IF qwer=1
+        SET COLOR TO
+        CLEAR
+        QUIT
+     ELSE
+        RESTSCREEN(09,14,14,27,asdf)
+        SET CURSOR OFF
+        SETCOLOR(coranterior)
+        RELEASE qwer,asdf
+     ENDIF   
+     RETURN
+*
+FUNCTION telinha
+     Quadro( 15,46,22,76,"W+/RB","N/N")
+     @ 17,48 SAY "<F1>  - Aux¡lio"
+     @ 18,48 SAY "<F8>  - Imprimir  etiquetas"
+     @ 19,48 SAY "<F9>  - Verificar c¢digos"
+     @ 20,48 SAY "<ESC> - Sair  sem imprimir" 
+     RETURN
+*
+function Quem
+     qual=" "
+     FOR a=1 TO 6
+         qual=qual+SUBSTR(cod_help,a,1)+" "
+     NEXT
+     qual=LTRIM(qual)+"S"    
+     Quadro( 01,04,03,20,"N/GR,GR+/N","N/N")
+     @ 02,06 SAY qual
+     Quadro( 01,61,03,74,"W+/R","N/N")
+     @ 02,63 SAY comp
+     RETURN
+************
+function Ver
+************
+
+IF i2<2
+   mensag=IIF(cod_help="CODIGO","Nenhum c¢digo foi digitado","Nenhum t¡tulo foi digitado")
+   Naoacho()
+   RETURN
+ENDIF        
+Desativa()
+coranterior=SETCOLOR()        
+sc2=SAVESCREEN(15,46,23,76)
+SET COLOR TO "W+/R"
+SCROLL(15,46,22,76,0)
+@ 15,46 TO 22,76 DOUBLE
+@ 16,48 SAY "Utilize as  teclas  com as"
+@ 17,48 SAY "setas,<PgUp>,<PgDn>,<Home>"
+@ 18,48 SAY "e <End> para se movimentar"
+Mensag=IIF(cod_help="CODIGO","nos c¢digos ou tecle <ESC>","nos t¡tulos ou tecle <ESC>")
+@ 19,48 SAY mensag
+@ 20,48 SAY "ou  <ENTER> para  voltar"
+@ 21,48 SAY ""
+SET COLOR TO "N/GR,W+/N"
+espa=IIF(cod_help="TITULO",7,14)
+@ 16,11 SAY SPACE(espa)
+VER1=iif( COD_HELP = "TITULO", "TIT2", "COD2")
+
+@ 00, 00 SAY VER1
+INKEY( 0 )
+
+
+col2=IIF(cod_help="TITULO",17,24)
+**    qq=ACHOICE(16-I2,11,14,col2,&VER1)
+IF VER1 = "COD2"
+
+	POPUP WINDOW  16-I2, 11, 14, COL2;
+   	   TO      QQ;
+      	OPTIONS COD2
+
+ELSE
+
+	POPUP WINDOW  16-I2, 11, 14, COL2;
+   	   TO      QQ;
+      	OPTIONS TIT2
+
+ENDIF			
+RESTSCREEN(15,46,23,76,sc2)
+SETCOLOR(coranterior)
+Ativa()
+RETURN
+*
+*************
+function sair
+*************
+
+SAI=1
+Desativa()
+keyboard 3
+return
+
+****************
+function Naoacho 
+****************
+
+coranterior=SETCOLOR()
+sc2=SAVESCREEN(18,03,23,35)
+Quadro( 18,03,22,33,"GR+/R","N/N")
+@ 20,03 SAY "Ì"+REPLICATE("Í",29)+"¹"
+SET CURSOR OFF
+@ 19,05 SAY mensag
+SET COLOR TO "GR+*/R"
+@ 21,05 SAY "Pressione qualquer tecla..."
+INKEY(0)
+RESTSCREEN(18,03,23,35,sc2)
+SET CURSOR ON
+SETCOLOR(coranterior)
+
+return
+
+*************
+function Help
+*************
+
+     Desativa()
+     coranterior=SETCOLOR()
+     sc2=SAVESCREEN(01,01,23,78)
+     SET COLOR TO "W+/B"
+     SCROLL(1,1,23,78,0)
+     SET CURSOR OFF
+     Quadro( 02,03,16,75,"W/R","N/N")
+     IF cod_help="CODIGO"
+        @ 03,05 SAY "                INFORMA€™ES SOBRE A ROTINA DE CODIGOS"
+        @ 04,03 SAY "Ì"+REPLICATE("Í",71)+"¹"
+        @ 05,05 SAY "Vocˆ pode digitar at‚ 100 c¢digos de uma s¢ vez e depois imprimi-los."
+        @ 06,05 SAY "Antes de come‡ar a  impress„o das  etiquetas  <tecla F8>  o  programa"
+        @ 07,05 SAY "pedir  que vocˆ digite quantas vezes ele dever   repetir cada uma das"
+        @ 08,05 SAY "etiquetas dos c¢digos digitados, podendo variar de uma a cinco vezes."
+        @ 09,05 SAY "Antes de responder verifique se sua  impressora  est   ligada e com o"
+        @ 10,05 SAY "papel das  etiquetas. Caso n„o esteja, o programa o informar  que sua"
+        @ 11,05 SAY "impressora est  desligada, neste caso, ligue a impressora e pressione"
+        @ 12,05 SAY "qualquer tecla. Vocˆ pode verificar os  c¢digos  j  digitados atrav‚s"
+        @ 13,05 SAY "da  <tecla F9> e seguir as instru‡”es da tela."
+        @ 14,05 SAY "Vocˆ poder  voltar … esta rotina de c¢digos quantas vezes quiser, sem"
+        @ 15,05 SAY "sair do programa."
+     ENDIF
+     IF cod_help="TITULO"
+        @ 03,05 SAY "                INFORMA€™ES SOBRE A ROTINA DE TITULOS"
+        @ 04,03 SAY "Ì"+REPLICATE("Í",71)+"¹"
+        @ 05,05 SAY "Vocˆ pode digitar at‚ 100 t¡tulos de uma s¢ vez e depois imprimi-los."
+        @ 06,05 SAY "Antes de come‡ar a  impress„o das  etiquetas  tecla <F8>  o  programa"
+        @ 07,05 SAY "pedir  que vocˆ digite quantas vezes ele dever   repetir cada uma das"
+        @ 08,05 SAY "etiquetas dos t¡tulos digitados, podendo variar de uma a cinco vezes."
+        @ 09,05 SAY "Antes de responder verifique se sua  impressora  est   ligada e com o"
+        @ 10,05 SAY "papel das  etiquetas. Caso n„o esteja, o programa o informar  que sua"
+        @ 11,05 SAY "impressora est  desligada, neste caso, ligue a impressora e pressione"
+        @ 12,05 SAY "qualquer tecla. Vocˆ pode verificar os  t¡tulos  j  digitados atrav‚s"
+        @ 13,05 SAY "da tecla <F9> e seguir as instru‡”es da tela. A quantidade de etique-"
+        @ 14,05 SAY "tas pode ser maior que a de t¡tulos, por suas c¢pias ou volumes. Vocˆ"
+        @ 15,05 SAY "pode voltar … esta rotina quantas vezes quiser, sem sair do programa."
+     ENDIF
+     Quadro( 19,21,21,54,"W/R","N/N")
+     SET COLOR TO "W+*/R"
+     @ 20,24 SAY "Tecle algo para continuar..."
+     INKEY(0)
+     RESTSCREEN(01,01,23,78,sc2)
+     SETCOLOR(coranterior)
+     SET CURSOR ON
+     Ativa()
+     RETURN     
+***************
+function ROTIMP
+***************
+IMPSAI = 0
+bak_i1=i1
+IF i1<2
+
+   mensag="Nenhum c¢digo foi digitado"
+   Naoacho()
+   RETURN
+
+ENDIF        
+imp1 = 1
+* CLEAR GETS
+qe=1
+sc2=SAVESCREEN(01,01,23,78)
+coranterior=SETCOLOR()
+SET COLOR TO "N/BG,W+/BG"
+SET DELIMITERS TO
+SET DELIMITERS OFF
+Quadro( 07,23,09,70,"N/BG,W+/BG","N/N" )
+@ 08,25 SAY "Quantas vezes devo repetir cada etiqueta :" get qe pict "9" VALID( QE >= 1 .AND. QE <= 5)
+READ local
+Quadro( 12,29,15,62,"N/BG,W+/BG","N/N" )
+n_eti=(i1-1)*qe
+n_folha=_int(n_eti/90)+1
+@ 13,31 SAY "Ser„o impressas"
+@ 13,47 SAY n_eti PICTURE "9999"
+@ 13,52 SAY "etiquetas"
+zxcv=IIF(n_folha<2,"Ser  necess ria","S„o necess rias")
+@ 14,31 SAY zxcv
+@ 14,47 SAY n_folha PICTURE "9999"
+zxcv=IIF(n_folha<2,"folha","folhas")
+@ 14,52 SAY zxcv
+Quadro( 18,21,20,41,"N/BG,W+*/BG","N/N" )
+SET DELIMITERS TO "[]"
+SET DELIMITERS ON
+@ 19,23 PROMPT "Imprimir"
+@ 19,32 PROMPT "Retornar"
+MENU TO ir
+IF ir=2
+   SET DELIMITERS TO
+   SET DELIMITERS OFF
+   RESTSCREEN(01,01,23,78,sc2) 
+   RETURN
+ENDIF     
+tecla=checaimp()
+IF tecla=27
+   SET DELIMITERS TO
+   SET DELIMITERS OFF
+   SETCOLOR(coranterior)
+   RESTSCREEN(01,01,23,78,sc2)  
+   i1=bak_i1
+   RETURN
+ENDIF
+e12=CHR(27)+"M"
+s12=CHR(27)+"P"
+DO WHILE .T.
+   Quadro( 18,46,20,74,"N/BG,W+*/BG","N/N" )
+   @ 18,64 SAY "Ñ"
+   @ 20,64 SAY "Ï"
+   @ 19,48 SAY "Imprime teste ? ³"
+   KEYBOARD CHR(4)
+   @ 19,66 PROMPT "Sim"
+   @ 19,70 PROMPT "N„o"
+   MENU TO tt
+   SET DELIMITERS TO
+   SET DELIMITERS OFF
+   IF tt=1
+
+      SET PRINT ON
+      SET CONSOLE OFF
+*     ??  "rotacional  rotacional  rotacional  rotacional  rotacional"
+      ??  COMP + "  " + COMP + "  " + COMP + "  " + COMP + "  " + COMP
+      ?   " 00  0000    00  0000    00  0000    00  0000    00  0000 "
+      ?   " 00   0 0    00   0 0    00   0 0    00   0 0    00   0 0 "
+      ?
+		  ?
+      SET PRINT OFF
+      SET CONSOLE ON
+      LOOP
+
+	  elseif lastkey() = 27 .or. TT = 0
+	  
+	     return
+
+   ELSE
+
+      exit
+		  
+   ENDIF
+
+ENDDO
+Quadro( 18,46,20,74,"N/BG","N/N" )
+@ 19,55 SAY "Aborta a impress„o"           
+SET COLOR TO "N*/BG"
+SET CURSOR OFF
+@ 19,48 SAY "<END>"
+SET PRINT ON
+SET CONSOLE OFF
+*
+*** QE  = QT REP ETIQ
+*** QEC = QT REP JA FEITAS
+*
+AA          = 1
+QUANTO_REP  = QE
+QUANTAS_ETI = QE * I1
+LINHA_1     = ""
+LINHA_2     = ""
+QUANTAS_JA  = 0
+JA_FOI      = 0 && fff
+for LOOP_2  = 1 to QUANTAS_ETI
+	
+   JA_FOI  = JA_FOI + 1
+	LINHA_1 = LINHA_1    + space( 1 ) + _left( CODIGO[ AA ], 2 ) + ;
+             space( 2 ) + substr( CODIGO[ AA ], 3, 4 ) + space( 3 )
+	LINHA_2 = LINHA_2    + space( 1 ) + substr( CODIGO[ AA ], 7, 2 ) + ;
+             space( 3 ) + substr( CODIGO[ AA ], 9, 1 ) + ;
+             space( 1 ) + _right(  CODIGO[ AA ], 1 ) + space( 3 )
+	QUANTAS_JA = QUANTAS_JA + 1
+   if JA_FOI  = QUANTO_REP
+
+	   AA = AA + 1
+	   JA_FOI = 0
+	   if AA = I1
+
+		   Imprime_linha()
+		   exit
+
+	   endif
+
+   endif
+	if QUANTAS_JA = 5
+
+		Imprime_linha()
+
+	endif				
+   inkey()
+   if lastkey() = 6 .or. nextkey() = 6
+
+		keyboard 27
+	   exit
+
+   endif
+
+next
+set print off
+set console on
+restscreen(01,01,23,78,SC2)  
+setcolor(CORANTERIOR)
+set cursor on
+* clear gets
+clear typeahead
+I1=BAK_I1
+keyboard 27 && IMPSAI = 1
+return
+
+**********************
+function Imprime_linha
+**********************
+
+?? replicate( "rotacional  ", QUANTAS_JA ) 
+?  LINHA_1
+?  LINHA_2
+?
+?
+LINHA_1 = ""
+LINHA_2 = ""
+QUANTAS_JA = 0
+
+function checa
+     comp=""
+     n1=" "
+     n2=0
+     FOR n=1 TO LEN(nm)
+         n1=SUBSTR(nm,n,1)
+         n2=ASC(n1)-5
+         comp=comp+CHR(n2)
+     NEXT
+     RETURN
+*
+FUNCTION BOXTEXTO
+         PARAMETERS f_lin1,f_col1,f_lin2,f_col2,texto                           
+         IF _TYPE("texto")="U"                                                   
+            texto="*"                                                           
+         ENDIF                                                                  
+         largura=f_col2-f_col1+1                                                
+         altura=f_lin2-f_lin1                                                   
+         texto=TRIM(texto)                                                      
+         textobox=REPLICATE(texto,_int(80/LEN(texto)+3))                         
+         @ f_lin1,f_col1 SAY (_left(textobox,largura))                           
+         pos=1                                                                  
+         pos2=largura                                                           
+         DO WHILE pos<=altura                                                   
+            @ f_lin1+(pos),f_col1 SAY SUBSTR(textobox,pos+1,1)                     
+            @ f_lin1+(pos),f_col2 SAY SUBSTR(textobox,pos2+pos,1)                  
+            pos=pos+1                                                              
+         ENDDO                                                                  
+         @ f_lin2,f_col1 SAY (SUBSTR(textobox,altura+1,largura))                
+         RETURN (" ")                                                            
+*
+FUNCTION checaimp
+
+     Desativa()
+     coranterior=SETCOLOR()
+     sc3=SAVESCREEN(09,08,14,48)
+     IF .NOT. ISPRINTER()
+
+        Quadro( 09,08,13,46,"W/R","N/N")
+        SET COLOR TO "W*/R"
+        @ 09,08 TO 13,46 double
+        SET COLOR TO "W/R"
+        SET CURSOR OFF
+        @ 10,10 SAY "Por favor, ligue a sua"
+        @ 11,10 SAY "tecle"
+        @ 11,24 SAY "quando estiver pronto"
+        @ 12,10 SAY "ou tecle"
+        @ 12,25 SAY "para sair."
+        SET COLOR TO "W+/R"
+        @ 10,34 SAY "IMPRESSORA."
+        @ 11,16 SAY "<ENTER>"
+        @ 12,19 SAY "<ESC>"
+        DO WHILE .T.
+
+           FOR a=1700 TO 2000 STEP 100
+
+               tone( A, 1 )
+
+           NEXT
+           TECLA = inkey(0)
+           IF tecla=27
+
+              Ativa()
+              RESTSCREEN(09,08,14,48,sc3)
+              SETCOLOR(coranterior)
+              SET CURSOR ON
+              RETURN (tecla)
+
+           ENDIF
+           IF ISPRINTER()
+
+				  keyboard 27
+              exit
+
+           ENDIF   
+
+        ENDDO
+
+     ENDIF
+     Ativa()
+     RESTSCREEN(09,08,14,48,sc3)
+     SETCOLOR(coranterior)
+     RETURN (1)
+*
+function Ativa
+     SET KEY 27 TO sair()
+     SET KEY 28 TO help()
+     SET KEY -7 TO rotimp()
+     SET KEY -8 TO ver()
+     RETURN
+*
+function desativa
+     SET KEY 27 TO
+     SET KEY 28 TO
+     SET KEY -7 TO
+     SET KEY -8 TO
+     RETURN
+
+***************
+function Quadro
+***************
+
+PARAMETERS LI,CI,LF,CF,CORBOX,CORSOMBRA
+SET COLOR TO CORSOMBRA
+SCROLL(LI+1,CI+2,LF+1,CF+2,0)
+SET COLOR TO CORBOX
+SCROLL(LI,CI,LF,CF,0)
+@ LI,CI TO LF,CF DOUBLE
+RETURN
+
+*
+FUNCTION print_error
+parameters NAME, LINHA
+set device to SCREEN
+SCP=savescreen(01,02,06,41)
+CORANTERIOR=setcolor()
+Quadro( 01,02,05,39,"W+/R,W+*/R","N/N" )
+@ 02,05 SAY "Sua IMPRESSORA est  DESABILITADA"
+@ 03,02 SAY "Ì"+REPLICATE("Í",36)+"¹"
+@ 04,05 SAY "Devo tentar outra vez ?"
+keyboard chr(4)
+@ 04,30 prompt "Sim"
+@ 04,34 prompt "N„o"
+menu to PRI
+if PRI=2
+   set color to
+   set cursor ON
+   clear
+   quit
+endif   
+restscreen(01,02,06,41,SCP)
+setcolor(CORANTERIOR)
+return .T.
+
+******************
+function Nautoriza
+******************
+
+clear
+@ 20,10 say " *** C¢pia n„o autorizada ***" color "W+*/N"
+@ 21,00 say ""
+quit
+return

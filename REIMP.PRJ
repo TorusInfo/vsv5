@@ -1,0 +1,721 @@
+****************
+procedure Re_imp 
+****************
+
+if lastrec( "MOVIMEN" ) = 0
+	Imp_bol_cx()
+	clear typeahead
+	return
+endif
+set confirm ON
+select "MOVIMEN"
+go bottom
+do while val( MOVIMEN->BOLETO_NUM ) = 0
+	skip -1	
+	if bof()
+		Imp_bol_cx()
+		clear typeahead
+		return
+	endif
+enddo
+
+SET KEY asc( "C" ) TO Temp_1() && Imp_bol_cx()
+SET KEY asc( "c" ) TO Temp_1() && Imp_bol_cx()
+Mtemp = " "
+NUM_BOLETO = MOVIMEN->BOLETO_NUM
+@ 23,01 SAY SPACE(60) COLOR "W/B"
+@ 23,02 SAY "Entre N§ do boleto = " GET NUM_BOLETO COLOR "W+/B,W+/N,N,W+/B"
+read
+SET KEY asc( "C" ) TO 
+SET KEY asc( "c" ) TO 
+if Mtemp = "^"
+
+	Imp_bol_cx()
+	Mtemp = " "
+	return
+
+endif
+set confirm OFF
+if lastkey() = 27
+
+	return
+
+endif
+
+* IMPRIME BOLETO DE CAIXA
+*if _left(NUM_BOLETO,1) = "C" .OR. _left(NUM_BOLETO,1) = "c"
+*	Imp_bol_cx()
+*	return
+*endif
+
+locate for MOVIMEN->BOLETO_NUM = NUM_BOLETO .and. MOVIMEN->ITEM = "00"
+if .not. found() .or. NUM_BOLETO # MOVIMEN->BOLETO_NUM
+
+	Mens_erro( " Boleto n„o encontrado " )
+	return
+
+endif
+restore from "MENSAGEM" additive
+*** prepara impressao da mensagem no boleto ***
+		ult_linha = 0
+		IF LEN(ALLTRIM(men_l01)) # 0
+			ult_linha = 1
+		ENDIF
+		IF LEN(ALLTRIM(men_l02)) # 0
+			ult_linha = 2
+		ENDIF
+		IF LEN(ALLTRIM(men_l03)) # 0
+			ult_linha = 3
+		ENDIF
+		IF LEN(ALLTRIM(men_l04)) # 0
+			ult_linha = 4
+		ENDIF
+		IF LEN(ALLTRIM(men_l05)) # 0
+			ult_linha = 5
+		ENDIF
+		IF LEN(ALLTRIM(men_l06)) # 0
+			ult_linha = 6
+		ENDIF
+		IF LEN(ALLTRIM(men_l07)) # 0
+			ult_linha = 7
+		ENDIF
+		IF LEN(ALLTRIM(men_l08)) # 0
+			ult_linha = 8
+		ENDIF
+		IF LEN(ALLTRIM(men_l09)) # 0
+			ult_linha = 9
+		ENDIF
+		IF LEN(ALLTRIM(men_l10)) # 0
+			ult_linha = 10
+		ENDIF
+		ult_linha = ult_linha + 1
+
+restore from "SYSFILE.MEM" additive
+Abrir_Imp( NOM_TERM )
+
+select "FUNCION"
+seek MOVIMEN->CODFUNC
+select "CLIENTES"
+
+flock( 15 )
+set order to 3
+unlock
+
+seek MOVIMEN->COD_CLI
+select "MOVIMEN"
+if MOVIMEN->OPERACAO = "R"
+
+if IMP_RET = "BOLETO.PRN"
+	do while .t.
+		IMP_RET1 = "B" + STR( _RAND()*1000000, 6 )
+		if _file(IMP_RET1)
+			loop
+		else
+			set printer to IMP_RET1
+			exit
+		endif
+	enddo
+else
+	set printer to IMP_RET
+endif
+
+   PRECO_TOTAL = 0
+	TOT_DESC    = 0
+	TOT_VC		= 0
+	NUM_FITAS   = 0
+   lprint NOM_LOC
+	if IMP_NF = "S"
+
+		lprint END_LOC
+		lprint CID_LOC+" "+UF_LOC
+		lprint "CEP "+CEP_LOC
+		lprint "C.G.C : "+CGC_LOC
+		lprint "I.E.  : "+IE_LOC
+		IF _TYPE( IM_LOC ) # "U"
+		
+			IF alltrim( IM_LOC ) # "" 
+
+				lprint "INSC. MUNIC. : "+IM_LOC
+
+			ENDIF
+
+		ENDIF
+		lprint "NOTA FISCAL DE SERVICOS SIMPLIFICADA  "
+		lprint "SERIE B"
+
+	endif
+   lprint "LOJA : "+NUM_LOJA+"                      RETIRADA"
+   lprint MOVIMEN->HORA + "h  -     " + DTOC( MOVIMEN->DATA_MOV ) + ;
+			 "   -   " + _raw( CDOW( MOVIMEN->DATA_MOV ) )
+
+	if IMP_NF = "S"
+	   lprint "BOLETO NUMERO ........... "+dtos(DIA_ATUAL)+MOVIMEN->BOLETO_NUM
+	else
+	   lprint "BOLETO NUMERO ................... "+MOVIMEN->BOLETO_NUM
+	endif
+   lprint
+	IF MOVIMEN->CONCLUSAO
+		lprint "PAGO ANTECIPADAMENTE"
+		lprint
+	ENDIF
+   lprint "FITA           CATEG         PRECO DEVOL"
+
+   DO WHILE MOVIMEN->BOLETO_NUM = NUM_BOLETO .AND. .NOT.EOF()
+		num_fitas = num_fitas + 1
+	   SELECT "TITULOS"
+	   SEEK _LEFT(MOVIMEN->CODFITA,6)
+		SELECT "CATEGOR"
+		GO TITULOS->T_CATEGOR
+	   lprint TITULOS->T_PORT
+      lprint MOVIMEN->CODFITA PICTURE "@R 99.9999.99.9-9" nolinefeed
+	   lprint " "+_left(UPPER(CATEGOR->DADOS),10)          nolinefeed
+		IF MOVIMEN->NUM_VC > 0
+			tot_vc = tot_vc+movimen->num_vc
+			valor_normal = 0
+		ELSE
+			valor_normal = MOVIMEN->VALOR
+		ENDIF
+      lprint valor_normal PICTURE "##,###.##" nolinefeed
+      preco_total = preco_total + valor_normal
+		tot_desc = tot_desc + (valor_normal * MOVIMEN->DESCONTO/100)
+      lprint " "+_left(DTOC(MOVIMEN->DATA_PREV),5)
+      if len(alltrim(MOVIMEN->SEQUENCIAL))#0
+         lprint "Seq.: " nolinefeed
+         lprint MOVIMEN->SEQUENCIAL picture "9999" 
+      endif
+
+		SELECT "MOVIMEN"
+		IF EOF() .OR. MOVIMEN->LINK = 0
+			EXIT
+		ELSE
+			SKIP MOVIMEN->LINK
+		ENDIF
+   ENDDO
+
+   lprint
+   lprint "TOTAL DE FITAS =  " nolinefeed
+   lprint num_fitas PICTURE "99" 
+   lprint "PRECO TOTAL ................. " nolinefeed
+   lprint preco_total PICTURE "###,###.##"
+
+	IF tot_desc # 0 .AND. preco_total > 0
+		lprint "DESCONTO PROMOCIONAL DE ..... " nolinefeed
+		lprint tot_desc PICTURE "###,###.##"
+		lprint "TOTAL A PAGAR ............... " nolinefeed
+		preco_total = (preco_total-tot_desc)
+		lprint  preco_total PICTURE "###,###.##"
+	ENDIF
+	if CLIENTES->DEBITOS # 0
+
+	  	lprint "       " nolinefeed
+	   if CLIENTES->DEBITOS > 0
+   
+      	lprint " DEBITO ANTERIOR = " nolinefeed
+
+		elseif CLIENTES->DEBITOS < 0
+	
+	      lprint "CREDITO ANTERIOR = " nolinefeed
+
+   	endif 
+      lprint _abs( CLIENTES->DEBITOS ) picture "###,###,###.##"
+
+	endif
+   lprint
+   lprint "FUNC : "+FUNCION->NOME+"   "
+   lprint
+   lprint CLIENTES->COD_CLI+"  " nolinefeed
+   lprint CLIENTES->NOME
+   lprint
+   lprint
+   lprint
+   lprint REPLICATE("-",40)
+   lprint "               ASSINATURA"
+
+*** IMPRIME EXTRATO DO VIDEO CHEQUE ***
+
+	IF tot_vc > 0 
+		lprint
+		lprint "VIDEO CHEQUE EXTRATO"
+		lprint
+		lprint "VALIDO ATE DIA = " nolinefeed
+		lprint CLIENTES->VC_DATA PICTURE "@E"
+		lprint "USADOS         = " nolinefeed
+		lprint tot_vc PICTURE "##,###"
+		lprint "SALDO ATUAL    = " nolinefeed
+		lprint CLIENTES->VC_QTDE PICTURE "##,###"
+	ENDIF
+
+	  *** imprime mensagem no boleto ***
+	  if MEN_LRET = "S"
+		IF ult_linha > 1
+			lprint
+			lprint men_l01
+		ENDIF
+		IF ult_linha > 2
+			lprint men_l02
+		ENDIF
+		IF ult_linha > 3
+			lprint men_l03
+		ENDIF
+		IF ult_linha > 4
+			lprint men_l04
+		ENDIF
+		IF ult_linha > 5
+			lprint men_l05
+		ENDIF
+		IF ult_linha > 6
+			lprint men_l06
+		ENDIF
+		IF ult_linha > 7
+			lprint men_l07
+		ENDIF
+		IF ult_linha > 8
+			lprint men_l08
+		ENDIF
+		IF ult_linha > 9
+			lprint men_l09
+		ENDIF
+		IF ult_linha > 10
+			lprint men_l10
+		ENDIF
+	  endif
+	*** IMPRIME N' LINHAS APOS BOLETO ***
+	FOR L1 = 1 TO imp_linr
+	   lprint
+	NEXT
+	SET PRINTER TO
+	if IMP_RET = "BOLETO.PRN"
+
+		Boleto_tela(imp_ret1)
+
+	endif
+
+elseif MOVIMEN->OPERACAO = "D" .or. MOVIMEN->OPERACAO = "E"
+
+	SELECT "MOVIMEN"
+
+if IMP_DEV = "BOLETO.PRN"
+	do while .t.
+		IMP_DEV1 = "B" + STR( _RAND()*1000000, 6 )
+		if _file(IMP_DEV1)
+			loop
+		else
+			set printer to IMP_DEV1
+			exit
+		endif
+	enddo
+else
+	set printer to IMP_DEV
+endif
+
+	IF MOVIMEN->OPERACAO = "D"
+	   _store( "DEVOLUCAO" , "OPEREXT" )
+	ELSE
+	   _store( "ESTORNO" , "OPEREXT" )
+	ENDIF
+	tot_desc = 0
+	BOLETO_STR = MOVIMEN->BOLETO_NUM
+   lprint NOM_LOC
+	if IMP_NF = "S"
+		lprint END_LOC
+		lprint CID_LOC+" "+UF_LOC
+		lprint "CEP "+CEP_LOC
+		lprint "C.G.C : "+CGC_LOC
+		lprint "I.E.  : "+IE_LOC
+		IF _TYPE( IM_LOC ) # "U"
+		
+			IF alltrim( IM_LOC ) # "" 
+
+				lprint "INSC. MUNIC. : "+IM_LOC
+
+			ENDIF
+
+		ENDIF
+		lprint "NOTA FISCAL DE SERVICOS SIMPLIFICADA  "
+		lprint "SERIE B"
+
+	endif
+   lprint "LOJA : "+NUM_LOJA+"                     "+OPEREXT
+   lprint _time()+"h  -     "+DTOC(_date())+"   -  "+_raw(CDOW(_date()))
+	if IMP_NF = "S"
+	   lprint "BOLETO NUMERO ........... "+dtos(DIA_ATUAL)+BOLETO_STR
+	else
+	   lprint "BOLETO NUMERO ................... "+BOLETO_STR
+	endif
+   lprint
+   lprint "FITA           RETIR     PRECO  D.EXTRAS"
+	_store( _time() , "M->HORA_ATUAL" )
+   preco_tot1 = 0
+   preco_tot2 = 0
+	tot_vc = 0
+	NUM_FITAS = 0
+   DO WHILE MOVIMEN->BOLETO_NUM = NUM_BOLETO .AND. .NOT.EOF()
+		NUM_FITAS = NUM_FITAS+1
+      IF MID(MOVIMEN->CODFITA,9,1) = "1"
+         SELECT "TITULOS"
+         SEEK _LEFT(MOVIMEN->CODFITA,6)
+         lprint TITULOS->T_PORT 
+      ENDIF
+		IF MOVIMEN->VALOR_PAGO = 0
+			VALOR_NORMAL = 0
+			VALOR_ATRASO = 0
+		ELSE
+			VALOR_NORMAL = MOVIMEN->VALOR
+*			VALOR_ATRASO = MOVIMEN->VALOR_PAGO - MOVIMEN->VALOR
+			VALOR_ATRASO = (MOVIMEN->ATRASO_VAL * MOVIMEN->ATRASO_DIA)
+			IF VALOR_ATRASO < 0
+				VALOR_ATRASO = 0
+			ENDIF
+		ENDIF
+		TOT_DESC = TOT_DESC + (VALOR_NORMAL * (MOVIMEN->DESCONTO / 100))
+		TOT_VC = TOT_VC + MOVIMEN->NUM_VC
+		SELECT "MOVIMEN"
+      lprint MOVIMEN->CODFITA PICTURE "@R 99.9999.99.9-9" nolinefeed
+      lprint " " nolinefeed
+      lprint _left(DTOC(MOVIMEN->DATA_PREV),5)            nolinefeed
+      lprint " " nolinefeed
+      lprint M->VALOR_NORMAL PICTURE "##,###.##" nolinefeed
+      lprint " " nolinefeed
+      lprint M->VALOR_ATRASO PICTURE iif( M->VALOR_ATRASO < 100000, ;
+		                                   "##,###.##", "######.##" )
+      if len(alltrim(MOVIMEN->SEQUENCIAL))#0
+         lprint "Seq.: " nolinefeed
+         lprint MOVIMEN->SEQUENCIAL picture "9999" 
+      endif
+
+      preco_tot1=preco_tot1+M->VALOR_NORMAL
+      preco_tot2=preco_tot2+M->VALOR_ATRASO
+		IF EOF() .OR. MOVIMEN->LINK = 0
+			EXIT
+		ELSE
+			SKIP MOVIMEN->LINK
+		ENDIF
+   ENDDO
+   lprint
+   lprint "TOTAL FITAS = " nolinefeed
+   lprint NUM_FITAS PICTURE "99"
+   lprint "PRECO TOTAL ................." nolinefeed
+   IF MOVIMEN->OPERACAO = "E"
+
+      VAL_ESTOR = 0
+      lprint val_estor PICTURE "####,###.##"
+
+   ELSE   
+
+      lprint (preco_tot1+preco_tot2) PICTURE "####,###.##"
+
+   ENDIF
+	PRECO_TOTAL = PRECO_TOT1+PRECO_TOT2
+	IF tot_desc # 0 .AND. CLIENTES->C_TIPOC # "I" .AND.;
+		PRECO_TOTAL > 0 .and. MOVIMEN->OPERACAO = "D"
+
+		lprint "DESCONTO PROMOCIONAL DE ....." nolinefeed
+		lprint tot_desc PICTURE "####,###.##"
+		lprint "TOTAL A PAGAR ..............." nolinefeed
+		lprint (preco_total-tot_desc) PICTURE "####,###.##"
+
+	ENDIF
+	if CLIENTES->DEBITOS # 0
+
+	  	lprint "       " nolinefeed
+	   if CLIENTES->DEBITOS > 0
+   
+      	lprint " DEBITO ANTERIOR = " nolinefeed
+
+		elseif CLIENTES->DEBITOS < 0
+	
+	      lprint "CREDITO ANTERIOR = " nolinefeed
+
+   	endif 
+      lprint _abs( CLIENTES->DEBITOS ) picture "###,###,###.##"
+
+	endif
+	SELECT "FUNCION"
+	SEEK MOVIMEN->CODFUNC
+   lprint
+   lprint "FUNC : "+FUNCION->NOME+"   "
+   lprint
+   lprint CLIENTES->COD_CLI+"  " nolinefeed
+   lprint CLIENTES->NOME
+	*** IMPRIME EXTRATO DO VIDEO CHEQUE ***
+	IF tot_vc > 0 
+
+		lprint
+		lprint "VIDEO CHEQUE EXTRATO"
+		lprint
+		lprint "USADOS         = " nolinefeed
+		lprint tot_vc PICTURE "##,###"
+		lprint "SALDO ATUAL    = " nolinefeed
+		lprint CLIENTES->VC_QTDE PICTURE "##,###"
+	ENDIF
+   SELECT "FITAS"      
+
+	flock( 15 )
+	SET ORDER TO 2
+	unlock
+	
+   SEEK CLIENTES->COD_CLI 
+   IF FOUND() .AND. (FITAS->COD_CLI = CLIENTES->COD_CLI)
+		lprint
+      lprint "FITAS AINDA NAO DEVOLVIDAS"
+      DO WHILE FITAS->COD_CLI = CLIENTES->COD_CLI
+         SELECT "TITULOS"
+         SEEK FITAS->T_CODIGO
+         lprint TITULOS->T_PORT
+         lprint FITAS->CODFITA PICTURE "@R 99.9999.99.9-9" nolinefeed
+         lprint " Retirou em "+_left(DTOC(FITAS->DATA_RET),5) nolinefeed
+         lprint " P/ "+_left(DTOC(FITAS->DATA_PREV),5)
+         if len(alltrim(MOVIMEN->SEQUENCIAL))#0
+            lprint "Seq.: " nolinefeed
+            lprint MOVIMEN->SEQUENCIAL picture "9999" 
+         endif
+
+         SELECT "FITAS"
+         SKIP
+      ENDDO
+   ENDIF
+   SELECT "FITAS"      
+
+	flock ( 15 )
+	SET ORDER TO 1
+	unlock
+	
+	*** imprime mensagem no boleto ***
+		if MEN_LDEV = "S"
+			IF ult_linha > 1
+				lprint
+				lprint men_l01
+			ENDIF
+			IF ult_linha > 2
+				lprint men_l02
+			ENDIF
+			IF ult_linha > 3
+				lprint men_l03
+			ENDIF
+			IF ult_linha > 4
+				lprint men_l04
+			ENDIF
+			IF ult_linha > 5
+				lprint men_l05
+			ENDIF
+			IF ult_linha > 6
+				lprint men_l06
+			ENDIF
+			IF ult_linha > 7
+				lprint men_l07
+			ENDIF
+			IF ult_linha > 8
+				lprint men_l08
+			ENDIF
+			IF ult_linha > 9
+				lprint men_l09
+			ENDIF
+			IF ult_linha > 10
+				lprint men_l10
+			ENDIF
+		endif
+	*** IMPRIME N' LINHAS APOS BOLETO ***
+	FOR L1 = 1 TO imp_lind
+	   lprint
+	NEXT
+	SELECT "MOVIMEN"
+	set printer to
+	if IMP_DEV = "BOLETO.PRN"
+
+		Boleto_tela(imp_dev1)
+
+	endif
+
+elseif MOVIMEN->OPERACAO = "V"
+
+
+if IMP_DEV = "BOLETO.PRN"
+	do while .t.
+		IMP_DEV1 = "B" + STR( _RAND()*1000000, 6 )
+		if _file(IMP_DEV1)
+			loop
+		else
+			set printer to IMP_DEV1
+			exit
+		endif
+	enddo
+else
+	set printer to IMP_DEV
+endif
+
+	BOLETO_STR = MOVIMEN->BOLETO_NUM
+   lprint NOM_LOC
+	if IMP_NF = "S"
+		lprint END_LOC
+		lprint CID_LOC+" "+UF_LOC
+		lprint "CEP "+CEP_LOC
+		lprint "C.G.C : "+CGC_LOC
+		lprint "I.E.  : "+IE_LOC
+		IF _TYPE( IM_LOC ) # "U"
+		
+			IF alltrim( IM_LOC ) # "" 
+
+				lprint "INSC. MUNIC. : "+IM_LOC
+
+			ENDIF
+
+		ENDIF
+		lprint "NOTA FISCAL DE SERVICOS SIMPLIFICADA  "
+		lprint "SERIE B"
+	endif
+   lprint "LOJA : "+NUM_LOJA+"                      VENDA"
+   lprint _time()+"h  -     "+DTOC(DIA_ATUAL)+"   -   "+_raw(CDOW(DIA_ATUAL))
+	if IMP_NF = "S"
+	   lprint "BOLETO NUMERO ........... "+dtos(DIA_ATUAL)+BOLETO_STR
+	else
+	   lprint "BOLETO NUMERO ................... "+BOLETO_STR
+	endif
+   lprint
+   lprint "PRODUTO                      PRECO      "
+	_store( _time() , "HORA_ATUAL" )
+   SELECT "MOVIMEN"
+   NUM_FITAS   = 0
+   PRECO_TOTAL = 0
+   DO WHILE .NOT. EOF() .and. MOVIMEN->BOLETO_NUM = NUM_BOLETO
+		NUM_FITAS += 1
+      SELECT "MOVIMEN"
+		VALOR_NORMAL = MOVIMEN->VALOR
+      SELECT "TITULOS"
+      SEEK _LEFT(MOVIMEN->CODFITA,6)
+      lprint TITULOS->T_PORT
+		SELECT "MOVIMEN"
+      lprint MOVIMEN->CODFITA PICTURE "@R 99.9999" + ".00    " nolinefeed
+	   lprint "           " nolinefeed
+      lprint VALOR_NORMAL PICTURE "###,###.##"
+      PRECO_TOTAL = PRECO_TOTAL + VALOR_NORMAL
+		SKIP
+   ENDDO
+   lprint
+   lprint "TOTAL DE PRODUTOS =  " nolinefeed
+   lprint NUM_FITAS PICTURE "99" 
+   lprint "PRECO TOTAL ................. " nolinefeed
+   lprint preco_total PICTURE "###,###.##"
+	SELECT "FUNCION"
+	seek MOVIMEN->CODFUNC
+   lprint "FUNC : "+FUNCION->NOME+"   "
+	*** IMPRIME N' LINHAS APOS BOLETO ***
+	FOR L1 = 1 TO imp_lind
+	   lprint
+	NEXT
+	SET PRINTER TO
+	if IMP_DEV = "BOLETO.PRN"
+
+		Boleto_tela(imp_dev1)
+
+	endif
+
+endif
+
+@ 23,01 SAY SPACE(60) COLOR "W/B"
+
+RETURN
+*
+
+function Temp_1
+
+keyboard 13
+Mtemp = "^"
+return
+
+*******************
+function Imp_bol_cx
+*******************
+
+clear gets
+if lastrec( "CAIXA" ) = 0
+	return
+endif
+set confirm ON
+select "CAIXA"
+go bottom
+do while val( CAIXA->NUMERO ) = 0
+	skip -1	
+	if bof()
+		return
+	endif
+enddo
+
+NUM_BOLETO = CAIXA->NUMERO
+@ 23,01 SAY SPACE(60) COLOR "W/B"
+@ 23,02 SAY "Entre N§ do boleto de caixa = " GET NUM_BOLETO COLOR "W+/B,W+/N,N,W+/B"
+read local
+set confirm OFF
+if lastkey() = 27
+
+	return
+
+endif
+
+* num_boleto = "0"+_right(num_boleto,5)
+
+locate for CAIXA->NUMERO = NUM_BOLETO 
+if .not. found()
+
+	Mens_erro( " Boleto n„o encontrado " )
+	select "MOVIMEN"
+	return
+
+endif
+select "FUNCION"
+seek CAIXA->CODFUNC
+select "CAIXA"
+
+CX_TITU = " "
+if CAIXA->OPERACAO = "P"
+	CX_TITU = "CLIENTES CREDITOS / DEBITOS"
+elseif CAIXA->OPERACAO = "D"
+   CX_TITU = "DESPESAS E VALES DE FUNCIONARIOS"
+elseif CAIXA->OPERACAO = "R"
+   CX_TITU = "OUTROS RECEBIMENTOS" 
+endif
+
+if IMP_DEV = "BOLETO.PRN"
+	do while .t.
+		IMP_DEV1 = "B" + STR( _RAND()*1000000, 6 )
+		if _file(IMP_DEV1)
+			loop
+		else
+			set printer to IMP_DEV1
+			exit
+		endif
+	enddo
+else
+	set printer to IMP_DEV
+endif
+
+lprint NOM_LOC
+lprint
+lprint "LOJA : " + NUM_LOJA
+lprint
+lprint CAIXA->CX_HORA + "h  -     " + dtoc( CAIXA->CX_DATA ) + "   -   ";
+		 + _raw(cdow( CAIXA->CX_DATA ) )
+lprint
+lprint "BOLETO NUMERO ................... "+CAIXA->NUMERO
+lprint
+lprint CX_TITU
+lprint
+lprint CAIXA->HISTORICO
+lprint
+lprint space( 18 ) + "VALOR : " nolinefeed
+lprint CAIXA->VALOR picture "###,###,###.##"
+lprint 
+lprint CAIXA->CODFUNC + " - " + FUNCION->NOME
+for A = 1 to IMP_LIND
+
+	lprint 
+
+next
+set printer to
+if IMP_DEV = "BOLETO.PRN"
+
+	Boleto_tela(IMP_DEV1)
+
+endif
+select "MOVIMEN"
+return
+*

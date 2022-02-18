@@ -1,0 +1,296 @@
+*-------------------------------------------------------------------------------
+*
+*   jREPORT 2.00  -  Copyright (c) Tuxon Software, Agosto 1992.
+*
+*   PROGRAMA: REL_RESER.PRJ
+*
+*-------------------------------------------------------------------------------
+
+function   Rel_reserva
+area=_select()
+private    I          ,;
+           COL_NO     ,;
+           ERRO       ,;
+           ELEMENTO   ,;
+           LINE_COUNT ,;
+           PAGE_COUNT
+
+I          = 0
+COL_NO     = 0
+LINE_COUNT = 51
+PAGE_COUNT = 0
+d_ini = _date()
+d_fim = _date()+30
+restore from "SYSFILE.MEM" ADDITIVE
+Abrir_Imp( NOM_TERM )
+if imp_tipo=1
+      a=chr(15)
+      imp_comp=a
+      a=chr(18)
+      imp_c_comp=a
+      a=chr(14)
+      imp_expa=a
+      a=chr(20)
+      imp_c_expa=a
+elseif imp_tipo=2
+      * comprimido
+      *portrait
+      a=chr(27)+chr(38)+chr(108)+chr(48)+chr(79)
+      *conj. de caracteres
+      b=chr(27)+chr(40)+chr(49)+chr(50)+chr(85)
+      *espacamento
+      c=chr(27)+chr(40)+chr(115)+chr(48)+chr(80)
+      *pitch
+      d=chr(27)+chr(40)+chr(115)+"15"+chr(72)
+      *formato
+      e=chr(27)+chr(40)+chr(115)+chr(52)+chr(49)+chr(48)+chr(49)+chr(84)
+      imp_comp=a+b+c+d+e
+      * normal
+      *portrait
+      a=chr(27)+chr(38)+chr(108)+chr(48)+chr(79)
+      *conj. de caracteres
+      b=chr(27)+chr(40)+chr(49)+chr(50)+chr(85)
+      *espacamento
+      c=chr(27)+chr(40)+chr(115)+chr(48)+chr(80)
+      *pitch
+      d=chr(27)+chr(40)+chr(115)+"12"+chr(72)
+      *formato
+      e=chr(27)+chr(40)+chr(115)+chr(52)+chr(49)+chr(48)+chr(49)+chr(84)
+      imp_c_comp=a+b+c+d+e
+      *expandido
+      *portrait
+      a=chr(27)+chr(38)+chr(108)+chr(48)+chr(79)
+      *conj. de caracteres
+      b=chr(27)+chr(40)+chr(49)+chr(50)+chr(85)
+      *espacamento
+      c=chr(27)+chr(40)+chr(115)+chr(48)+chr(80)
+      *pitch
+      d=chr(27)+chr(40)+chr(115)+"8"+chr(72)
+      *formato
+      e=chr(27)+chr(40)+chr(115)+chr(52)+chr(49)+chr(48)+chr(49)+chr(84)
+      imp_expa=a+b+c+d+e
+      imp_c_expa=imp_c_comp
+endif
+@ 23,01 SAY SPACE(78) COLOR "W+/B" 
+@ 23,01 SAY "Data inicial da listagem :               data final : " COLOR "W+/B"
+@ 23,28 get d_ini picture "@E" COLOR "W+/N"
+@ 23,55 get d_fim picture "@E" COLOR "W+/N"
+read local
+*mens_erro(" ")
+@ 23,01 SAY SPACE(78) COLOR "W+/B" 
+mens_rerro("Ligue a impressora, alinhe o papel e tecle <ENTER> p/ iniciar ou <ESC> cancela",0)
+if lastkey() # 27
+@ 23,01 say "Aguarde a impress„o ..." color "W+*/B"
+SELECT "TITULOS" 
+SET ORDER TO 1
+select "RESERVA"
+use
+open("RESERVA")
+set order to 3
+set relation TO RESERVA->T_codigo into "titulos"
+SET PRINTER TO IMP_REL
+
+SET PRINT ON
+*lprint "consegui"
+*quit
+
+LPRINT IMP_COMP
+go top
+*seek d_ini
+do while !eof()
+   IF RESERVA->D_RESERVA >=D_INI.AND.RESERVA->D_RESERVA<=D_FIM
+   LINE_COUNT += 1
+
+   if LINE_COUNT > 50
+
+      Header_Report_Rel_reser ()
+
+   endif
+
+   lprint pad ( transform ( evaluate ( [D_RESERVA], ERRO, ELEMENTO ) ), 10 ) column 3 nolinefeed
+   if ERRO != 0
+      ? "Erro na Avaliacao da Expressao: " | ELEMENTO
+      quit
+   endif
+
+   lprint pad ( transform ( evaluate ( [CODFITA], ERRO, ELEMENTO ) ), 12 ) column 14 nolinefeed
+   if ERRO != 0
+      ? "Erro na Avaliacao da Expressao: " | ELEMENTO
+      quit
+   endif
+
+   lprint pad ( transform ( evaluate ( [SEQUENCIAL], ERRO, ELEMENTO ) ), 8 ) column 27 nolinefeed
+   if ERRO != 0
+      ? "Erro na Avaliacao da Expressao: " | ELEMENTO
+      quit
+   endif
+
+   lprint pad ( transform ( evaluate ( [COD_CLI], ERRO, ELEMENTO ) ), 8 ) column 36 nolinefeed
+   if ERRO != 0
+      ? "Erro na Avaliacao da Expressao: " | ELEMENTO
+      quit
+   endif
+
+   lprint pad ( transform ( evaluate ( [NOME], ERRO, ELEMENTO ) ), 31 ) column 45 nolinefeed
+   if ERRO != 0
+      ? "Erro na Avaliacao da Expressao: " | ELEMENTO
+      quit
+   endif
+
+   lprint pad ( transform ( evaluate ( [TITULOS->T_PORT], ERRO, ELEMENTO ) ), 30 ) column 77 nolinefeed
+   if ERRO != 0
+      ? "Erro na Avaliacao da Expressao: " | ELEMENTO
+      quit
+   endif
+
+   lprint pad ( transform ( evaluate ( [TITULOS->T_ORIGINAL], ERRO, ELEMENTO ) ), 25 ) column 108 nolinefeed
+   if ERRO != 0
+      ? "Erro na Avaliacao da Expressao: " | ELEMENTO
+      quit
+   endif
+
+   lprint
+	ENDIF
+   skip
+
+enddo
+
+if PAGE_COUNT != 0
+
+   Footer_Report_Rel_reser ()
+
+endif
+eject
+set print off
+@ 23,01 say space (78) color "W+/B"
+@ 23,01 say "Impress„o terminada - tecle algo" color "W+*/B"
+inkey(0)
+endif
+@ 23,01 say space (78) color "W+/B"
+select area
+return
+*********
+function Header_Report_Rel_reser
+*********
+
+PAGE_COUNT += 1
+
+if PAGE_COUNT != 1
+
+   Footer_Report_Rel_reser ()
+
+endif
+
+LINE_COUNT  = 1
+
+lprint "   Pagina  : " + str( PAGE_COUNT, 5, 0, "" )
+lprint "   Emiss„o : " + dtoc( _date() ) + " - " + jtime()
+lprint "   "+nom_sistema+" N.S."+num_serie+space(20)+nom_loc
+lprint "                                                    LISTAGEM DE FITAS RESERVADAS                                                    "
+lprint "                                                    DO DIA " nolinefeed
+lprint D_INI picture "@E" nolinefeed
+lprint " ATE O DIA " nolinefeed
+lprint D_fim picture "@E"
+lprint
+lprint
+lprint "   DATA       CODIGO DA    CODIGO   CODIGO   NOME                            TITULO EM                      TITULO"
+lprint "              FITA         SEQ.     DO                                       PORTUGUES                      ORIGINAL"
+lprint "                                    CLIENTE"
+lprint
+
+*********
+function Footer_Report_Rel_reser
+*********
+if PAGE_COUNT # 1
+for I = LINE_COUNT to 50
+   lprint
+next
+
+lprint
+lprint
+
+eject
+ENDIF
+
+*-------------------------------------------------------------------------------
+*
+*   >>> REL_RESER.PRJ <<<   -  FIM DO PROGRAMA
+*
+*-------------------------------------------------------------------------------
+
+
+FUNCTION MOSTRA_RER
+
+AREA=_select()
+   SELECT "TITULOS"
+   ord_tit =INDEXORD()
+   SET ORDER TO 1
+   SELECT "RESERVA"
+   set order to 3
+   set relation TO RESERVA->T_codigo into "titulos"
+*	set precedence to FIELDS
+   set delet on
+   private CAMPOS [ 8 ], CABEC [ 8 ], MASCAR [ 8 ], EDICAO [ 8 ]
+
+   CAMPOS[1] = "RESERVA->CODFITA"
+   CAMPOS[2] = "RESERVA->SEQUENCIAL"
+   CAMPOS[3] = "TITULOS->T_PORT"
+   CAMPOS[4] = "RESERVA->D_RESERVA"
+   CAMPOS[5] = "RESERVA->COD_CLI"
+   CAMPOS[6] = "RESERVA->NOME"
+   CAMPOS[7] = "RESERVA->TEL_RES"
+   CAMPOS[8] = "RESERVA->TEL_COM"
+
+
+	CABEC[1] = "CODIGO DA FITA"
+   CABEC[2] = "SEQ."
+   CABEC[3] = "TITULO EM PORTUGUES"
+   CABEC[4] = "DATA RES."
+   CABEC[5] = "CODIGO"
+   CABEC[6] = "NOME DO CLIENTE"
+   CABEC[7] = "TEL. RES."
+   CABEC[8] = "TEL. COM."
+
+	MASCAR[1] = "@R 99.9999.99.9-9"
+	MASCAR[2] = "@!"
+   MASCAR[3] = "@!"
+   MASCAR[4] = "@E"
+   MASCAR[5] = "@!"
+   MASCAR[6] = "@!"
+   MASCAR[7] = "@!"
+   MASCAR[8] = "@!"
+
+	SET CURSOR OFF
+
+	@ 23,01 SAY "Para se mover use as Setas - PgUp - PgDn - Home "+;
+					"- End - Ctrl PgUp - Ctrl PgDn " COLOR "W+/B"
+   SCCOLOR=SETCOLOR()
+   SCCLI=SAVESCREEN(09,02,21,78)   
+	SET COLOR TO "N/N"
+	@ 21,04 CLEAR TO 21,78
+	@ 10,77 CLEAR TO 20,78
+	SET COLOR TO "N/BG,N/BG,N,N/BG"
+   
+   BROWSE   WINDOW   09,02,20,76;
+				COLOR   "N/BG,W+/R,W+/BG,N/BG";
+				FRAME    DOUBLE;
+            FIELDS   campos;
+				PICTURE  mascar;
+				HEADING  CABEC;
+				EDIT     .F.;
+				NOAPPEND;
+				NODELETE
+
+	SET CURSOR ON
+	SET RELATION TO
+	SELECT "TITULOS"
+	SET ORDER TO ord_tit
+	SELECT "FITAS"
+RESTSCREEN(09,02,21,78,SCCLI)   
+SETCOLOR(SCCOLOR)
+SELECT AREA
+set dele off
+@ 23,01 SAY SPACE(78) COLOR "W+/B"
+
+return
+

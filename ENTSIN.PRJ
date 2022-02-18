@@ -1,0 +1,49 @@
+*********************
+function Apresentacao 
+*********************
+
+set typeahead to 126
+set date      "DMY"
+set mark      to "/"
+set hours     to 24
+set point     to ","
+set separator to "."
+set recbuffer to 0
+set cursor    .F.
+*Open( "CLIENTES" )
+Open( "TITULOS"  )
+Open( "FITAS"    )
+*Open( "MOVIMEN"  )
+Open( "FUNCION"  )
+*Open( "CAIXA"    )
+Open( "SINOPSE"  )
+*Open( "FERIADOS" )
+* Open( "RESERVA"  )
+* Open( "EXTRATO"  )
+Open( "REDE"   )
+Open( "GREDE"  )
+set key  -1 to Descanso()              &&  F2  Descanso de tela
+set key -20 to Ativa_fun()             && ^F1  Seleciona funcionario
+return
+
+********************
+function Acerta_data
+********************
+
+set date      "DMY"
+set mark      to "/"
+set hours     to 24
+Quadro( 14, 09, 20, 44, "N/BG,W+/BG,N,W+/N", "N+/N" )
+TDATA = _date()
+MHORA = _time()
+@ 23,02 say "Tecle <Enter> para confirmar ou altere a data e hora" color "W+/B"
+@ 16,11 say "Confirme esta data : " get TDATA picture "@E"
+@ 18,11 say "Confirme esta hora : " get MHORA picture "99:99:99"
+set cursor   ON
+read
+set cursor   OFF
+_date( TDATA )
+_time( MHORA )
+set color to "W+/B"
+@ 03,01 clear to 21,78  color "W/B"
+@ 23,01 say space( 78 ) color "W/B"

@@ -1,0 +1,83 @@
+*****************
+function Imp_Term
+*****************
+
+PUBLIC NOM_TERM
+private NUM_TERM
+select "REDE"
+NUM_TERM = 666666
+*NUM_TERM = ROMCKSUM()
+locate for NOME = NUM_TERM
+if found()  && terminal ja cadastrado
+	NOM_TERM = "PRTER" + STR( RECNO() , 3, 0, "0")
+	if _file( NOM_TERM + ".MEM" )
+
+		* NECESSARIO APENAS SE AS FASES ONDE IMPRIME NAO FIZEREM
+		* SEU PROPRIO RESTORE
+*		restore from NOM_TERM additive
+
+	else
+
+	   TERM_DEV    = "BOLETO.PRN"  && Dispositivo de sa¡da de boleto de devolucao
+   	TERM_RET    = "BOLETO.PRN"  && Dispositivo de sa¡da de boleto de retirada
+	   TERM_REL    = "RELATOR.PRN" && Dispositivo de sa¡da do relat¢rio 
+		TERM_LINR   =  7            && Linhas a saltar apos boleto de retirada
+		TERM_LIND   =  7            && Linhas a saltar apos boleto de devolucao
+		save to NOM_TERM ALL LIKE "TERM_*"
+
+	endif
+ 		
+else	&& terminal nao cadastrado
+
+	if flock( 15 , "REDE" )
+		append blank
+		replace REDE->NOME with NUM_TERM
+		NOM_TERM = "PRTER" + STR( RECNO() , 3, 0, "0")
+	   TERM_DEV    = "BOLETO.PRN"  && Dispositivo de sa¡da de boleto de devolucao
+	  	TERM_RET    = "BOLETO.PRN"  && Dispositivo de sa¡da de boleto de retirada
+	  	TERM_REL    = "RELATOR.PRN" && Dispositivo de sa¡da do relat¢rio 
+		TERM_LINR   =  7            && Linhas a saltar apos boleto de retirada
+		TERM_LIND   =  7            && Linhas a saltar apos boleto de devolucao
+		save to NOM_TERM ALL LIKE "TERM_*"
+	else
+		Mens_rerro( " Erro de espera na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+		inkey(0)
+		quit
+	endif
+endif
+
+return
+*
+
+******************
+function Abrir_Imp
+******************
+
+parameters ARQ_NAME
+
+PUBLIC IMP_DEV,IMP_RET,IMP_REL,IMP_LINR,IMP_LIND
+restore from ARQ_NAME additive
+IMP_DEV  = TERM_DEV 
+IMP_RET  = TERM_RET
+IMP_REL  = TERM_REL
+IMP_LINR = TERM_LINR
+IMP_LIND = TERM_LIND
+
+return
+*
+
+******************
+function Grava_Imp
+******************
+
+parameters ARQ_NAME
+
+TERM_DEV    = IMP_DEV
+TERM_RET    = IMP_RET
+TERM_REL    = IMP_REL
+TERM_LINR   = IMP_LINR 
+TERM_LIND   = IMP_LIND 
+save to NOM_TERM ALL LIKE "TERM_*"
+
+return
+*

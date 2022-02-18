@@ -1,0 +1,236 @@
+***************************
+* procedure Fitas_locadas *
+***************************
+
+
+SELECT 4
+USE "CLIENTES.DBF"
+SET INDEX TO "CLIENTES.K1" KEY CLIENTES->NOME,;
+  	          "CLIENTES.K2" KEY CLIENTES->CPF_CLI ,;
+     	       "CLIENTES.K3" KEY CLIENTES->COD_CLI 
+
+SELECT 6
+USE "FITAS.DBF"
+SET INDEX TO "FITAS.K1" KEY FITAS->CODFITA,;
+             "FITAS.K2" KEY FITAS->COD_CLI+FITAS->CODFITA,;
+				 "FITAS.K3" KEY FITAS->SEQUENCIAL
+
+set softseek ON
+set deleted  ON
+
+restore from "SYSFILE.MEM" additive
+Abrir_Imp( NOM_TERM )
+
+restore from "DADLOC.MEM"  additive
+select "FITAS"
+set order to 2
+select "CLIENTES"
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say "Por ordem <A>lfabetica ou <C>¢digo de clientes ? " color "W+/B"
+clear typeahead
+TT = inkey( 0 )
+if TT = 65 .or. TT = 97
+
+	@ 21,01 say "Relat¢rio por ordem alfab‚tica" color "W+/B"
+	_bell()
+	Alfabeto()
+	
+elseif TT = 67 .or. TT = 99
+
+	@ 21,01 say "Relat¢rio por ordem de c¢digo" color "W+/B"
+	_bell()
+	Codigo()
+	
+endif
+set printer to
+set cursor  ON
+close all
+quit
+
+*****************
+function Alfabeto
+*****************
+
+ver_printer()
+@ 23,01 			say space( 78 ) color "W/B"
+@ 23,01 			say "<End>" color "W+*/B"
+@ 23,col()+2 	say "-  Interrompe a impress„o " color "W+/B"
+PG = 1
+clear typeahead
+Cabecalho()
+select "CLIENTES"
+set order to 1
+go top
+do while .not. eof()
+
+	inkey()
+	if lastkey() = 6 .or. nextkey() = 6
+
+		return
+
+	endif
+	if CLIENTES->COD_CLI # "000000"
+
+		select "FITAS"
+		seek CLIENTES->COD_CLI
+		if FITAS->COD_CLI == CLIENTES->COD_CLI
+
+			do while FITAS->COD_CLI == CLIENTES->COD_CLI
+		
+				inkey()
+				if lastkey() = 6 .or. nextkey() = 6
+
+					return
+
+				endif
+				Imprime_relat()
+				if eof()
+				
+					exit
+					
+				endif	
+				skip
+		
+			enddo
+		
+		endif
+	
+	endif
+	select "CLIENTES"
+	if eof()
+				
+		exit
+				
+	endif	
+	skip
+	
+enddo
+inkey()
+if lastkey() = 6 .or. nextkey() = 6
+	return
+endif
+lprint chr(18) nolinefeed
+eject
+set printer to
+@ 21,01 say "                              " color "W+/B"
+_bell()
+
+return
+
+******************
+FUNCTION cabecalho 
+******************
+
+inkey()
+if lastkey() = 6 .or. nextkey() = 6
+	return
+endif
+LPRINT SPACE(05)  NOLINEFEED
+LPRINT _DATE()    NOLINEFEED
+LPRINT SPACE(23) + NOM_LOC + SPACE(10) + "LOJA : " + NUM_LOJA NOLINEFEED
+LPRINT SPACE(26) + "HORA  :  " NOLINEFEED
+LPRINT _TIME() PICTURE "##:##"
+LPRINT
+LPRINT SPACE(36) + "RELATORIOS   DAS  FITAS  LOCADAS   " + SPACE(42) NOLINEFEED
+LPRINT "PAGINA : " NOLINEFEED
+LPRINT pg PICTURE "#####"
+LPRINT
+LPRINT SPACE(05) + "NOME                            - CODIGO - V.C - " NOLINEFEED
+LPRINT "CODIGO DA FITA - N.SEQ -     VALOR  - DESC - PAGO - RETIRADA - DEVOLVER"
+RETURN
+
+********************
+FUNCTION ver_printer 
+********************
+
+set printer to IMP_REL
+@ 23,01	 	SAY SPACE(78) COLOR "W/B"
+@ 23,01 		SAY "Ligue e posicione o papel da sua impressora " COLOR "W+/B"
+@ 23,COL()	SAY "e tecle algo " COLOR "W+/B"
+INKEY(0)
+LPRINT CHR(15) NOLINEFEED
+@ 23,01	 	SAY SPACE(78) COLOR "W/B"
+
+RETURN
+
+**********************
+FUNCTION imprime_relat 
+**********************
+
+IF PROW() > 59
+	pg = pg + 1
+	EJECT
+	cabecalho()
+ENDIF
+inkey()
+if lastkey() = 6 .or. nextkey() = 6
+
+	return
+
+endif
+lprint space( 05 ) nolinefeed
+lprint CLIENTES->NOME + " - " + CLIENTES->COD_CLI + " - " nolinefeed
+lprint transform( CLIENTES->VC_QTDE, "###" ) + " - "      nolinefeed
+lprint FITAS->CODFITA PICTURE "@R ##.####.##.#-#"         nolinefeed
+lprint " - "                                              nolinefeed
+lprint FITAS->SEQUENCIAL PICTURE "#####"                  nolinefeed
+lprint " - "                                              nolinefeed
+lprint transform( FITAS->VALOR, "###,###.##")             nolinefeed
+lprint " -  "                                             nolinefeed
+lprint transform( FITAS->DESCONTO, "###" )                nolinefeed
+lprint " -  " + FITAS->PAGTO + "   - "                    nolinefeed
+lprint dtoc( FITAS->DATA_RET )                            nolinefeed
+lprint " - "                                              nolinefeed
+lprint dtoc( FITAS->DATA_PREV )
+
+return
+
+***************
+function Codigo
+***************
+
+set softseek ON
+select "CLIENTES"
+set order to 3
+select "FITAS"
+set order to 2
+set relation to FITAS->COD_CLI into "CLIENTES"
+go top
+seek "000001"
+ver_printer()
+@ 23,01 			SAY SPACE(78) COLOR "W/B"
+@ 23,01 			SAY "<End>" COLOR "W+*/B"
+@ 23,COL()+2 	SAY "-  Interrompe a impress„o " COLOR "W+/B"
+PG = 1
+Cabecalho()
+if .not. eof()
+
+	do while .not. eof()
+
+		inkey()
+		if lastkey() = 6 .or. nextkey() = 6
+
+			return
+
+		endif
+		Imprime_relat()
+		if .not. eof()
+	
+			skip
+
+		endif
+		
+	enddo
+
+endif
+inkey()
+if lastkey() = 6 .or. nextkey() = 6
+
+	return
+
+endif
+lprint chr( 18 ) nolinefeed
+eject
+_bell()
+return
+

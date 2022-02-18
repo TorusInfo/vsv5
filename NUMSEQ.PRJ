@@ -1,0 +1,233 @@
+*
+* Programa para pesquisas de acerto nos NUMEROS SEQUENCIAIS
+*
+set deleted   ON
+set softseek  ON
+set exclusive OFF
+clear screen
+@ 23,02 say "Aguarde... Criando o indice" color "W+*/N"
+select 2
+use "BRANCO.DBF"
+flock( 15 )
+zap
+unlock
+select 3
+use "FALTA.DBF"
+flock( 15 )
+zap
+unlock
+select 4
+use "DUPLO.DBF"
+flock( 15 )
+zap
+unlock
+select 1
+use "FITAS.DBF"
+flock( 15 )
+index on str( val( FITAS->SEQUENCIAL ) ) + FITAS->CODFITA to "FITAS.K20"
+set index to "FITAS.K20" key str( val( FITAS->SEQUENCIAL ) ) + FITAS->CODFITA
+unlock
+go top
+clear screen
+CONT_FALTA = 0
+CONT_DUPLO = 0
+CONT_BRANC = 0
+CODIGO     = 0
+@ 00,00 say "BRANCOS"
+@ 01,00 say  CONT_BRANC picture "@E 9,999"
+@ 00,30 say "DUPLO"
+@ 01,30 say  CONT_DUPLO picture "@E 9,999"
+@ 00,60 say "FALTA"
+@ 01,60 say  CONT_FALTA picture "@E 9,999"
+do while val( FITAS->SEQUENCIAL ) < 1 .and. .not. eof()
+
+	select "BRANCO"
+	flock( 15 )
+	append blank
+	unlock
+	CONT_BRANC += 1
+	replace BRANCO->CODFITA with FITAS->CODFITA
+	unlock
+	@ 01,00 say  CONT_BRANC picture "@E 9,999"
+	select "FITAS"
+	skip
+		
+enddo	
+select "FITAS"
+NUMREC = recno()
+CODIGO = val( FITAS->SEQUENCIAL )
+do while .not. eof()
+
+	skip
+	if CODIGO =	val( FITAS->SEQUENCIAL )
+
+		select "DUPLO"
+		flock( 15 )
+		append blank
+		unlock
+		CONT_DUPLO += 1
+		rlock( 15 )
+		replace DUPLO->SEQUENCIAL with FITAS->SEQUENCIAL,;
+		        DUPLO->CODFITA    with FITAS->CODFITA
+		unlock		  
+		@ 01,30 say  CONT_DUPLO picture "@E 9,999"
+		
+	endif
+	select "FITAS"
+	CODIGO = val( FITAS->SEQUENCIAL )
+	
+enddo	
+go NUMREC
+CODIGO = 1
+do while .not. eof()
+
+	if CODIGO > val( FITAS->SEQUENCIAL )
+	
+		select "FALTA"
+		flock( 15 )
+		append blank
+		unlock
+		rlock( 15 )
+		replace FALTA->SEQUENCIAL with str( CODIGO, 4, 0, "0" ) 
+		unlock
+		CONT_FALTA += 1
+		@ 01,60 say  CONT_FALTA picture "@E 9,999"
+		do while CODIGO > val( FITAS->SEQUENCIAL )
+		
+			select "FITAS"
+			skip
+
+		enddo
+		CODIGO += 1
+
+	elseif CODIGO < val( FITAS->SEQUENCIAL )
+
+		do while CODIGO < val( FITAS->SEQUENCIAL )
+
+			select "FALTA"
+			flock( 15 )
+			append blank
+			unlock
+			rlock( 15 )
+			replace FALTA->SEQUENCIAL with str( CODIGO, 4, 0, "0" ) 
+			unlock
+			CONT_FALTA += 1
+			@ 01,60 say  CONT_FALTA picture "@E 9,999"
+			CODIGO += 1
+
+		enddo
+
+	endif
+	select "FITAS"
+	skip	
+	do while CODIGO =  val( FITAS->SEQUENCIAL )
+
+		skip
+	
+	enddo
+	CODIGO += 1
+		
+enddo
+set printer to "FALTA.PRN"
+set console OFF
+set print   ON
+select "FALTA"
+go top
+do while .not. eof()
+
+	?? FALTA->SEQUENCIAL
+	if recno() / 10 = _int( recno() / 10 )
+	
+		?
+		
+	else
+	
+		?? " - "
+		
+	endif
+	skip	
+	
+enddo
+?
+? "QUANTIDADE TOTAL DE CODIGO SEQUENCIAL EM ABERTO "
+?? lastrec()
+?
+?
+set print   OFF
+set console ON
+flock( 15 )
+zap
+unlock
+set printer to "DUPLO.PRN"
+set console OFF
+set print   ON
+select "DUPLO"
+go top
+do while .not. eof()
+
+	?? DUPLO->SEQUENCIAL + " - " + DUPLO->CODFITA
+	?
+	skip
+	
+enddo
+?
+? "QUANTIDADE TOTAL DE CODIGO SEQUENCIAL EM DUPLICATA "
+?? lastrec()
+?
+?
+set print   OFF
+set console ON
+flock( 15 )
+zap
+unlock
+set printer to "BRANCO.PRN"
+set console OFF
+set print   ON
+select "BRANCO"
+go top
+do while .not. eof()
+
+	?? BRANCO->CODFITA
+	if recno() / 5 = _int( recno() / 5 )
+	
+		?
+		
+	else
+	
+		?? " - "
+
+	endif	
+	skip
+		
+enddo
+?
+? "QUANTIDADE TOTAL DE CODIGO SEQUENCIAL EM BRANCO "
+?? lastrec()
+?
+?
+set print   OFF
+set console ON
+flock( 15 )
+zap
+unlock
+for A = 1000 to 3500 step 500
+
+	tone(A,4)
+
+next
+for A = 3500 to 1000 step -500
+
+	tone(A,4)
+
+next
+for A = 2500 to 0 step -500
+
+	tone(A,5)
+
+next
+for A = 1500 to 0 step -500
+
+	tone(A,5)
+
+next
+close all

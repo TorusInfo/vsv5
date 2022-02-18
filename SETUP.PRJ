@@ -1,0 +1,3171 @@
+parameters QUAL_ROT, QUAL_PALAVRA
+set hours to 24
+set date "DMY"
+demo=.t.
+set century on
+set key -10 to Mostraqt()
+*testa_memoria()
+
+*      quit
+*   endif
+torus_tel = "(0xx19) 3287-8687"
+torus_hp  = "www.torus.cjb.net"
+torus_mail= "torus@uol.com.br"
+torus_end= "R. Benedito Alves Aranha, 160 s.20/21"
+torus_cont=10
+torus_cid="Campinas"
+torus_est="SP"
+torus_cep="13085-220"
+
+if pcount() < 2
+  
+   setorus("I")
+	
+endif
+
+
+if upper( QUAL_ROT ) = "I"	
+
+	Verifica()
+	Indexar()
+	
+elseif upper( QUAL_ROT ) = "T"
+
+	Termina()
+
+elseif upper( QUAL_ROT ) = "S"
+
+	Setorus("S")
+
+elseif upper( QUAL_ROT ) = "X"
+
+	Transfer()
+
+elseif upper( QUAL_ROT ) = "W"
+
+	clear
+	Acer_pal()
+	
+elseif upper( QUAL_ROT ) = "D"
+
+	clear
+	Sumdeb()
+
+elseif upper( QUAL_ROT ) = "M"
+
+	clear
+	Imp_manual()
+
+else
+
+   setorus("I")
+
+*	Termina()
+	
+endif
+
+Termina()
+*
+* PROGRAMA P/ INDEXAR REMONTADO
+*
+****************
+function Indexar
+****************
+
+set exclusive on
+** set escape  OFF
+set cursor  OFF
+*set date    "DMY"
+set mark to "/"
+set deleted ON
+set color to "W+/B,N/B,N,W+/B"
+clear
+@ 00,00 TO 24,79 DOUBLE
+@ 02,00 SAY "Ã"+REPLICATE("Õ",78)+"π"
+@ 01,01 SAY "VSV4R.0 - Torus∫        IndexaáÑo e acerto dos arquivos       ∫ ESC - Retorna"
+@ 00,16 SAY "À"
+@ 02,16 SAY " "
+@ 00,63 SAY "À"
+@ 02,63 SAY " "
+@ 22,00 SAY "Ã"+REPLICATE("Õ",78)+"π"
+if network()
+
+   @ 23,01 say " AtenáÑo...Tenha certeza que os outros terminais nÑo estejam no programa" color "W+*/N"
+	_bell()
+	_bell()
+	_bell()
+	_bell()
+	inkey( 50 )
+   @ 23,01 say space( 78 ) color "W+/N"
+
+endif
+declare 	REGARQ[5],	REGCOR[5]
+regarq[1] = "arquivos- Individual  "
+regarq[2] = "Arquivos- todos       "
+regarq[3] = "arquivos- acerTo geral"
+regarq[4] = "tabela de Padrîes     "
+regarq[5] = "Remover clientes perm."
+regcor[1] = "I"
+regcor[2] = "A"
+regcor[3] = "T"
+regcor[4] = "P"
+regcor[5] = "R"
+Quadro(04,02,10,29,"W+/R,N/R,N,W+/R","N/N")
+do while .t.
+
+	popup	window 	05,04,11,28;
+			to 		OP_ARQ;
+			options 	REGARQ;
+			hilite	REGCOR,"GR+/R";
+			color 	"W+/R,N/W,N,W+/R"
+
+	if lastkey() = 27
+
+		exit
+
+	endif
+	E_CONF = 2
+	if lastkey() # 27 .and. OP_ARQ # 1
+
+		clear typeahead
+		_bell()
+		sc_per = SETCOLOR()
+		SET COLOR TO "W+/B,W+*/B,N,W+/B"
+		@ 23,01 SAY SPACE(78) COLOR "W/B"
+		@ 23,01 SAY "Confirma  ? "
+      if OP_arq = 5
+         @ 23,col()+1 say "A remoá∆o ser† permanente "
+      endif
+		@ 23,COL()+1 PROMPT "Sim "
+		@ 23,COL()+1 PROMPT "NÑo "
+		MENU TO e_conf
+		SETCOLOR(sc_per)
+		@ 23,01 SAY SPACE(78) COLOR "W/B"
+		
+	endif
+	if E_CONF = 2 .and. OP_ARQ # 1
+
+		loop
+
+	endif
+	SC_IND = savescreen( 03,01,21,78 )
+	IF op_arq = 3
+   
+		acerto_titulos()
+		toca()
+
+   ELSEIF op_arq = 5
+
+		Del_cli()
+		@ 23,01 say space( 78 ) color "W/B"
+		toca()
+
+   ELSEIF op_arq = 4
+
+		@ 23,01 SAY SPACE(78) COLOR "W+/B"
+		@ 23,01 SAY " ACERTANDO AS TABELAS DE PADROES" COLOR "W+*/B"
+		indpad("DISTRIB.TPO")
+		indpad("IDIOMA.TPO")
+		indpad("LEGENDA.TPO")
+		indpad("PAIS.TPO")
+		indpad("PREMIOS.TPO")
+		indpad("QUALID.TPO")
+		indpad("TIPO.TPO")
+      indpad("QUEM.TPO")
+		CLOSE ALL
+		toca()
+		repoe()
+
+	ELSEIF op_arq = 2
+
+		caixa()
+		clientes()
+		feriados()
+		fitas()
+		funcionarios()
+		titulos()
+      sinopse()
+		toca()
+		FOR a = 2500 TO 0 STEP -500
+			TONE(a,5)
+		NEXT
+
+
+	ELSEIF op_arq = 1
+
+		Individual()
+
+	ELSE
+
+		encerra()
+
+	ENDIF
+	restscreen( 03,01,21,78,SC_IND )
+
+
+ENDDO
+
+encerra()
+
+*
+FUNCTION encerra
+*
+CLOSE ALL
+SET CURSOR ON
+SET COLOR TO
+QUIT
+
+RETURN
+*
+
+*
+FUNCTION caixa
+*
+@ 23,01 SAY SPACE(78) COLOR "W+/B"
+@ 23,01 SAY " CRIANDO INDICES DO CAIXA" COLOR "W+*/B"
+USE "CAIXA.DBF"
+flock( 15 )
+pack nobackup
+index on CAIXA->OPERACAO to "CAIXA.K1"
+Repoe()
+
+RETURN
+*
+
+*
+FUNCTION feriados
+*
+@ 23,01 SAY SPACE(78) COLOR "W+/B"
+@ 23,01 SAY " CRIANDO INDICES DOS FERIADOS" COLOR "W+*/B"
+
+IF _file("ult_bol.mem")
+	DELETE FILE "ult_bol.mem"
+ENDIF
+
+USE "FERIADOS.DBF"
+flock( 15 )
+pack nobackup
+index on FERIADOS->DATA_FER TO "FERIADOS.K1"
+repoe()
+
+RETURN
+*
+
+*
+FUNCTION funcionarios
+*
+@ 23,01 SAY SPACE(78) COLOR "W+/B"
+@ 23,01 SAY " CRIANDO INDICES DE FUNCIONARIOS" COLOR "W+*/B"
+USE "FUNCION.DBF"
+flock( 15 )
+pack nobackup
+index on FUNCION->F_CODIGO TO "FUNCION.K1"
+repoe()
+
+RETURN
+*
+
+*
+FUNCTION clientes
+*
+@ 23,01 SAY SPACE(78) COLOR "W+/B"
+@ 23,01 SAY " CRIANDO INDICES DE CLIENTES" COLOR "W+*/B"
+USE "CLIENTES.DBF"
+pack nobackup
+flock( 15 )
+index on CLIENTES->NOME    to "CLIENTES.K1"
+index on CLIENTES->CPF_CLI to "CLIENTES.K2"
+index on CLIENTES->COD_CLI to "CLIENTES.K3"
+set index to "CLIENTES.K1" key CLIENTES->NOME,;
+  	          "CLIENTES.K2" key CLIENTES->CPF_CLI ,;
+     	       "CLIENTES.K3" key CLIENTES->COD_CLI 
+set order to 3
+unlock
+seek space( 06 )
+if found()
+
+	rlock( 15 )
+	replace CLIENTES->COD_CLI with replicate( chr( 254 ), 06 )
+	delete
+	unlock
+
+endif
+flock( 15 )
+set order to 1
+Repoe()
+
+RETURN
+*
+
+*
+function Titulos
+*
+@ 23,01 SAY SPACE(78) COLOR "W+/B"
+@ 23,01 SAY " CRIANDO INDICES DE TITULOS" COLOR "W+*/B"
+use "TITDELCO.DBF"
+flock( 15 )
+pack nobackup
+index on _left( TITULO, 6 ) to "TITDELCO.K1"
+close
+use "TITDEL.DBF"
+flock( 15 )
+pack nobackup
+index on _left( TITULO, 2 ) to "TITDEL.K1"
+unlock
+close
+use "TITULOS.DBF" 
+flock( 15 )
+pack nobackup
+index on TITULOS->T_CODIGO   to "TITULOS.K1"
+index on TITULOS->T_PORT     to "TITULOS.K2"
+index on TITULOS->T_ORIGINAL to "TITULOS.K3"
+index on TITULOS->T_IDIOMA + TITULOS->T_PORT to "TITULOS.K4"
+index on _descend( dtos( TITULOS->T_DATA_ENT ) + TITULOS->T_CODIGO ) to "TITULOS.K5"
+set index to "TITULOS.K1" key TITULOS->T_CODIGO   ,;
+  	          "TITULOS.K2" key TITULOS->T_PORT     ,;
+				 "TITULOS.K3" KEY TITULOS->T_ORIGINAL ,;
+				 "TITULOS.K4" KEY TITULOS->T_IDIOMA + TITULOS->T_PORT ,;
+				 "TITULOS.K5" KEY _descend( dtos( TITULOS->T_DATA_ENT ) + TITULOS->T_CODIGO )
+set order to 1
+seek space( 06 )
+if found()
+
+	rlock()
+	replace TITULOS->T_CODIGO with replicate( chr( 254 ), 06 )
+	delete
+	unlock
+
+endif
+close
+use "WORD.DBF"
+flock( 15 )
+pack nobackup
+index on WORD->WORD    to "WORD.K1"
+index on WORD->TIT_COD to "WORD.K2"
+Repoe()
+
+return
+*
+function sinopse
+@ 23,01 SAY SPACE(78) COLOR "W+/B"
+@ 23,01 SAY " CRIANDO INDICES DAS SINOPSES" COLOR "W+*/B"
+
+   USE "SINOPSE.DBF"
+	if flock( 15 )
+      pack nobackup
+      SET INDEX TO "SINOPSE.K1" KEY SINOPSE->T_CODIGO  ,;
+                   "SINOPSE.K2" KEY SINOPSE->T_PORT    ,;
+                   "SINOPSE.K3" KEY SINOPSE->T_ORIGINAL
+		unlock
+		set autolock on
+      close
+	else
+
+		Mens_rerro( "Erro de acesso na rede, operaáÑo cancelada", 4, "W+*/B" )
+		close all
+		quit 
+
+	endif
+	
+Repoe()
+
+
+
+return
+*
+FUNCTION fitas
+*
+@ 23,01 SAY SPACE(78) COLOR "W+/B"
+@ 23,01 SAY " CRIANDO INDICES DAS FITAS" COLOR "W+*/B"
+USE "FITAS.DBF"
+flock( 15 )
+pack nobackup
+index on FITAS->CODFITA                  to "FITAS.K1"
+index on FITAS->COD_CLI + FITAS->CODFITA to "FITAS.K2"
+index on FITAS->SEQUENCIAL               to "FITAS.K3"
+set index to "FITAS.K1" key FITAS->CODFITA,;
+             "FITAS.K2" key FITAS->COD_CLI+FITAS->CODFITA,;
+				 "FITAS.K3" key FITAS->SEQUENCIAL
+set order to 1
+seek space( 10 )
+if found()
+
+	rlock( 15 )
+	replace FITAS->CODFITA with replicate( chr( 254 ), 10 )
+	delete
+	unlock
+
+endif
+Repoe()
+
+return
+*
+
+**************
+function Repoe 
+**************
+
+close data
+@ 23,01 say space(78) color "W+/B"
+clear typeahead
+
+return
+*
+
+*
+PROCEDURE indpad 
+*
+PARAMETERS var_arq
+*
+IF _file("TEMPTPO.TMP")
+	DELETE FILE "TEMPTPO.TMP"
+ENDIF
+USE var_arq
+flock( 15 )
+GO 1
+primeiro = DADOS
+DELETE 
+index on DADOS to "TEMPTPO.K1"
+COPY TO "TEMPTPO.TMP"
+ZAP
+APPEND BLANK
+REPLACE DADOS WITH primeiro
+APPEND FROM "TEMPTPO.TMP"
+unlock
+CLOSE
+VAR_ARQ1 = "_" + VAR_ARQ
+delete file VAR_ARQ1
+IF _file("TEMPTPO.TMP")
+	DELETE FILE "TEMPTPO.TMP"
+ENDIF
+IF _file("TEMPTPO.K1")
+	DELETE FILE "TEMPTPO.K1"
+ENDIF
+
+RETURN
+*
+
+*
+PROCEDURE acerto_qtde
+*
+SET CURSOR OFF
+sc_acerto = SAVESCREEN(03,01,21,78)
+sc_cor = SETCOLOR()
+SET COLOR TO "W+/B,W+/B,N,W+/B"
+SCROLL(03,01,21,78,0)
+@ 23,01 SAY "AtualizaáÑo das quantidades de fitas por t°tulos"
+RESTORE FROM "DADLOC.MEM" ADDITIVE
+@ 04,10 SAY "Estamos na  "+nom_loc
+@ 06,10 SAY "na loja  :  "+num_loja
+@ 20,05 SAY "AGUARDE... " COLOR "W+*/B"
+@ 21,05 SAY "Estou acertando o arquivo para calcular a qtde. de c¢pias"
+select 8
+use "GENERO.TPO"
+locate for GENERO->DADOS = "PRODUTOS"
+if .not. found()
+
+	NUM_PROD = 99
+	
+else
+
+	NUM_PROD = recno()
+
+endif	
+flock( 15 )	
+replace all GENERO->FITAS_TOT  with 0,;
+				GENERO->FITAS_FORA with 0,;
+				GENERO->TITULOS    with 0
+unlock
+select 1
+use "TITULOS"
+flock( 15 )
+replace all TITULOS->T_COPIAS	  WITH 0,;
+				TITULOS->N_COP_LOJA WITH 0,;
+				TITULOS->N_COP_FORA WITH 0  for TITULOS->T_GENERO # NUM_PROD
+unlock
+_bell()
+@ 20,05 SAY SPACE(74)
+@ 21,05 SAY SPACE(74)
+IF !_file("TITULOS.K1")
+
+	@ 20,10 SAY "Aguarde... estou criando o °ndice dos t°tulos"
+	_bell()
+
+ENDIF
+SET INDEX TO "TITULOS.K1" KEY T_CODIGO
+SELECT 2
+USE "FITAS"
+flock( 15 )
+IF !_file("FITAS.K1")
+
+	@ 20,10 SAY "Aguarde... estou criando o °ndice das fitas  "
+	_bell()
+
+ENDIF
+SET INDEX TO "FITAS.K1" KEY FITAS->CODFITA
+unlock
+@ 20,05 SAY SPACE(74)
+@ 20,05 SAY SPACE(74)
+num_total = RECCOUNT()
+@ 12,10 SAY "N£mero total de registros      "
+@ 12,COL()	SAY num_total PICTURE "##,###"
+@ 20,10 SAY "Aguarde... estou calculando as qt. das c¢pias"
+_bell()
+CODIGO    = FITAS->T_CODIGO
+num_fitas = 0
+num_feito = 0
+SELECT "FITAS"
+GO TOP
+num_ja = 0
+do while .not. eof()
+
+   SELECT "TITULOS"
+   SEEK FITAS->T_CODIGO
+   if found()
+
+		if substr( FITAS->CODFITA, 9, 1 ) = "1";
+ 			.and. substr( FITAS->CODFITA, 7, 2 ) # "00"
+
+			rlock( 15 )
+			replace TITULOS->T_COPIAS 	with    ( TITULOS->T_COPIAS + 1 ),;
+					  TITULOS->N_ULT_COP	with val( mid( FITAS->CODFITA, 7, 2 ) )
+			unlock		  
+
+		ENDIF
+	   IF FITAS->LOJA = NUM_LOJA
+
+			IF SUBSTR(FITAS->CODFITA,9,1) = "1";
+ 				.AND. SUBSTR(FITAS->CODFITA,7,2) # "00"
+
+				rlock( 15 )
+				replace TITULOS->N_COP_LOJA WITH (TITULOS->N_COP_LOJA+1)
+				unlock
+				select "GENERO"
+				go TITULOS->T_GENERO
+				rlock( 15 )
+				replace GENERO->FITAS_TOT with GENERO->FITAS_TOT + 1
+				unlock
+				select "TITULOS"
+				IF FITAS->COD_CLI # "000000"
+
+					rlock( 15 )
+					REPLACE TITULOS->N_COP_FORA WITH (TITULOS->N_COP_FORA+1)
+					unlock
+					select "GENERO"
+					go TITULOS->T_GENERO
+					rlock( 15 )
+					replace GENERO->FITAS_FORA WITH GENERO->FITAS_FORA + 1
+					unlock
+					select "TITULOS"
+
+				ENDIF
+
+			ENDIF
+
+		ENDIF
+
+   else                               && Fran - 11--95
+
+      select "FITAS"
+      delete
+
+   ENDIF                              && ate aqui foi alterado
+	SELECT "FITAS"
+	SKIP
+	NUM_JA = NUM_JA + 1
+	@ 14,10 SAY "Nß de registros j† conferidos  "
+	@ 14,COL() SAY num_ja PICTURE "##,###"
+
+ENDDO
+_bell()
+_bell()
+@ 12,01 clear to 20,78  color "W/B"
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say "Aguarde... Acertando a quantidade de TITULOS" color "W+*/B"
+select  "TITULOS"
+flock( 15 )
+set order to 1
+unlock
+select  "GENERO"
+count to NUMERO_DE_REGISTROS
+for LOOP_1 = 2 to NUMERO_DE_REGISTROS
+
+	go LOOP_1
+	QT_TITULOS  = 0
+	QUAL_GENERO	= str( LOOP_1 - 1, 2, 0, "0" )
+	select "TITULOS"
+	seek   QUAL_GENERO
+	if .not. eof()
+	
+		do while _left( TITULOS->T_CODIGO, 2 ) == QUAL_GENERO
+			
+			QT_TITULOS += 1
+			if .not. eof()
+			
+				skip
+					
+			else
+
+				exit
+				
+			endif	
+
+		enddo
+
+	endif
+	select  "GENERO"
+	rlock( 15 )
+	replace 	GENERO->TITULOS with	QT_TITULOS
+	unlock
+
+next
+close all
+restscreen(03,01,21,78,SC_ACERTO)
+@ 23,01 say space(78) color "W/B"
+setcolor(SC_COR)
+set cursor ON
+return
+*
+
+***********************
+function Acerto_titulos 
+***********************
+
+COR_ANT = setcolor()
+sc_acerto = SAVESCREEN(03,01,21,78)
+set color to "W+/B,W+*/B,N,W+/B"
+ATUALIZA = 1
+clear typeahead
+_bell()
+@ 23,01 		say space(78) color "W/B"
+@ 23,02 		say "Deseja reutilizar c¢digos de t°tulos que foram apagados ?  ";
+				color "W+/B"
+@ 23,col() 	prompt "Sim  "
+@ 23,col()  prompt "NÑo"
+menu to ATUALIZA
+setcolor(COR_ANT)
+select 5
+use "TITULOS.DBF"
+if ATUALIZA = 1
+
+	@ 23,01 say space(78) color "W/B"
+	@ 23,01 say "Aguarde... Estou contando os t°tulos" color "W+*/B"
+	count to NUM_REG_TIT
+
+endif
+set index to "TITULOS.K1" key TITULOS->T_CODIGO ,;
+  	          "TITULOS.K2" key TITULOS->T_PORT
+select 2
+if _file( "TITDEL.K1" )
+
+	delete file "TITDEL.K1"
+
+endif
+use "TITDEL.DBF"
+flock( 15 )
+zap
+set index to "TITDEL.K1" key _left( TITDEL->TITULO, 2 )
+unlock
+if ATUALIZA = 1
+
+	@ 23,01 say space(78) color "W/B"
+	@ 23,02 say "Atualizando os c¢digos de t°tulos dispon°veis" color "W+*/B"
+	NUM_CONTADO = 0 && 1
+	NUM_PASSADO = 0
+	select "TITULOS"
+	flock( 15 )
+	set order to 1
+	unlock
+	go top
+	@ 17,02 say "Quantidade total de t°tulos................. = " + ;
+					 str( NUM_REG_TIT, 6 ) color "W+/B"
+	do while .not. eof()
+
+		QUAL_CODIGO = _left( TITULOS->T_CODIGO, 2 )
+		CONT_CODIGO = 1
+		do while _left(TITULOS->T_CODIGO,2) = qual_codigo .AND. .NOT. EOF()
+
+			@ 20,02 SAY "C¢digo do t°tulo em verificaáÑo............. = " + ;
+							TITULOS->T_CODIGO	COLOR "W+/B"
+			if _right(TITULOS->T_CODIGO,4) = "0000" .or. ;
+            val( TITULOS->T_CODIGO ) < 1
+
+            delete
+
+         endif
+			if _right(TITULOS->T_CODIGO,4) # "0000" .and. ;
+            val( TITULOS->T_CODIGO ) > 0
+
+				if CONT_CODIGO # val(_right(TITULOS->T_CODIGO,4))
+
+					SELECT "TITDEL"
+					flock( 15 )
+					append blank
+					unlock
+					COD_DEL = 	_left( TITULOS->T_CODIGO, 2 ) + ;
+									_right( "000" + alltrim( str( CONT_CODIGO ) ), 4 )
+					rlock( 15 )				
+					replace TITDEL->TITULO with COD_DEL
+					unlock
+					select "TITULOS"
+					NUM_PASSADO += 1
+					@ 19,02 say "Quantidade de t°tulos a serem reaproveitados = " +;
+									 str( NUM_PASSADO, 6 ) color "W+/B"
+					CONT_CODIGO = CONT_CODIGO + 1
+					loop
+
+				endif
+				CONT_CODIGO = CONT_CODIGO + 1
+
+			endif
+			ULT_CODIGO  = TITULOS->T_CODIGO
+			if .not. eof()
+
+				skip
+				NUM_CONTADO = NUM_CONTADO + 1
+				@ 18,02 say "Quantidade de t°tulos conferidos............ = " + ;
+								str( NUM_CONTADO, 6 ) color "W+/B"
+				if ULT_CODIGO = TITULOS->T_CODIGO
+
+               delete
+               exit
+
+				endif
+
+			else
+
+				exit
+
+			endif
+
+		enddo
+
+	enddo
+
+endif
+close "TITDEL"
+set softseek ON
+select "TITULOS"
+flock( 15 )
+set order to 1
+unlock
+go top
+select 2
+use "GENERO.TPO"
+count to NUM_REG
+for A = 2 to NUM_REG
+
+	go A
+	MPESQ = str( A,   2, 0, "0" )
+	MPES1 = str( A-1, 2, 0, "0" )
+	select "TITULOS"
+	seek MPESQ
+	if .not. bof()
+
+		skip -1
+
+	endif
+	select "GENERO"
+	if MPES1 = _left( TITULOS->T_CODIGO, 2 )
+
+		NUM_TIT = val( _right( TITULOS->T_CODIGO, 4 ) )
+
+	else
+
+		NUM_TIT = 0
+
+	endif
+	rlock( 15 )
+	replace GENERO->ULT_NUM with NUM_TIT
+	unlock
+
+next
+close all
+@ 17,01 say space( 78 ) color "W/B"
+@ 18,01 say space( 78 ) color "W/B"
+@ 19,01 say space( 78 ) color "W/B"
+@ 20,01 say space( 78 ) color "W/B"
+Repoe()
+*********************** inicio da funcao Acer_tit1
+select 5
+use "TITULOS.DBF"
+flock( 15 )
+set index to "TITULOS.K1" key TITULOS->T_CODIGO ,;
+  	          "TITULOS.K2" key TITULOS->T_PORT
+set order to 1
+unlock
+select 6
+use "FITAS.DBF"
+flock( 15 )
+set index to "FITAS.K1" key FITAS->CODFITA,;
+             "FITAS.K2" key FITAS->COD_CLI+FITAS->CODFITA,;
+				 "FITAS.K3" key FITAS->SEQUENCIAL
+set order to 1
+unlock
+select 2
+if _file("TITDELCO.K1")
+
+	delete file "TITDELCO.K1"
+
+endif
+use "TITDELCO.DBF"
+flock( 15 )
+zap
+set index to "TITDELCO.K1" key _left( TITULO, 6 )
+unlock
+set color to "W+/B,W+*/B,N,W+/B"
+set cursor OFF
+@ 21,01 SAY SPACE(78) COLOR "W/B"
+@ 21,02 SAY "AGUARDE... "  COLOR "W+*/B"
+@ 23,01 say space(78) color "W/B"
+@ 23,02 say "Atualizando as c¢pias dispon°veis de cada TITULO" color "W+/B"
+select 5
+go top
+do while .not. eof()
+
+	@ 19,01 say space(78) color "W/B"
+	@ 19,01 say "TITULO = " + T_CODIGO
+	select "FITAS"
+	seek TITULOS->T_CODIGO
+   if found()
+
+		CONTA_FITA    = 1				
+		FITA_ANTERIOR = FITAS->CODFITA
+		do while _left( FITAS->CODFITA, 6 ) = TITULOS->T_CODIGO
+
+			if mid( FITAS->CODFITA, 9, 1 ) = "1"
+
+				if val( mid( FITAS->CODFITA, 7, 2 ) ) # CONTA_FITA
+
+					FALTA = FITAS->T_CODIGO + ;
+                      _right( "0" + alltrim( str( CONTA_FITA ) ), 2 )
+					select "TITDELCO"
+					flock( 15 )
+					append blank
+					unlock
+					rlock( 15 )
+					replace TITDELCO->TITULO with FALTA
+					unlock
+					select "FITAS"
+					CONTA_FITA = CONTA_FITA + 1
+					loop
+
+				endif
+				CONTA_FITA = CONTA_FITA + 1
+
+			endif
+			FITA_ANTERIOR = FITAS->CODFITA
+   		if .not. eof()
+
+				skip
+
+			endif
+			if _left( FITA_ANTERIOR, 9 ) = _left( FITAS->CODFITA, 9 )
+
+*            skip -1
+            do while _left( FITA_ANTERIOR, 9 ) = _left( FITAS->CODFITA, 9 )
+
+               delete                        && FRAN1
+               skip
+
+            enddo   
+
+			endif
+
+		enddo
+
+	endif
+	select "TITULOS"
+	skip
+
+enddo
+close all
+@ 23,01 say space(78) color "W/B"
+************************************ Rotina para acertar genero = 0
+restscreen(03,01,21,78,SC_ACERTO)
+select 5
+use "TITULOS.DBF"
+flock( 15 )
+@ 15,01 clear to 20,77
+@ 17,02 say "Titulos conferidos       de " + str( lastrec(), 5, 0 )
+nQcon = 1
+nQdel = 1
+go top
+do while .not. eof()
+
+   if TITULOS->T_GENERO < 1 .or. val( TITULOS->T_CODIGO ) < 1
+
+      @ 19,02 say "Removidos = " + str( nQdel, 5, 0 )
+      delete
+      nQdel += 1
+
+   endif
+   @ 17,21 say str( nQcon, 5, 0 )
+   nQcon += 1
+   skip
+      
+enddo
+close all
+restscreen(03,01,21,78,SC_ACERTO)
+@ 23,02 say "Acertando as palavras de pesquisa dos T°tulos" color "W+*/B"
+Acer_Pal()
+restscreen(03,01,21,78,SC_ACERTO)
+Titulos()
+Fitas()
+restscreen(03,01,21,78,SC_ACERTO)
+select 4
+use "CLIENTES"
+@ 15,01 clear to 20,77
+@ 15,02 say "Verificando C¢digo de Clientes"
+@ 17,02 say "Clientes conferidos       de " + str( lastrec(), 5, 0 )
+nQcon = 1
+nQdel = 1
+do while .not. eof()
+
+   if val( CLIENTES->COD_CLI ) = 0 .and. CLIENTES->COD_CLI # "000000"
+
+      @ 19,02 say "Removidos = " + str( nQdel, 5, 0 )
+      delete
+      nQdel += 1
+
+   endif   
+   @ 17,21 say str( nQcon, 5, 0 )
+   nQcon += 1
+   skip
+
+enddo   
+@ 23,01 say space(78) color "W/B"
+restscreen(03,01,21,78,SC_ACERTO)
+Clientes()
+select 4
+use "CLIENTES"
+set index to "CLIENTES.K1" KEY CLIENTES->NOME,;
+	          "CLIENTES.K2" KEY CLIENTES->CPF_CLI ,;
+  		       "CLIENTES.K3" KEY CLIENTES->COD_CLI 
+set order to 3
+go bottom
+ULT_CLI      = CLIENTES->COD_CLI
+NUM_CLIENTES = lastrec()
+close "CLIENTES"
+select 1
+use "CODCLIV"
+go 1
+rlock( 15 )
+if eof()
+	append blank
+	replace CODCLIV->COD_CLI with "000000"
+else
+	replace CODCLIV->COD_CLI with ULT_CLI
+endif
+unlock
+go 2
+rlock( 15 )
+if eof()
+	append blank
+endif
+replace CODCLIV->COD_CLI with str( NUM_CLIENTES, 6, 0, "0" )
+unlock
+close "CODCLIV"
+restscreen(03,01,21,78,SC_ACERTO)
+@ 23,02 say "Acertando o valor dos DÇbitos de Clientes" color "W+*/B"
+Sumdeb()
+restscreen(03,01,21,78,SC_ACERTO)
+Acerto_qtde()
+restscreen(03,01,21,78,SC_ACERTO)
+Fitas()
+restscreen(03,01,21,78,SC_ACERTO)
+titulos_t_orig()
+restscreen(03,01,21,78,SC_ACERTO)
+fitas_cli()
+restscreen(03,01,21,78,SC_ACERTO)
+
+close all
+return
+
+*************
+function Toca
+*************
+
+FOR a = 1000 TO 3500 STEP 500
+	TONE(a,4)
+NEXT
+FOR a = 3500 TO 1000 STEP -500
+	TONE(a,4)
+NEXT
+FOR a = 2500 TO 0 STEP -500
+	TONE(a,5)
+NEXT
+FOR a = 1500 TO 0 STEP -500
+	TONE(a,5)
+NEXT
+RETURN
+ 
+*******************
+function Individual 
+*******************
+
+declare 	INDARQ[7],	INDCOR[7]
+INDARQ[1] = "CAIXA              "
+INDARQ[2] = "CLIENTES           "
+INDARQ[3] = "FERIADOS           "
+INDARQ[4] = "FITAS              "
+INDARQ[5] = "FUNCIONARIOS       "
+INDARQ[6] = "TITULOS            "
+INDARQ[7] = "SINOPSES           "
+INDCOR[1] = "C"
+INDCOR[2] = "L"
+INDCOR[3] = "F"
+INDCOR[4] = "I"
+INDCOR[5] = "U"
+INDCOR[6] = "T"
+INDCOR[7] = "S"
+Quadro(04,42,12,63,"N/BG,W+/BG,N,N/BG","N/N")
+do while .T.
+
+	popup	window 	05,44,11,61;
+			to 		OP_IND;
+			options 	INDARQ;
+			hilite	INDCOR,"W+/BG";
+			color 	"N/BG,W+/BG,N,N/BG"
+	if OP_IND = 1
+
+		Caixa()
+
+	elseif OP_IND = 2
+
+		Clientes()
+
+	elseif OP_IND = 3
+
+		Feriados()
+
+	elseif OP_IND = 4
+
+		Fitas()
+
+	elseif OP_IND = 5
+
+		Funcionarios()
+
+	elseif OP_IND = 6
+
+		Titulos()
+
+	elseif OP_IND = 7
+
+      sinopse()
+
+	else
+
+		Repoe()
+		close all
+
+		return
+
+	endif
+	Toca()
+	
+enddo
+
+return
+
+****************
+function Del_cli
+****************
+
+private Q_DATA, PODE
+select 11
+use "FUNCION.DBF"
+set index to "FUNCION.K1" key FUNCION->F_CODIGO
+R_COD  =	space( 04 )
+@ 23,01 	say space( 78 ) color "W/B"
+@ 23,01 	say "Digite o seu c¢digo de funcion†rio " color "W+/B" ;
+			get R_COD picture "99";
+			color "W+/B,W+/N,N,W+/B"
+set cursor  ON
+read
+set cursor  OFF
+if len( alltrim( R_COD ) ) = 0
+
+	@ 23,01 say space( 78 ) color "W/B"
+	close all
+	return
+
+else
+
+	select "FUNCION"
+	seek R_COD
+	if .not. found() 
+
+		Mens_rerro( "Funcion†rio nÑo cadastrado", 30, "W+*/B" )
+		close all
+		return
+
+	else
+
+		M_1 = FUNCION->ACESSO
+		N_1 = alltrim( FUNCION->NOME )
+		S_1 = FUNCION->SENHA
+		SENHA1 = Senha()
+		if SENHA1 # S_1
+
+			Mens_rerro(  N_1 + ", sua senha est† errada", 30, "W+*/B" )
+			close all
+			return
+
+		endif
+		if M_1 <= "8"
+
+			Mens_rerro( N_1 + ", seu n°vel nÑo permite acesso a esta rotina",;
+			            30, "W+*/B" )
+			close all
+			return
+
+		endif
+
+	endif
+
+endif	
+@ 23,01 say space( 78 ) color "W/B"
+close all
+select 4
+use "CLIENTES.DBF"
+flock( 15 )
+set index to "CLIENTES.K1" key CLIENTES->NOME,;
+  	          "CLIENTES.K2" key CLIENTES->CPF_CLI ,;
+     	       "CLIENTES.K3" key CLIENTES->COD_CLI 
+unlock
+Q_DATA = ctod( "  /  /    " )
+@ 23,02 	say " Deletar clientes cuja £ltima frequància Ç anterior a qual data " color "W+/B" ;
+			get Q_DATA picture "@E";
+			color "W+/B,W+/N,N,W+/B"
+set cursor  ON
+read
+set cursor  OFF
+@ 23,01 say space( 78 ) color "W/B"
+if empty( Q_DATA )
+
+	close all 
+	return
+	
+else
+
+	@ 23,02 say "Aguarde..." color "W+*/B"
+	flock( 15 )
+	delete all for         CLIENTES->ULT_FREQ < Q_DATA .and. ;
+	          .not. empty( CLIENTES->ULT_FREQ )
+	pack nobackup	
+	unlock
+endif	
+close all	
+@ 23,01 say space( 78 ) color "W/B"
+
+**************
+function Senha  
+**************
+
+set cursor ON
+SENHA1 = ""
+@ 23,50 say "Digite sua senha " color "W+/B"
+for A = 1 to 4
+
+	poscur( 23, 69+A )
+	FF = inkey( 0 )
+	if FF # 8
+
+		@ 23,69+A say "*" color "W+/B"
+		SENHA1 = SENHA1 + chr( FF )
+
+	else
+
+		if A > 1
+
+			A = A - 1
+			@ 23,69+A say " " color "W+/B"
+			SENHA1 = _left( SENHA1, A - 1 )
+			A = A - 1
+
+		else
+
+			SENHA1 = ""
+			A = 0
+
+		endif
+
+	endif
+
+next
+set cursor OFF
+return SENHA1
+
+*******************
+function Mens_rerro                     && MENSAGENS DE PROBLEMAS
+*******************
+
+parameters QUAL_ERRO, QUAL_TEMPO, QUAL_COR
+private    ULT_LINHA
+
+if _type( QUAL_ERRO ) == "C"
+
+	QUAL_COR  = iif( pcount() > 2 .and. _type( QUAL_COR ) == "C" ,;
+	                 QUAL_COR, "W+/B" )
+	ULT_LINHA = savescreen( 23, 01, 23, 78 )
+	@ 23,01 say space( 78 ) color QUAL_COR
+	@ 23,01 say QUAL_ERRO   color QUAL_COR
+	if len( QUAL_ERRO ) # 0
+
+		ERRO_OCOR = .T.
+
+	endif
+	if pcount() > 1 .and. _type( QUAL_TEMPO ) == "N"
+
+	   _bell()
+		clear typeahead
+		inkey( QUAL_TEMPO )
+		restscreen( 23, 01, 23, 78, ULT_LINHA )
+		return
+
+	endif
+	if pcount() > 1 .and. QUAL_TEMPO = " "
+	
+		tone( 2000, 25 )
+		tone( 1000, 25 )
+		tone( 2000, 25 )
+		restscreen( 23, 01, 23, 78, ULT_LINHA )
+		
+	endif	
+
+endif
+return
+*----------------------------------------------------------------------------
+
+***************
+function Quadro 
+***************
+
+parameters LI, CI, LF, CF, CORBOX, CORSOMBRA
+@ LI + 1,CI + 2 fill to LF + 1,CF + 2 color CORSOMBRA
+set color to CORBOX
+@ LI,CI clear to LF,CF color CORBOX
+@ LI,CI to LF,CF double
+
+return
+
+*****************
+function Userexit        && ROTINA DE SAIDA P/ O DOS
+*****************
+
+set color  to
+set cursor ON
+close all
+return
+
+*
+FUNCTION mens_erro                     && MENSAGENS DE PROBLEMAS
+*
+PARAMETERS qual_erro
+*
+@ 23,01 SAY SPACE(78) COLOR "W/B"
+
+@ 23,03 SAY qual_erro COLOR "W+*/B"
+
+IF LEN(qual_erro) # 0
+	erro_ocor = .T.
+   _bell()
+ENDIF
+
+RETURN
+
+**********************                 && A funáÑo CriticalError aqui declarada
+function CriticalError noswap          && evitar† a inclusÑo da funáÑo original
+**********************                 && da biblioteca do JOINER.
+
+set device to SCREEN
+parameters ERRO                        && C¢digo do erro ocorrido
+private AREA_VIDEO,;                   && èrea de v°deo a ser armazenada
+        QUAL_ACAO, ;                   && AáÑo a ser tomada (pelo usu†rio)
+        MENSAGEM,  ;                   && Mensagem de erro
+        RETORNO                        && Valor de Retorno
+*
+* ObtÇm a mensagem correspondente ao erro.
+*
+if ERRO == 0
+
+   MENSAGEM = "Disco Protegido contra gravaáÑo"
+
+elseif ERRO == 1
+
+   MENSAGEM = "Unidade Desconhecida"
+
+elseif ERRO == 2
+
+   MENSAGEM = "Drive nÑo responde"
+
+elseif ERRO == 3
+
+   MENSAGEM = "Comando interno do DOS desconhecido"
+
+elseif ERRO == 4
+
+   MENSAGEM = "Erro de dados (CRC)"
+
+elseif ERRO == 5
+
+   MENSAGEM = "Tamanho da estrutura solicitada inv†lido"
+
+elseif ERRO == 6
+
+   MENSAGEM = "Erro no acesso ao cilindro"
+
+elseif ERRO == 7
+
+   MENSAGEM = "Formato de Disco Desconhecido"
+
+elseif ERRO == 8
+
+   MENSAGEM = "Setor nÑo encontrado"
+
+elseif ERRO == 9
+
+   MENSAGEM = "Impressora sem papel"
+
+elseif ERRO == 10
+
+   MENSAGEM = "Erro ao enviar dados para o dispositivo"
+
+elseif ERRO == 11
+
+   MENSAGEM = "Erro ao ler dados do dispositivo"
+
+elseif ERRO == 12
+
+   MENSAGEM = "Falha geral do Dispositivo"
+
+elseif ERRO == 15
+
+   MENSAGEM = "Troca de disco inv†lida"
+
+elseif ERRO == 15
+
+   MENSAGEM = "Erro desconhecido. C¢digo " + str( ERRO, 3 )
+
+endif
+                                       && Salva †rea do v°deo
+AREA_VIDEO = savescreen( 08, 18, 17, 63 )
+                                       && Monta a sombra
+at  9, 20, 17, 63 box replicate( chr( 219 ), 9 )
+explode(  8, 18, 16, 61, "D" )         && Monta a moldura
+at 12, 18 say chr( 199 ) + replicate( chr( 196 ), 42 ) + chr( 182 )
+                                       && Exibe mensagem de erro
+at  8, 20 say "Falha do Equipamento/Sistema Operacional"
+at 12, 33 say "Selecione AáÑo"
+TAMANHO = len( MENSAGEM )              && ObtÇm o tamanho da Mensagem
+                                       && Exibe mensagem descritiva do erro
+at 10, _int( ( 80 - TAMANHO ) / 2 ) say MENSAGEM
+at 14, 20 prompt " Ignorar "
+at 14, 30 prompt " Repetir "
+at 14, 40 prompt " Encerrar "
+at 14, 52 prompt " Falhar "
+menu to QUAL_ACAO                      && Aguarda seleáÑo de uma opáÑo
+                                       && Restaura a †rea de v°deo
+restscreen(  8, 18, 17, 63, AREA_VIDEO )
+*
+* Retornar† ao controle da aplicaáÑo de acordo com a opáÑo escolhida
+*
+if QUAL_ACAO == 1 .or. QUAL_ACAO == 0  && Ignorou ou Abortou
+
+   RETORNO =  0
+
+elseif QUAL_AO == 2                  && Tenta novamente
+
+   RETORNO =  1
+
+elseif QUAL_ACAO == 3                  && Aborta e retorna ao DOS
+
+	close all
+	set cursor ON
+	set color  to
+   RETORNO =  2
+
+else
+
+   RETORNO =  3                        && Assume o erro como Falha
+
+endif
+
+return RETORNO                         && Retorna a aáÑo a ser tomada.
+
+*----------------------------------------------------------------------------
+
+****************
+function Termina
+****************
+
+set color  to
+set cursor ON
+clear
+@ 01,07 say "…ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕª" color "W+/B"
+@ 02,07 say "∫                  TORUS INFORMATICA                       ∫" color "W+/B"
+@ 03,07 say "∫            HOME PAGE: www.torus.cjb.net                  ∫" color "W+/B"
+@ 04,07 say "∫     e-mail: torus@uol.com.br  Fone : (19) 3287-8687      ∫" COLOR "w+/b"
+@ 05,07 say "ÃÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕπ" color "W+/B"
+@ 06,07 say "∫                                                          ∫" color "W+/B"
+@ 07,07 say "∫        Sistema de AutomaáÑo para  Video  Locadoras       ∫" color "W+/B"
+@ 08,07 say "∫                                                          ∫" color "W+/B"
+@ 09,07 say "∫                    V S V 4R.0                            ∫" color "W+/B"
+@ 10,07 say "∫                                                          ∫" color "W+/B"
+@ 11,07 say "»ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕº" color "W+/B"
+@ 20,00 say " "
+tone( 1308, 10 )
+tone( 1468, 10 )
+tone( 1648, 10 )
+tone( 1746, 10 )
+inkey(2)
+
+quit
+
+****************
+function Setorus
+****************
+parameters opz
+set confirm ON
+set escape OFF
+set date  "DDMMYYYY"
+
+clear
+PUBLIC NORMAL_SAI
+NORMAL_SAI = .F.
+set color to "W+/N"
+clear
+explode( 00, 00, 10, 79, "P", "W+/B", .T. )
+TT = "Torus Inform†tica Ltda "
+EE = "                      "
+ZZ = "                                                "
+set cursor OFF
+*@ 04,10 say ZZ  color "W+/B"
+*@ 06,10 say EE  color "W+/B"
+@ 08,05 say "Sistema de Controle Informatizado para V°deo Locadoras  V S V 4R.0"  color "W+/B"
+@ 03,05 say torus_end color "W+/B"
+@ 04,05 say torus_cid +" - " color "W+/B"
+@ 04,col()+1 say torus_est color "W+/B"
+@ 04,col()+1 say "   CEP " color "W+/B"
+@ 04,col() say torus_cep color "W+/B"
+@ 04,col()+1 say "Fone : " color "W+/B"
+@ 04,col() say torus_tel color "W+/B"
+@ 05,05 say "Home page : " color "W+/B"
+@ 05,col() say torus_hp color "W+/B"
+@ 05,col()+1 say " E-mail : " color "W+/B"
+@ 05,col() say torus_mail color "W+/B"
+for A = 1 to len( TT )
+
+	@ 02,04+A say mid( TT, A, 1 ) color "W+/B"
+	tone( 130 * A, 1 )
+	
+next
+Quadro( 11,00,13,79, "W+/R,W+*/R,N,W+/R", "N+/N" )
+if opz="I" &&pcount() < 2
+  
+   O_QUE= 1 &&setorus()
+
+ELSE
+   
+   O_QUE = 3
+	
+endif
+do while .T.
+
+	mens_erro("Escolha a opáÑo com as setas ou a letra maiuscula","","W+/N")
+	@ 12,02 prompt "InstalaáÑo  " color "W+/R,W+*/R,N,W+/R"
+	@ 12,27 prompt "ReinstalaáÑo" color "W+/R,W+*/R,N,W+/R"
+	@ 12,52 prompt "Senha       " color "W+/R,W+*/R,N,W+/R"
+	@ 12,67 prompt "Encerra     " color "W+/R,W+*/R,N,W+/R"
+		if _file( "\WINDOWS" ) .and. attrib( "\WINDOWS" ) = "D"
+			mens_rerro("As rotinas de Instalaá∆o e Reinstalaá∆o s∆o para o Sistema Operacional MS DOS","W*+/N")
+*			loop
+		endif
+
+	menu to O_QUE	
+*teste de DOS
+
+	if O_QUE = 4
+
+		NORMAL_SAI = .T.			
+		exit
+
+	elseif O_QUE = 1
+		if _file( "\WINDOWS" ) .and. attrib( "\WINDOWS" ) = "D"
+			mens_rerro("Esta rotina Ç somente para a vers∆o DOS de Sistema Operacional","W*+/B")
+			loop
+		endif
+
+	sc_per = SETCOLOR()
+	SET COLOR TO "W+/B,W+*/B,N,W+/B"
+   @ 23,01 say space(78) color "W+/N" 
+        sc_tran = savescreen (00,00,24,79)
+*        clear screen
+        
+        con_garantia()
+        if pergunta( " Concorda com os Termos da Licenáa de Uso ?  (S/N) " )
+           clear screen
+           setcolor(sc_per)
+           restscreen(00,00,24,79, sc_tran)
+            
+           if pergunta( " Ser† criado novo diret¢rio e zerados os arquivos criados ...Continua  (S/N) " )
+
+              if pergunta ( "Entre em contato com a Torus para instalaá∆o ...Continua (S/N) ")
+
+   			Instala()
+
+              endif
+
+           endif
+        else
+        restscreen(00,00,24,79, sc_tran)
+        setcolor(sc_per)
+
+        loop
+        
+        endif
+
+	elseif O_QUE = 2
+		if _file( "\WINDOWS" ) .and. attrib( "\WINDOWS" ) = "D"
+			mens_rerro("Esta rotina Ç somente para a vers∆o DOS de Sistema Operacional","W*+/B")
+			loop
+		endif
+
+
+	sc_per = SETCOLOR()
+	SET COLOR TO "W+/B,W+*/B,N,W+/B"
+
+        sc_tran = savescreen (00,00,24,79)
+        
+        con_garantia()
+        if pergunta( " Concorda com os Termos da Licenáa de Uso ?  (S/N) ", "W+*/B" )
+           clear screen
+           setcolor(sc_per)
+           restscreen(00,00,24,79, sc_tran)
+            
+
+		if pergunta( " Confirma a reinstalaáÑo ?  (S/N) ", "W+*/B" )
+
+			Reinstala()
+
+		endif
+        else
+        restscreen(00,00,24,79, sc_tran)
+        setcolor(sc_per)
+
+        loop
+
+        endif
+	elseif O_QUE = 3
+
+		if pergunta( " Confirma a senha ?  (S/N) ", "W+*/B" )
+
+
+         Senha2()
+			Termina()
+
+		endif
+
+	endif
+
+enddo	
+set color  to
+set cursor ON
+Termina()
+
+****************
+function Instala
+****************
+
+
+@ 15,10 say "Mantenha o disco 1 no drive A e tecle algo"      color "w/b"
+inkey(0)
+@ 15,10 say space(69)      color "N/N"
+@ 15,10 say "Aguarde ... " color "W+*/N"
+mens_erro( "  ","", "W+/N")
+mens_erro( "NÑo interrompa o processo - Possibilidade de dano aos arquivos e discos","","w+/n" )
+set color to "N/N"
+run "C:  >NUL"
+run "CD\ >NUL"
+@ 15,10 say space(69)                color "N/N"
+@ 15,10 say "Aguarde ..."            color "W+*/N"
+@ 15,23 say "instalando os arquivos" color "W+/N"
+Mens_erro( "NÑo interrompa o processo - Possibilidade de dano aos arquivos e discos","","w+/n" )
+if _file( "\DOS" ) .and. attrib( "\DOS" ) = "D"
+
+else
+
+	run "MD DOS >NUL"
+
+endif
+
+if _file( "\VSV4" ) .and. attrib( "\VSV4" ) = "D"
+
+   run "del \vsv4\*.exe >nul"
+   run "del \vsv4\*.ovj >nul"
+   run "del \vsv4\*.dbf >nul"
+   run "del \vsv4\*.mem >nul"
+   run "del \vsv4\*.k* >nul"
+else
+
+	run "MD VSV4 >NUL"
+
+endif
+run "c: >nul"
+run "CD\VSV4 >NUL"
+run "copy a:abre.exe >nul"
+run "ABRE -O A:VSV41 >NUL"
+run "ABRE -O A:utils >NUL"
+run "copy a:. >nul"
+mens_erro( "  ","", "W+/N")
+@ 15,10 say "Coloque o disco 2 no drive A e tecle algo"      color "w/b"
+inkey(0)
+@ 15,10 say space(69) color "N/N"
+_bell()
+_bell()
+_bell()
+_bell()
+_bell()
+_bell()
+@ 15,10 say "Verificando ..." color "W+*/N"
+*set color to "N/N"
+if !_file("a:vsv42.zip")
+ @ 15,10 say "Disco 2 n∆o est† no drive A ..." color "W+*/N"
+ inkey(2)
+ quit 
+endif
+inkey(1)
+@ 15,10 say space(69) color "N/N"
+@ 15,10 say space(69) color "N/N"
+@ 15,10 say "Aguarde ..." color "W+*/N"
+@ 15,23 say "completando a instalaáÑo" color "W+/N"
+Mens_erro( "NÑo interrompa o processo - Possibilidade de dano aos arquivos e discos","","w+/n" )
+run "ABRE -O A:VSV42 >NUL"
+run "ABRE -O A:VSV43 >NUL"
+run "copy a:. >NUL"
+_bell()
+_bell()
+_bell()
+_bell()
+@ 15,10 say space(69) color "N/N"
+@ 15,10 say "InstalaáÑo completada ...   " color "W+/N"
+set color to
+tone( 1308, 10 )
+tone( 1468, 10 )
+tone( 1648, 10 )
+tone( 1746, 10 )
+mens_erro( "Contate o Suporte TÇcnico da Torus para a senha de instalaáÑo","","W+/N")
+inkey(5)
+@ 15,10 say space(69) color "N/N"
+@ 15,10 say "Tecle algo p/ prosseguir " color "W+*/N"
+clear typeahead
+inkey( 0 )
+@ 15,10 say space(69) color "N/N"
+Senha2()
+run "COPY SVSV4.BAT \DOS >NUL"
+run "COPY TR4.DAT \DOS >NUL"
+run "COPY TRIM.EXE \DOS >NUL"
+run "COPY TPARK.EXE \DOS >NUL"
+run "copy fecha.exe c:\dos >nul"
+run "copy abre.exe \dos >nul"
+run "COPY S4.BAT \DOS >NUL"
+run "COPY arj.exe \DOS >NUL"
+run "COPY S4.BAT \    >NUL"
+Termina()
+
+******************
+function Reinstala
+******************
+
+mens_erro(" ","", "W+/N")
+_bell()
+_bell()
+@ 15,10 say space(69) color "N/N"
+@ 15,10 say "Aguarde ..." color "W+*/N"
+@ 15,23 say "reinstalando os arquivos" color "W+/N"
+Mens_erro( "NÑo interrompa o processo - Possibilidade de dano aos arquivos e discos","","w+/n" )
+set color to "N/N"
+run "C:  >NUL"
+run "CD\ >NUL"
+if _file( "\VSV4" ) .and. attrib( "\VSV4" ) = "D"
+
+else
+
+	@ 15,10 say space(69) color "N/N"
+   Mens_erro( "Vocà tem que fazer a instalaáÑo do programa.... ","", "W+/N")
+	inkey(0)
+	return		
+
+endif
+if _file( "\DOS" ) .and. attrib( "\DOS" ) = "D"
+
+else
+
+	run "MD DOS >NUL"
+
+endif
+run "CD\VSV4"
+if !_file("a:vsv41.zip")
+	@ 15,10 say space(69) color "N/N"
+   Mens_erro( "Vocà tem colocar o disco 1 no drive A.... ","", "W+/N")
+	inkey(0)
+	return		
+endif   
+run "copy a:. >nul"
+run "copy fecha.exe c:\dos >nul"
+run "copy abre.exe \dos >nul"
+run "copy arj.exe c:\dos >nul"
+run "abre -o vsv41.zip >nul"
+run "abre -o utils.zip >nul"
+_bell()
+_bell()
+_bell()
+@ 15,10 say space(69) color "N/N"
+@ 15,10 say "Insira o disco numero 2 no drive A e tecle algo p/ prosseguir" color "W+/N"
+clear typeahead
+inkey(0)
+@ 15,10 say space(69) color "N/N"
+@ 15,10 say "Aguarde ..." color "W+*/N"
+if !_file("a:vsv42.zip")
+	@ 15,10 say space(69) color "N/N"
+   Mens_erro( "Vocà tem colocar o disco 2 no drive A.... ","", "W+/N")
+	inkey(0)
+	return		
+endif   
+@ 15,23 say "reinstalando os arquivos" color "W+/N"
+mens_erro( "NÑo interrompa o processo - Possibilidade de dano aos arquivos e discos","","w+/n" )
+set color to "N/N"
+run "ABRE -O A:VSV42 VSV4.* >NUL"
+run "ABRE -O A:VSV43 HELP*.* *.BAT *.DAT *.EXE *.PIC *.MEM *.TAG *.TEL *.FD *.RPC *.FMC MENU.DBF >NUL"
+@ 15,10 say "ReinstalaáÑo completada ...                                   " color "W+/N"
+inkey( 10 )
+@ 23,01 say space( 78 ) color "W/N"
+*Mens_erro( " ", "", "W+/N" )
+*set color to
+Senha2()
+run "COPY SVSV4.BAT \DOS >NUL"
+run "COPY TR4.DAT \DOS >NUL"
+run "COPY TRIM.EXE \DOS >NUL"
+run "COPY TPARK.EXE \DOS >NUL"
+run "COPY S4.BAT \DOS >NUL"
+run "COPY arj.exe \DOS >NUL"
+run "COPY S4.BAT \    >NUL"
+
+Termina()
+
+***************
+function Senha2
+***************
+
+run "CD\VSV4 >NUL"
+if .not. _file( "DADLOC.MEM" )
+
+   Mens_erro( "Vocà tem que fazer a instalaáÑo.... ","", "W+/N")
+	inkey(0)
+	return		
+
+endif
+if _file( "\DOS" ) .and. attrib( "\DOS" ) = "D"
+
+else
+
+   Mens_erro( "Vocà tem que fazer a reinstalaáÑo.... ","", "W+/N")
+	inkey(0)
+	return		
+
+endif
+*a1=66
+*for a1 = 66 to 90
+*   ?? chr(a1)
+*   a2=chr(a1)+"?"
+*   release &a2 && chr(a1)+"*" &&l2
+*next
+release qual_rot,qual_palavra,;
+        opz,s,normal_sai,tt,zz,;
+        o_que,ee,a 
+*save to "arq.mem" all
+*inkey(0)
+restore from "DADLOC.MEM"
+set date "DMY"
+* GERA SENHA ALEATORIA
+SENHA = "000000000"
+do while val(SENHA) = 0
+
+	SENHA = str( _rand() * 1000000000, 9, 0, "0" )
+
+enddo
+* GERA CHECK DIGIT P/ SENHA
+CD_1 = mod10( mid( SENHA, 1, 3 ) )
+CD_2 = mod11( mid( SENHA, 4, 3 ) )
+CD_3 = mod10( mid( SENHA, 7, 3 ) )
+CD   = CD_1+CD_2+CD_3
+PEGA_SENHA = space(09)
+@ 15,00 clear to 24,79 color "N/N"
+@ 21,50 say substr(NOM_LOC,1,28) color "W+/N"
+@ 22,50 say "Registro nß : "  color "W+/N"
+@ 22,col() say Num_serie  color "W+/N"
+
+*zzzz
+Quadro( 15, 10, 23, 47, "W+/R,W+/N,N,W+/N", "N+/N" )
+@ 17,15 say _date()
+if demo=.t.
+   @ 19,15 say "Senha         " + senha+"/"+substr(num_serie,7,2)+substr(num_serie,1,1)
+else
+   @ 19,15 say "Senha         " + senha+"/"+substr(num_serie,1,1)+substr(num_serie,1,2)
+endif
+@ 20,15 say "Contra_senha  "
+accept to PEGA_SENHA
+* CHECA CONTRA SENHA
+SENHA_OK = .T.
+CS1  = mid( PEGA_SENHA, 1, 3 )
+CS2  = mid( PEGA_SENHA, 4, 3 )
+CS11 = mid( PEGA_SENHA, 7, 1 )
+CS12 = mid( PEGA_SENHA, 8, 1 )
+CS13 = mid( PEGA_SENHA, 9, 1 )
+if CD # CS2 .and. SENHA_OK
+
+	SENHA_OK = .F.
+
+endif
+if mod10( CS1 ) # CS11 .and. SENHA_OK
+
+	SENHA_OK = .F.
+
+endif
+if mod11( CS1 + CS11 ) # CS12 .and. SENHA_OK
+
+	SENHA_OK = .F.
+
+endif
+if mod10( CS1 + CS11 + CS12 ) # CS13 .and. SENHA_OK
+
+	SENHA_OK = .F.
+
+endif
+if demo=.t.
+	if alltrim(pega_senha)="456678901"
+		SENHA_OK = .T.
+	endif
+endif
+if SENHA_OK
+*        adir("c:\vsv4\dadloc.mem",a,t,d,h,b)
+
+*        zc=h[1]
+*        zc=h[1]
+*        if at ("m",zc) # 0
+*           set hours to 12
+*        else
+*           set hours to 24
+*        endif
+   if _file("\dos\ramboot.com")
+      attrib( "\DOS\RAMBOOT.COM" , "-hr")
+      run "del \dos\ramboot.com >nul"
+   endif
+	restore from "DADLOC.MEM"
+	VAL_DATA = _date() + 180
+	CHECK_DATA = _int(_sqrt( ( year( VAL_DATA ) * 10000 ) + ;
+	             ( month( VAL_DATA ) * 100 ) +  day( VAL_DATA ) ) )
+	NOM_SISTEMA  = "VSV4R.0 Torus Inform†tica"
+   NOM_SIS_DATA = ctod( "21/02/2001" )
+
+   zc= jtime()
+*   @ 23,01 say "time "
+*   @ 23,01 say zc
+*   inkey(0)
+   save to "DADLOC.MEM" all
+
+* CRIA RAMBOOT.COM NO DOS
+CRIADOR = chr( 234 ) + chr( 000 ) + chr( 000 ) + chr( 255 ) + chr( 255 ) +;
+			 "MS DOS (C)Copyright 1981-1991 Microsoft Corp "	
+memowrit( "\DOS\RAMBOOT.COM", CRIADOR )
+attrib( "\DOS\RAMBOOT.COM" , "+hr")
+
+	NORMAL_SAI = .T.
+   if _file("torus.mem")
+      restore from ("torus.mem") additive
+   else
+      torus_tel = "(0xx19) 3287-8687"
+      torus_hp  = "www.torus.cjb.net"
+      torus_mail= "torus@uol.com.br"
+      torus_end= "R. Benedito Alves Aranha, 160 s.20/21"
+      torus_cont=100000
+      torus_cid="Campinas"
+      torus_est="SP"
+      torus_cep="13085-220"
+
+      save to "torus.mem" all like "torus*"
+   endif
+	@ 22,12 say "S E N H A    A C E I T A"
+	tone( 1308, 10 )
+	tone( 1468, 10 )
+	tone( 1648, 10 )
+	tone( 1746, 10 )
+	inkey( 3 )
+
+else
+
+	@ 22,12 say "S E N H A    I N V A L I D A"
+	tone( 1746/2, 20 )
+	tone( 1648/2, 20 )
+	tone( 1468/2, 20 )
+	tone( 1308/2, 20 )
+*        set escape off
+*        do while .t.
+        inkey(0)
+        termina()
+*        enddo
+
+endif
+return
+
+*****************
+function Pergunta  
+*****************
+
+parameters MENSAGEM, COR_LINHA
+
+private TECLA, ULT_LINHA, COR_LINHA, VOLTA, SC_CUR
+SC_CUR = _set( "CURSOR" ) == "ON"
+VOLTA = .F.
+if pcount() < 2
+
+   COR_LINHA = "W+/B"
+	
+endif
+ULT_LINHA = savescreen( 23, 01, 23, 78 )
+@ 23,01 say space( 78 ) color COR_LINHA
+@ 23,01 say MENSAGEM    color COR_LINHA
+clear typeahead
+set cursor ON
+TECLA = inkey( 0 )	
+set cursor SC_CUR
+if TECLA = 83 .or. TECLA = 115
+
+	VOLTA = .T.
+	
+endif	
+restscreen( 23, 01, 23, 78, ULT_LINHA )
+return VOLTA
+
+*****************
+function Transfer
+*****************
+
+set color to
+clear
+set escape OFF
+set date  "DDMMYYYY"
+
+clear
+PUBLIC NORMAL_SAI
+NORMAL_SAI = .F.
+set color to "W+/N"
+clear
+explode( 00, 00, 10, 79, "P", "W+/B", .T. )
+TT = "Torus Inform†tica Ltda "
+EE = "                      "
+ZZ = "Transferància  das versîes 3.0/3.0 rede para versÑo 4R.0"
+set cursor OFF
+@ 04,05 say ZZ  color "W+*/B"
+@ 06,10 say EE  color "W+/B"
+@ 08,05 say "Controle Informatizado para V°deo Locadoras - Torus V S V versÑo 4R.0"  color "W+/B"
+for A = 1 to len( TT )
+
+	@ 02,04+A say mid( TT, A, 1 ) color "W+/B"
+	tone( 130 * A, 30 )
+	tone( 130 * A, 30 )
+	tone( 130 * A, 30 )
+	
+next
+testa_transf()
+set confirm on
+if pergunta( " Confirma a transferància ? (S/N) " )
+
+         if pergunta ( "Entre em contato com a Torus para transferància ...Continua (S/N) ")
+
+         else
+            termina()
+            quit
+
+         endif
+else
+            termina()
+            quit
+
+
+endif
+run "cd\vsv4 >nul"
+*run "copy c:\vsv\dadloc.mem >nul"
+RESTORE FROM "DADLOC.MEM" ADDITIVE
+sc_tran = savescreen (00,00,24,79)
+senha2()
+*@ 11,30 say NOM_LOC 
+*@ 12,30 say "Registro nß : "
+*@ 12,col() say Num_serie
+run "abre -o vsv43 *.40 >nul"
+*zzz
+restscreen(00,00,24,79, sc_tran)
+@ 11,09 SAY "…ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕª"
+@ 12,09 SAY "∫         Percentual da transferància executado      ∫"
+@ 13,09 SAY "«ƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒ∂"
+@ 14,09 SAY "∫ 1   10   20   30   40   50   60   70   80   90  100∫"
+@ 15,09 SAY "∫⁄Ÿ...≥....≥....≥....≥....≥....≥....≥....≥....≥....¿ø∫"
+@ 16,09 SAY "∫≥                                                  ≥∫"
+@ 17,09 SAY "∫¿ƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒŸ∫"
+@ 18,09 SAY "»ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕº"
+@ 16,11 say replicate( chr(219), 1 ) color "W+/B"
+@ 21,50 say substr(NOM_LOC,1,28)  color "W+/N"
+@ 22,50 say "Registro nß : "  color "W+/N"
+@ 22,col() say Num_serie  color "W+/N"
+
+*@ 21,45 say NOM_LOC color "W+/N"
+*@ 22,45 say "Registro nß : " color "W+/N"
+*@ 22,col() say Num_serie color "W+/N"
+
+run "c: >nul"
+run "cd\vsv4 >nul"
+@ 23,01 say space(78) color "W+/N"
+mens_erro("Fase clientes...","","W+/N")
+@ 16,11 say replicate( chr(219), 2 ) color "W+/B"
+select 1
+use "clientes.40"
+zap
+append from "c:\vsv\clientes.DBF"
+use
+@ 16,11 say replicate( chr(219), 3 ) color "W+/B"
+USE "CLIENTES.40"
+pack nobackup
+replace all clientes->cep_res with substr(clientes->cep_res,1,5)+"-"+substr(clientes->cep_res,6,3)
+replace all clientes->cep_com with substr(clientes->cep_com,1,5)+"-"+substr(clientes->cep_com,6,3)&&stuff(clientes->cep_com,5,1,"-")
+@ 16,11 say replicate( chr(219), 5 ) color "W+/B"
+index on CLIENTES->NOME    to "CLIENTES.K1"
+index on CLIENTES->CPF_CLI to "CLIENTES.K2"
+index on CLIENTES->COD_CLI to "CLIENTES.K3"
+@ 16,11 say replicate( chr(219), 8 ) color "W+/B"
+set index to "CLIENTES.K1" key CLIENTES->NOME,;
+  	          "CLIENTES.K2" key CLIENTES->CPF_CLI ,;
+     	       "CLIENTES.K3" key CLIENTES->COD_CLI 
+set order to 3
+@ 16,11 say replicate( chr(219), 10 ) color "W+/B"
+mens_erro("Fase fitas...","","W+/N")
+select 2
+use "fitas.40"
+zap
+append from "c:\vsv\fitas.dbf"
+pack nobackup
+GO TOP
+LOCATE FOR FITAS->COD_CLI # "000000"
+do while .not. eof()
+   if fitas->cod_cli # "000000"
+      select 1
+      seek fitas->cod_cli
+      if found()
+         replace CLIENTES->FZC WITH "˛"
+         replace clientes->fz with clientes->fz+1
+      endif
+   endif
+   select 2
+   continue
+enddo
+@ 16,11 say replicate( chr(219), 15 ) color "W+/B"
+mens_erro("Fase t°tulos...","","W+/N")
+select 1
+use
+select 2
+use
+select 1
+use "titulos.40"
+zap
+append from "c:\vsv\titulos.dbf"
+repla all TITULOS->T_ORIGINAL WITH SUBSTR(T_PORT,1,1) FOR LEN(ALLTRIM(TITULOS->T_ORIGINAL))=0
+use
+@ 16,11 say replicate( chr(219), 25 ) color "W+/B"
+mens_erro("Fase sinopses...","","W+/N")
+
+select 1
+use "sinopse.dbf"
+zap
+append from "c:\vsv4\titulos.40"
+use
+@ 16,11 say replicate( chr(219), 30 ) color "W+/B"
+mens_erro("Fase movimento...","","W+/N")
+
+select 1
+use "movimen.40"
+append from "c:\vsv\movimen.dbf"
+use
+@ 16,11 say replicate( chr(219), 32 ) color "W+/B"
+mens_erro("Fase màs...","","W+/N")
+
+select 1
+use "mes.40"
+zap
+append from "c:\vsv\mes.dbf"
+use
+select 1
+use "genero.40"
+zap
+append from "c:\vsv\genero.tpo"
+use
+@ 16,11 say replicate( chr(219), 33 ) color "W+/B"
+mens_erro("Fase tabelas acess¢rias...","","W+/N")
+
+if _file("c:\vsv\tpo.dbf")
+   select 1
+   use "c:\vsv\tpo.dbf"
+   copy to "c:\vsv4\tpo.txt" sdf
+   use
+   select 1
+   use "tpo.dbf"
+   append from "tpo.txt" sdf
+   use
+endif
+
+@ 16,11 say replicate( chr(219), 35 ) color "W+/B"
+run "cd\vsv4 >nul"
+run "del *.k* >nul"
+run "copy c:\vsv\*.pro >nul"
+if _file("c:\vsv\arqfpag.mem")
+   run "copy c:\vsv\arqfpag.mem >nul"
+else
+   arq="c:\vsv\arqfpag.mem"
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+*run "copy c:\vsv\arqprom.mem >nul"
+if _file("c:\vsv\clube.mem")
+   run "copy c:\vsv\clube.mem >nul"
+else
+   arq="c:\vsv\clube.mem"
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+
+*run "copy c:\vsv\clube.mem >nul"
+if _file("c:\vsv\debcli.mem")
+   run "copy c:\vsv\debcli.mem >nul"
+else
+   arq="c:\vsv\debcli.mem"
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+*run "copy c:\vsv\debcli.mem >nul"
+if _file("c:\vsv\descdeb.mem")
+   run "copy c:\vsv\descdeb.mem >nul"
+else
+   arq="c:\vsv\descdeb.mem"
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+
+*run "copy c:\vsv\descdeb.mem >nul"
+arq="c:\vsv\descsem.mem"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+
+*run "copy c:\vsv\descsem.mem >nul"
+arq="c:\vsv\dianao.mem"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+
+*run "copy c:\vsv\dianao.mem >nul"
+arq="c:\vsv\mensagem.mem"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+
+*run "copy c:\vsv\mensagem.mem >nul"
+arq="c:\vsv\sysfile.mem"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+
+*run "copy c:\vsv\sysfile.mem >nul"
+arq="c:\vsv\valind.mem"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+
+*run "copy c:\vsv\valind.mem >nul"
+arq="c:\vsv\resumov.mem"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+
+*   run "copy c:\vsv\resumov.mem >nul"
+
+arq="c:\vsv\ult_bol.mem"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+
+*   run "copy c:\vsv\ult_bol.mem >nul"
+arq="c:\vsv\categor.tpo"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+
+*run "copy c:\vsv\categor.tpo >nul"
+arq="c:\vsv\classe.tpo"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+*run "copy c:\vsv\classe.tpo >nul"
+arq="c:\vsv\distrib.tpo"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+*run "copy c:\vsv\distrib.tpo >nul"
+arq="c:\vsv\idioma.tpo"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+*run "copy c:\vsv\idioma.tpo >nul"
+arq="c:\vsv\legenda.tpo"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+
+*run "copy c:\vsv\legenda.tpo >nul"
+arq="c:\vsv\pais.tpo"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+*run "copy c:\vsv\pais.tpo >nul"
+arq="c:\vsv\premios.tpo"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+*run "copy c:\vsv\premios.tpo >nul"
+arq="c:\vsv\qualid.tpo"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+*run "copy c:\vsv\qualid.tpo >nul"
+arq="c:\vsv\tipo.tpo"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+*run "copy c:\vsv\tipo.tpo >nul"
+arq="c:\vsv\funcion.dbf"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+*run "copy c:\vsv\funcion.dbf >nul"
+arq="c:\vsv\funcion.k1"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+*run "copy c:\vsv\funcion.k1 >nul"
+arq="c:\vsv\codcliv.dbf"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+*run "copy c:\vsv\codcliv.dbf >nul"
+arq="c:\vsv\titdel.dbf"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+arq="c:\vsv\titdel.k1"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+arq="c:\vsv\titdelco.k1"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+*run "copy c:\vsv\titdel*.dbf >nul"
+arq="c:\vsv\titdelco.dbf"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+
+arq="c:\vsv\rede.dbf"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+arq="c:\vsv\grede.dbf"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+arq="c:\vsv\prnfita.dbf"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+arq="c:\vsv\quem.tpo"
+if _file(arq)
+   run "copy "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+@ 16,11 say replicate( chr(219), 37 ) color "W+/B"
+mens_erro("Fase tabelas de padrîes...","","W+/N")
+indpad("DISTRIB.TPO")
+indpad("IDIOMA.TPO")
+indpad("LEGENDA.TPO")
+indpad("PAIS.TPO")
+indpad("PREMIOS.TPO")
+indpad("QUALID.TPO")
+indpad("TIPO.TPO")
+indpad("QUEM.TPO")
+arq="c:\vsv4\clientes.dbf"
+if _file(arq)
+   run "del "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+*run "del clientes.dbf >nul"
+arq="c:\vsv4\fitas.dbf"
+if _file(arq)
+   run "del "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+*run "del fitas.dbf >nul"
+arq="c:\vsv4\titulos.dbf"
+if _file(arq)
+   run "del "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+*run "del titulos.dbf >nul"
+*@ 23,01 say "cheguei"
+*inkey(0)
+arq="c:\vsv4\mes.dbf"
+if _file(arq)
+   run "del "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+*run "del mes.dbf >nul"
+*@ 23,01 say "cheguei 2"
+*inkey(0)
+arq="c:\vsv4\genero.tpo"
+if _file(arq)
+   run "del "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+*run "del genero.tpo >nul"
+*@ 23,01 say "cheguei 3"
+*inkey(0)
+arq="c:\vsv4\movimen.dbf"
+if _file(arq)
+   run "del "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+*run "del movimen.dbf >nul"
+*@ 23,01 say "cheguei 4"
+*inkey(0)
+arq="c:\vsv4\clientes.k1"
+if _file(arq)
+   run "del "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+arq="c:\vsv4\clientes.k2"
+if _file(arq)
+   run "del "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+arq="c:\vsv4\clientes.k3"
+if _file(arq)
+   run "del "+arq+ " >nul"
+else
+   @ 23,50 say arq+" falhou"
+*   inkey(0)
+endif
+*run "del clientes.k* >nul"
+*@ 23,01 say "cheguei 5"
+*inkey(0)
+run "ren clientes.40 clientes.dbf >nul"
+*@ 23,01 say "cheguei 6"
+*inkey(0)
+run "ren titulos.40 titulos.dbf >nul"
+*@ 23,01 say "cheguei 7"
+*inkey(0)
+run "ren fitas.40 fitas.dbf >nul"
+*@ 23,01 say "cheguei 8"
+*inkey(0)
+run "ren genero.40 genero.tpo >nul"
+run "ren movimen.40 movimen.dbf >nul"
+run "ren mes.40 mes.dbf >nul"
+run "abre -o vsv42 *.40 >nul"
+@ 16,11 say replicate( chr(219), 40 ) color "W+/B"
+mens_erro("Fase criando °ndices...","","W+/N")
+caixa()
+clientes()
+feriados()
+fitas()
+@ 16,11 say replicate( chr(219), 45 ) color "W+/B"
+funcionarios()
+titulos()
+@ 16,11 say replicate( chr(219), 48 ) color "W+/B"
+sinopse()
+toca()
+@ 16,11 say replicate( chr(219), 50 ) color "W+/B"
+FOR a = 2500 TO 0 STEP -500
+	TONE(a,5)
+NEXT
+set cursor OFF
+mens_erro("Finalizando a transferància... checando registros","","W+/N")
+SumDeb()
+mens_erro("Finalizando a transferància... checagem final","","W+/N")
+Acer_pal()
+termina()
+quit
+
+******************** 
+function Acha_e_tira
+********************
+
+parameters STR_ORIGINAL ,;
+           QUAL_CAMPO         && A-ATOR , D-DIRETOR , R-REFERENCIA 
+STR_USO = alltrim( STR_ORIGINAL ) 
+if len( STR_USO ) = 0
+    return
+endif 
+do while .t. 
+    LUGAR  = _at( " " , STR_USO )  
+    LUGAR1 = _at( "," , STR_USO )
+    if LUGAR = 1 .OR. LUGAR1 = 1
+       STR_USO = ltrim( mid( STR_USO, 2 ) ) 
+       loop 
+    elseif LUGAR = 0 .and. LUGAR1 = 0
+         LUGAR = 12 
+         STR_USO = _left( STR_USO, 11 ) 
+    elseif LUGAR1 > 0 .and. LUGAR1 < LUGAR
+         LUGAR = LUGAR1
+    elseif LUGAR = 0
+         LUGAR = LUGAR1
+    endif
+    if lugar > 11
+       USAR = _left( STR_USO, 11 )
+    else
+       USAR = _left( STR_USO, LUGAR-1 )
+    endif 
+    select "WORD" 
+	 flock( 15 )
+    APPEND BLANK
+	 unlock
+	 rlock( 15 )
+    REPLACE WORD->WORD    with QUAL_CAMPO + USAR  ,; 
+            WORD->TIT_COD with TITULOS->T_CODIGO 
+	 unlock
+    if len( STR_USO ) < LUGAR + 1
+          return
+    endif
+    STR_USO = ltrim( mid( STR_USO, LUGAR + 1 ) ) 
+enddo
+
+***************
+function Sumdeb
+***************
+
+H_term()
+use "CLIENTES"
+nreg = lastrec()
+total_deb_clientes = 0
+do while .not. eof()
+
+	TOTAL_DEB_CLIENTES =  TOTAL_DEB_CLIENTES + CLIENTES->DEBITOS
+ 	VALOR = recno() * 100 / NREG 
+	@ 17,07 say replicate( chr(219), VALOR / 2 ) color "W+/B"
+	skip
+
+enddo
+save to "DEBCLI" all like "TOTAL_DEB_CLIENTES*"
+close "clientes"
+return
+
+*****************
+function Acer_pal
+*****************
+
+set cursor OFF
+SELECT 5
+USE "TITULOS.DBF"
+NREG = lastrec()
+SELECT 16
+USE "WORD.DBF"
+flock( 15 )
+zap
+unlock
+select "TITULOS"
+go top
+H_term()
+do while .not. eof() 
+
+    Acha_e_tira( TITULOS->T_ATOR1   , "A" ) 
+    Acha_e_tira( TITULOS->T_ATOR2   , "A" )
+    Acha_e_tira( TITULOS->T_ATOR3   , "A" )
+    Acha_e_tira( TITULOS->T_DIRETOR , "D" )
+    Acha_e_tira( TITULOS->T_QUEM    , "R" )
+    select "TITULOS"
+    skip 
+	 VALOR = recno() * 100 / NREG 
+    @ 17,07 say replicate( chr(219), VALOR / 2 ) color "W+/B"
+
+enddo
+CLOSE "TITULOS"
+CLOSE "WORD"   
+return
+
+*******************
+function Imp_manual
+*******************
+
+set deleted ON
+set color to "W+/B,N/B,N,W+/B"
+clear
+@ 00,00 TO 24,79 DOUBLE
+@ 02,00 SAY "Ã"+REPLICATE("Õ",78)+"π"
+@ 01,01 SAY "VSV4R.0 - Torus∫            ImpressÑo do manual               ∫ ESC - Retorna"
+@ 00,16 SAY "À"
+@ 02,16 SAY " "
+@ 00,63 SAY "À"
+@ 02,63 SAY " "
+@ 22,00 SAY "Ã"+REPLICATE("Õ",78)+"π"
+@ 23,02 say "Prepare sua impressora e pressione qualquer tecla..." color "W+*/B"
+clear typeahead
+inkey( 0 )
+if lastkey() # 27 
+
+	run "COPY MANUAL.TXT LPT1: >NUL"
+
+endif
+quit
+
+*****************
+function Verifica
+*****************
+
+restore from "DADLOC.MEM" additive
+ACESSO   = "0"
+rCHECK_NOM = 0
+FOR L1 = 1 TO LEN(NOM_LOC)
+	rCHECK_NOM = rCHECK_NOM +300-ASC(MID(NOM_LOC,L1,1))
+NEXT
+checa_ok1 = iif(check_nom = rcheck_nom ,.T.,.F.)
+rCHECK_SERIE = 0
+FOR L1 = 1 TO LEN(NUM_SERIE)
+	rCHECK_SERIE = rCHECK_SERIE +300-ASC(MID(NUM_SERIE,L1,1))
+NEXT
+checa_ok2 = iif(check_serie = rcheck_serie ,.T.,.F.)
+rCHECK_DATA = _int(_sqrt((YEAR(VAL_DATA)*10000)+(MONTH(VAL_DATA)*100)+DAY(VAL_DATA)))
+checa_ok3 = iif(check_data = rcheck_data ,.T.,.F.)
+IF checa_ok3 .and. checa_ok2 .and. checa_ok1 .and. _file("\dos\ramboot.com")
+	
+*   if _date() < VAL_DATA
+
+*                if VAL_DATA - _date() < 16
+		
+*         @ 21,01 say space( 78 ) color "W/B"
+*         @ 23,02 say "Senha de proteáÑo do usu†rio valida por mais "  +;
+*                     transform( VAL_DATA - _date(), "##" ) + "  dias " +;
+*                     " - Contate suporte"  color "W+*/B" 
+*         for ASENHA = 1 to 10
+			
+*            tone( 2000, 25 )
+				
+*         next
+*         inkey( 30 )
+					
+*      endif                       
+
+*else
+	
+*      @ 21,01 say space( 78 ) color "W/B"
+*      @ 23,02 say "Senha de proteáÑo do usu†rio vencida - Contate suporte" color "W+*/B" 
+*      for ASENHA = 1 to 10
+			
+*         tone( 2000, 25 )
+				
+*      next
+*      inkey( 30 )
+*      quit
+
+*   endif
+
+else
+
+	clear
+	@ 10,10 SAY "Problemas com o arquivo de entrada ..."	COLOR "W+/B"
+	@ 12,10 SAY "CONTATE  O SUPORTE TECNICO"					COLOR "W+*/B"
+	INKEY(50)
+	QUIT
+
+ENDIF
+
+*****************
+function Imp_Term
+*****************
+
+PUBLIC NOM_TERM
+private NUM_TERM
+select "REDE"
+NUM_TERM = 666666
+*NUM_TERM = ROMCKSUM()
+locate for NOME = NUM_TERM
+if found()  && terminal ja cadastrado
+	NOM_TERM = "PRTER" + STR( RECNO() , 3, 0, "0")
+	if _file( NOM_TERM + ".MEM" )
+
+		* NECESSARIO APENAS SE AS FASES ONDE IMPRIME NAO FIZEREM
+		* SEU PROPRIO RESTORE
+*		restore from NOM_TERM additive
+
+	else
+
+	   TERM_DEV    = "BOLETO.PRN"  && Dispositivo de sa°da de boleto de devolucao
+   	TERM_RET    = "BOLETO.PRN"  && Dispositivo de sa°da de boleto de retirada
+	   TERM_REL    = "RELATOR.PRN" && Dispositivo de sa°da do relat¢rio 
+		TERM_LINR   =  7            && Linhas a saltar apos boleto de retirada
+		TERM_LIND   =  7            && Linhas a saltar apos boleto de devolucao
+		save to NOM_TERM ALL LIKE "TERM_*"
+
+	endif
+ 		
+else	&& terminal nao cadastrado
+
+	if flock( 15 , "REDE" )
+		append blank
+		replace REDE->NOME with NUM_TERM
+		NOM_TERM = "PRTER" + STR( RECNO() , 3, 0, "0")
+	   TERM_DEV    = "BOLETO.PRN"  && Dispositivo de sa°da de boleto de devolucao
+	  	TERM_RET    = "BOLETO.PRN"  && Dispositivo de sa°da de boleto de retirada
+	  	TERM_REL    = "RELATOR.PRN" && Dispositivo de sa°da do relat¢rio 
+		TERM_LINR   =  7            && Linhas a saltar apos boleto de retirada
+		TERM_LIND   =  7            && Linhas a saltar apos boleto de devolucao
+		save to NOM_TERM ALL LIKE "TERM_*"
+	else
+		Mens_rerro( " Erro de espera na rede, operaáÑo nÑo efetuada",  3, "W+*/B" )
+		inkey(0)
+		quit
+	endif
+endif
+
+return
+*
+
+******************
+function Abrir_Imp
+******************
+
+parameters ARQ_NAME
+
+PUBLIC IMP_DEV,IMP_RET,IMP_REL,IMP_LINR,IMP_LIND
+restore from ARQ_NAME additive
+IMP_DEV  = TERM_DEV 
+IMP_RET  = TERM_RET
+IMP_REL  = TERM_REL
+IMP_LINR = TERM_LINR
+IMP_LIND = TERM_LIND
+
+return
+*
+
+******************
+function Grava_Imp
+******************
+
+parameters ARQ_NAME
+
+TERM_DEV    = IMP_DEV
+TERM_RET    = IMP_RET
+TERM_REL    = IMP_REL
+TERM_LINR   = IMP_LINR 
+TERM_LIND   = IMP_LIND 
+save to NOM_TERM ALL LIKE "TERM_*"
+
+return
+*
+
+***************
+function H_term
+***************
+
+ANTCOR = setcolor()
+set color to "W+/R,N/W,N,W+/R"
+Quadro(12,05,19,58,"W+/R,N/R,N,W+/R","N/N")
+@ 12,05 SAY "…ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕª"
+@ 13,05 SAY "∫                PERCENTUAL EXECUTADO                ∫"
+@ 14,05 SAY "«ƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒ∂"
+@ 15,05 SAY "∫ 1   10   20   30   40   50   60   70   80   90  100∫"
+@ 16,05 SAY "∫⁄Ÿ...≥....≥....≥....≥....≥....≥....≥....≥....≥....¿ø∫"
+@ 17,05 SAY "∫≥                                                  ≥∫"
+@ 18,05 SAY "∫¿ƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒŸ∫"
+@ 19,05 SAY "»ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕº"
+setcolor( ANTCOR )
+return
+
+
+**********************
+function coloca_imprel
+**********************
+private tipo_imp
+tipo_imp=" "
+SC_IND = savescreen( 03,01,21,78 )
+quadro(15,20,20,48,"N/BG,W+/BG,N,N/BG","N+/N")   &&"W+/R,N/R,N,W+/R","N/N")
+@ 16,21 say " Qual o tipo da Impressora"
+@ 17,21 say "1- Epson compat°vel"
+@ 18,21 say "2- HP Deskjet compat°vel"
+@ 19,21 say "Digite a opáÑo 1 ou 2 : "
+set confirm on
+@ 19,col()+1 get tipo_imp picture "9"  VALID (M->tipo_imp$"12")&& validar
+read local
+set confirm off
+if tipo_imp="1"
+      a=chr(15)
+      imp_comp=a
+      a=chr(18)
+      imp_c_comp=a
+      a=chr(14)
+      imp_expa=a
+      a=chr(20)
+      imp_c_expa=a
+
+
+elseif tipo_imp="2"
+      * comprimido
+      *portrait
+      a=chr(27)+chr(38)+chr(108)+chr(48)+chr(79)
+      *conj. de caracteres
+      b=chr(27)+chr(40)+chr(49)+chr(50)+chr(85)
+      *espacamento
+      c=chr(27)+chr(40)+chr(115)+chr(48)+chr(80)
+      *pitch
+      d=chr(27)+chr(40)+chr(115)+"15"+chr(72)
+      *formato
+      e=chr(27)+chr(40)+chr(115)+chr(52)+chr(49)+chr(48)+chr(49)+chr(84)
+      imp_comp=a+b+c+d+e
+      * normal
+      *portrait
+      a=chr(27)+chr(38)+chr(108)+chr(48)+chr(79)
+      *conj. de caracteres
+      b=chr(27)+chr(40)+chr(49)+chr(50)+chr(85)
+      *espacamento
+      c=chr(27)+chr(40)+chr(115)+chr(48)+chr(80)
+      *pitch
+      d=chr(27)+chr(40)+chr(115)+"12"+chr(72)
+      *formato
+      e=chr(27)+chr(40)+chr(115)+chr(52)+chr(49)+chr(48)+chr(49)+chr(84)
+      imp_c_comp=a+b+c+d+e
+      *expandido
+      *portrait
+      a=chr(27)+chr(38)+chr(108)+chr(48)+chr(79)
+      *conj. de caracteres
+      b=chr(27)+chr(40)+chr(49)+chr(50)+chr(85)
+      *espacamento
+      c=chr(27)+chr(40)+chr(115)+chr(48)+chr(80)
+      *pitch
+      d=chr(27)+chr(40)+chr(115)+"8"+chr(72)
+      *formato
+      e=chr(27)+chr(40)+chr(115)+chr(52)+chr(49)+chr(48)+chr(49)+chr(84)
+      imp_expa=a+b+c+d+e
+      imp_c_expa=imp_c_comp
+
+
+endif
+restscreen( 03,01,21,78,SC_IND )
+
+return
+
+*******************
+function fitas_cli
+*******************
+*acerta o campo FZC e FC para qt fitas com cliente
+
+select 1
+use "clientes.dbf"
+if flock( 15 )
+
+      do while .not. eof()
+            if clientes->cod_cli # "000000"
+               replace clientes->FZ with 0
+               replace clientes->fzc with " "
+            endif
+            skip
+      enddo
+
+     SET INDEX TO "CLIENTES.K1" KEY CLIENTES->NOME,;
+              "CLIENTES.K2" KEY CLIENTES->CPF_CLI ,;
+              "CLIENTES.K3" KEY CLIENTES->COD_CLI 
+
+
+              unlock
+              set autolock on
+else
+
+     Mens_rerro( "Erro de acesso na rede, operaáÑo cancelada", 4, "W+*/B" )
+     close all
+     quit 
+
+endif
+				 
+
+select 2
+use "fitas.dbf"
+if flock( 15 )
+    SET INDEX TO "FITAS.K1" KEY FITAS->CODFITA,;
+    "FITAS.K2" KEY FITAS->COD_CLI + FITAS->CODFITA,;
+    "FITAS.K3" KEY FITAS->SEQUENCIAL
+     unlock
+     set autolock on
+
+else
+
+     Mens_rerro( "Erro de acesso na rede, operaáÑo cancelada", 4, "W+*/B" )
+     close all
+     quit 
+
+endif
+
+codclim=space(6)
+select 1
+set order to 3
+select 2
+set order to 0
+locate for fitas->cod_cli # "000000"
+n=0
+do while.not. eof()
+            @ 20,10 say "Acertando Clientes com Fitas locadas "
+            @ 20,COL()+1 SAY FITAS->CODFITA
+       
+       if fitas->cod_cli # "000000" &&.and.fitas->num_fitas_vol1
+                select 1
+                codclim=fitas->cod_cli
+                seek codclim
+                if found()
+*                        @ 15,10 say "trocado"
+                       n=n+1
+*                         @ 15,col()+1 say n
+                        replace clientes->FZ with clientes->fz+1
+                        replace clientes->fzc with "˛"
+                endif
+       endif
+         select 2
+         continue
+        @ 20,47 SAY "                       "
+enddo
+
+
+
+return
+
+
+*******************
+function titulos_t_orig
+*******************
+*acerta o campo T_ORIGINAL SE ESTIVER EM BRANCO
+
+   SELECT 5
+	USE "TITULOS.DBF"
+        do while .not. eof()
+                @ 20,10 say "Acertando "
+                @ 20,col()+1 SAY TITULOS->T_CODIGO
+                if len(alltrim(TITULOS->T_ORIGINAL))=0
+                        replace TITULOS->T_ORIGINAL with TITULOS->T_PORT
+                endif
+                @ 20,21 SAY SPACE(40)
+                skip
+        enddo
+
+	if flock( 15 )
+
+      IF _file("TITULOS.K3")
+      	DELETE FILE "TITULOS.K3"
+      ENDIF
+      
+		SET INDEX TO "TITULOS.K1" KEY TITULOS->T_CODIGO  ,;
+   		          "TITULOS.K2" KEY TITULOS->T_PORT    ,;
+						 "TITULOS.K3" KEY TITULOS->T_ORIGINAL,;
+						 "TITULOS.K4" KEY TITULOS->T_IDIOMA + TITULOS->T_PORT    ,;
+						 "TITULOS.K5" KEY _descend( dtos(TITULOS->T_DATA_ENT) + TITULOS->T_CODIGO )
+		unlock
+		set autolock on
+
+	else
+
+                Mens_rerro( "Erro de acesso na rede, operaáÑo cancelada", 4, "W+*/B" )
+		close all
+		quit 
+
+	endif
+
+
+
+
+
+
+return
+
+
+function Mostraqt
+
+@ 23,01 say _memory() picture "@B 9,999,999"
+@ 23,25 say (137000 - _memory()) picture "@B 9,999,999"
+inkey (0)
+@ 23,01 SAY SPACE (78) COLOR "W/B"
+return
+
+
+**********************
+function checa_program
+**********************
+
+
+return
+
+
+function testa_transf
+
+if network()
+
+	@ 23,01 say " AtenáÑo...Tenha certeza que os outros terminais nÑo estejam no programa" color "W+*/B"
+	_bell()
+	_bell()
+	_bell()
+	_bell()
+	inkey( 50 )
+	@ 23,01 say space( 78 ) color "W+/B"
+
+endif
+
+run "c: >nul"
+if _file( "\vsv" ) .and. attrib( "\VSV" ) = "D"
+
+else
+   mens_rerro("N∆o existe programa para a transferància", 4, "W+*/B" )
+   termina()
+endif
+
+run "cd\vsv >nul"
+arq_nome = space(20)
+arq_tam=0
+mascara="*.*"
+no_arq = adir (mascara)
+espaco=0
+declare arq_nome[no_arq],;
+        arq_tam[no_arq],;
+        arq_data [no_arq],;
+        arq_hora [no_arq],;
+        arq_atributos[no_arq]
+adir (mascara, arq_nome, arq_tam, arq_data, arq_hora,arq_atributos)
+for i = 1 to no_arq
+        espaco = espaco + arq_tam [ i ]
+next
+*MMDD=TRANSFORM(diskspace(),"###,###,###,###")
+MMDD=diskspace()
+espaco = espaco * 2
+if espaco >= MMDD
+   @ 21,01 say "Espaáo dispon°vel = "+ TRANSFORM(diskspace(),"###,###,###,###")+" bytes"
+   @ 22,01 say "Espaáo necess†rio = "+ TRANSFORM(espaco,"###,###,###,###")+" bytes"
+   mens_rerro("N∆o existe espaáo dispon°vel para a transferància", 4, "W+*/B" )
+   termina()
+   quit
+endif
+
+
+if _file( "\vsv4" ) .and. attrib( "\VSV4" ) = "D"
+
+   attrib( "\DOS\RAMBOOT.COM" , "-hr")
+   
+
+else
+   mens_rerro("N∆o existe programa VSV 4R.0 para a transferància", 4, "W+*/B" )
+   termina()
+   quit
+endif
+
+
+if _file( "\vsv" ) .and. attrib( "\VSV" ) = "D"
+
+*   if _file ("\DOS\RAMBOOT.COM")
+*      attrib( "\DOS\RAMBOOT.COM" , "-hr")
+*   endif
+
+else
+   mens_rerro("N∆o existe programa VSV 3.0 para a transferància", 4, "W+*/B" )
+   termina()
+   quit
+endif
+
+
+
+return
+
+*****************
+procedure Memoria 
+*****************
+
+MMDD="Mem¢ria dispon°vel: "+TRANSFORM(_memory(),"###,###")+" bytes  "
+MMDD=MMDD+"Espaáo no HD : "+TRANSFORM(diskspace(),"###,###,###,###")+" bytes"
+Mens_rerro( MMDD, 20, "W+/B" )
+
+return
+
+
+
+function con_garantia
+private garantia, e_lin, e_col, e_lin_jan, up_lin, up_col, e_tlinha,;
+        e_tab, e_col_jan,z
+z="z"
+z=z+"i"
+z=z+"c"
+z=z+"o"
+run "abre -o -s"+z+" utils garantia.txt >nul"
+*clear screen
+if _file("garantia.txt")
+   garantia=memoread("garantia.txt")
+   clear screen
+   @ 00,00 say space (79) color "W+/B"
+   @ 00,00 SAY "Leia o contrato - movimente-se com setas <ESC> sai da leitura" color "W+/B"
+
+E_LIN     = 1
+E_COL     = 1                          && Coluna inicial
+E_LIN_JAN = 0                          && Linha da janela
+UP_LIN    = 22
+UP_COL    = 78
+E_TLINHA  = 77
+E_TAB     = 0
+E_COL_JAN = 0                          && Coluna da janela
+      edit memo         GARANTIA;
+           to           GARANTIA;
+           window       1, 0, UP_LIN-1, UP_COL;
+           frame        double;
+           color        "W/B, W+/B, I, N/W+";
+           linlength    E_TLINHA;
+           line         E_LIN;
+           tabsize      E_TAB;
+           column       E_COL;
+           linwind      E_LIN_JAN;
+           colwind      E_COL_JAN;
+           scrap        AREA_SCRAP;
+           NOUPDATE 
+else
+   mens_rerro("Termo de garantia e contrato de cess∆o de direitos n∆o encontrado",4,"W+*/B")
+   quit
+endif
+
+if _file("garantia.txt")
+   attrib( "garantia.txt" , "-hr")
+   run "del garantia.txt >nul"
+endif
+
+   
+return
+
+*function testa_memoria
+
+*@ 23,01 say _memory()
+*inkey (0)
+*mlivre=0
+*mlivre=_memory()
+*@ 23,40 say mlivre
+*inkey (0)
+*mlivre=val(mlivre)
+*if mlivre < "100000"
+
+*   clear
+*   @ 10,10 say "Sem memoria suficiente para execuá∆o ..." color "W+*/B"
+*   @ 10,12 say "libere mais mem¢ria ou entre em contato com o Suporte TÇcnico"  color "W+/B"
+*   inkey(10)
+   termina()
+*
+*endif
+
+*return

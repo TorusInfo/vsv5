@@ -1,0 +1,90 @@
+clear
+set century on
+set date "ddmmyyyy"
+if network()
+	NOME_NET =alltrim(netname())
+	set exclusive off
+        @ 23,02 SAY "MultiUser "+ "Terminal = > "+ NOME_NET 
+else
+	set exclusive on
+endif
+
+arq_nome = space(20)
+arq_tam=0
+arq_data=ctod("          ")
+arq_hora=0
+arq_atrib=space(10)
+mascara="*.mem"
+no_arq = adir (mascara)
+
+select 1
+set exclusive on
+use "arqs.dbf"
+flock(15)
+zap
+unlock
+set exclusive off
+
+declare arq_nome[no_arq],;
+        arq_tam[no_arq],;
+        arq_data[no_arq],;
+        arq_hora[no_arq],;
+        arq_atrib[no_arq]
+adir (mascara, arq_nome, arq_tam,arq_data,arq_hora,arq_atrib)
+@ 2,1 say "Arquivo         Tamanho           Data               Hora "
+for i= 1 to no_arq
+        if i < 17
+                linha = i + 2
+        else
+                linha = 19
+        endif
+        append blank
+        replace arqs->arq_nome with arq_nome [ i ]
+       at linha, 1 say arq_nome [ i ]
+       at linha, 14 say arq_tam [ i ] picture "@R 999,999,999"
+       at linha, 35 say arq_data [ i ]
+       at linha, 55 say arq_hora [ i ]
+       at linha, 69 say arq_atrib [ i ]        
+
+linha = linha +1
+next
+at linha, 1 say no_arq picture "999"
+at linha, col()+1 say "Arquivos mostrados "
+zerado = 17
+for i = 1 to no_arq
+        if arq_tam [ i ] = zerado
+        if arq_nome [ i ] = "ULT_BOL.MEM"
+           DELETE FILE "ULT_BOL.MEM"
+        else
+           clear
+           explode ( 00, 00, 09 , 79, "D", "W+/R")
+           @ 1,32 say "Torus Inform tica" color "W+/R"
+           @ 3,20 say "***********  ERRO de HARDWARE  ************" color "W+*/R"
+           linha = 05
+          _bell()
+          _bell()
+          _bell()
+          _bell()
+          _bell()
+          _bell()
+          _bell()
+          @ linha, 09 say " Aten‡„o o arquivo "  color "W+/R"
+          @ linha, col()+1 say arq_nome[i] picture "@!" color "RG+*/R"
+          @ linha, col()+4  say "est  danificado " color "W+/R"
+          @ linha+2,10  say "Anote esta informa‡„o e passe para o Suporte T‚cnico " color "W+/R"
+          inkey (0)
+        endif
+        endif
+next
+*inkey(0)
+?
+?
+?
+?
+?
+?
+?
+?
+
+quit
+

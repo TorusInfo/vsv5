@@ -1,0 +1,584 @@
+&& FUNCAO DE MANIPULACAO DE BASE DE DADOS
+
+PROCEDURE enter_file
+PARAMETERS enter_param
+
+PESQ_LENTA = .F.
+acha_lenta = " "
+&& DEFINICAO DAS VARIAVEIS                     
+
+PRIVATE arq_nome,;      && CONTEM O NOME DO DBF A SER USADO
+        tela_ent,;      && CONTEM O NOME DO PROC DE GET'S
+        fim,;           && CONTROLA LOOP PRINCIPAL
+        enter_cor,;     && COR NORMAL 
+        enter_box,;     && COR DAS MENSAGENS
+        enter_sombra,;  && SOMBRA DAS MENSAGENS
+        enter_alteracao && ALTERACAO (.T.) OU INCLUSAO (.F.)
+
+&& FATIA A STRING DOS PARAMETROS DE ENTRADA
+arq_nome=_left(enter_param,_at("-",enter_param)-1)
+tela_ent=TRIM(MID(enter_param,_at("-",enter_param)+1))
+
+del_ant = _set("DELETED") == "ON"
+cur_ant = _set("CURSOR") == "ON"
+con_ant = _set("CONFIRM") == "ON"
+see_ant = _set("SOFTSEEK") == "ON"
+
+fim=.F.
+enter_cor="W+/B,W+/R,N,W+/N"
+enter_box="W*/N"
+enter_sombra="N/N"
+enter_alteracao=.F.
+erro_ocor = .F.
+
+&& ARQUIVO FD C/ DEFINICOES DAS K e AREA P/ DBF 
+PRIVATE num_k,enter_area,area_anterior
+area_anterior = _select()
+arq_handle=_fopen(arq_nome+".FD",0)
+enter_area=VAL(_freadstr(arq_handle,3))
+_fseek(arq_handle,2,1)
+num_k=VAL(_freadstr(arq_handle,2))
+_fseek(arq_handle,2,1)
+IF num_k > 0 
+   PRIVATE chave_busca[num_k],;
+           chave_ordem[num_k]
+   FOR l1 = 1 TO num_k
+      chave_busca[l1]=TRIM(_freadstr(arq_handle,10))
+      _fseek(arq_handle,2,1)
+      chave_ordem[l1]=VAL(TRIM(_freadstr(arq_handle,2)))
+      _fseek(arq_handle,2,1)
+   NEXT
+ENDIF
+_fclose(arq_handle)
+
+
+&& ACESSO AOS ARQUIVOS
+
+IF enter_area = 0
+   SELECT arq_nome
+   ordem_anterior=indexord()
+ELSE
+   SELECT enter_area
+   OPEN(arq_nome)
+ENDIF
+
+tela_ant=SAVESCREEN(0,0,24,79)
+RESTORE FROM tela_ent+".TEL" ADDITIVE
+RESTSCREEN(0,0,24,79,TELA1)
+
+numero_campos=AFIELDS()            && NUMERO E NOME DE CAMPOS
+PRIVATE enter_nome[numero_campos],;
+        enter_var[numero_campos]
+
+SET PRECEDENCE TO FIELDS
+AFIELDS(enter_var)
+SET PRECEDENCE TO VARIABLES
+AFIELDS(enter_nome)
+*SET PRECEDENCE TO FIELDS
+
+
+COPY FIELDS BLANK TO MEMORY
+
+&& DEFINICAO DAS TECLAS DE FUNCAO
+
+SET KEY -2  TO pesq_enter()     && F3    PESQUISA
+SET KEY -3  TO recua_enter()    && F4    RECUA FICHA
+SET KEY -4  TO avanca_enter()   && F5    AVANCA FICHA
+SET KEY -7  TO limpa_enter()    && F8    LIMPA TELA
+SET KEY -8  TO delete_enter()   && F9    APAGA FICHA
+SET KEY -9  TO grava_enter()    && F10   GRAVA
+* SET KEY -12 TO Lpesq()          && ^F3   PESQUISA LENTA
+* SET KEY -13 TO LPROX()   		  && ^F4   CONNTINUA PESQUISA LENTA
+SET KEY 27  TO sai_enter()      && ESC   ABANDONA PROGRAMA
+
+SET DELETED ON
+SET CURSOR ON
+
+SET COLOR TO enter_cor
+*SET PRECEDENCE TO VARIABLES
+
+vai_get = 1
+DO WHILE .NOT.fim && INICIO DO LOOP PRINCIPAL
+   SET CONFIRM ON
+	autofind=.T.
+   SET KEY 32 TO GETVAI() && EXECUTA GOTO GET NO INICIO DO READ
+   KEYBOARD 32
+   DO tela_ent+"_GET" && ENTRADA DE DADOS 
+   SET CONFIRM OFF
+*   IF .NOT.fim 
+*      grava_enter() && GRAVA SE TERMINAR OS GET'S POR <ENTER>
+*   ENDIF
+
+ENDDO  && FIM DO LOOP PRINCIPAL 
+
+*SET PRECEDENCE TO FIELDS
+
+
+RELEASE TELA1
+IF enter_area # 0
+   CLOSE arq_nome
+ELSE
+	SET ORDER TO ordem_anterior
+ENDIF
+
+SELECT area_anterior
+
+&& CANCELA DEFINICAO DAS TECLAS DE FUNCAO
+
+SET KEY -2 TO
+SET KEY -3 TO 
+SET KEY -4 TO 
+SET KEY -7 TO 
+SET KEY -8 TO 
+SET KEY -9 TO 
+SET KEY 27 TO 
+
+SET DELETED del_ant
+SET CURSOR cur_ant
+SET CONFIRM con_ant
+SET SOFTSEEK see_ant
+RESTSCREEN(0,0,24,79,tela_ant)
+
+RETURN && SAIDA DA FUNCAO ENTER
+
+
+&& FUNCOES DA FUNCAO ENTER
+
+FUNCTION ajuda_enter  && F1    HELP
+erro_ocor = .F.
+
+RETURN 
+
+*
+FUNCTION GETVAI
+*
+   SET KEY 32 TO REFIND()
+	GOTOGET(vai_get)
+   vai_get = 1
+   autofind = .F.
+   KEYBOARD 32
+RETURN
+*
+FUNCTION REFIND && REATIVA AUTOFIND APOS GOTOGET INICIAL
+
+	SET KEY 32 TO
+   autofind = .T.
+RETURN
+
+FUNCTION pesq_enter   && F3    PESQUISA
+
+	savekey()
+	erro_ocor = .F.
+   IF PCOUNT() = 1 .AND. !autofind 
+		restkey()
+      RETURN
+   ENDIF
+   IF num_k = 0
+		restkey()
+      RETURN 
+   ENDIF
+   autofind = .F.
+   IF editing()
+      KEYBOARD 13, 5, -2
+		restkey()
+      RETURN
+   ENDIF
+   SET SOFTSEEK ON
+   busca=readvar()
+   ordem_num=ascan(chave_busca,busca)
+   IF ordem_num # 0
+      SET ORDER TO chave_ordem[ordem_num]
+      SEEK (fieldcont(busca,"M"))
+		IF LASTKEY() = -3 .OR. LASTKEY() = -4
+			IF .NOT. FOUND() .AND. LASTKEY() = -4
+				restkey()
+            RETURN .T.
+			ELSE
+				restkey()
+				RETURN
+			ENDIF
+		ENDIF
+	   IF (PCOUNT() = 1 .AND. .NOT.FOUND())
+         autofind = .T.
+			enter_alteracao = .F.
+			restkey()
+			RETURN 
+		ELSE
+         enter_alteracao = .T.
+         vai_get = GOTOGET()
+         copy fields to memory
+			keyboard 21 , 21  , 3
+		   if pcount() = 1
+				if lastkey() = 5
+					VAI_GET = VAI_GET - 1
+				else
+		         VAI_GET = VAI_GET + 1
+				endif
+			endif
+		endif
+   else
+		Mens_rerro(" Este campo n„o permite pesquisas", 10 )
+		restkey()
+		RETURN .T.
+   ENDIF
+	restkey()
+RETURN 
+
+FUNCTION imp_enter    &&     IMPRIME
+
+	savekey()
+	restkey()
+	erro_ocor = .F.
+
+RETURN
+
+FUNCTION calc_enter   &&     CALCULADORA 
+
+	savekey()
+	restkey()
+	erro_ocor = .F.
+
+RETURN
+
+FUNCTION delete_enter && F9    APAGA FICHA 
+
+	if .not. nivel_acesso(114)
+		return
+	endif
+	savekey()
+	erro_ocor = .F.
+   IF enter_alteracao .AND.;
+		.NOT. BOF() .AND.;
+		.NOT. EOF()
+      CLEAR TYPEAHEAD
+		conf_tel = SAVESCREEN(09,30,16,43)
+		quadro(09,30,15,41,"W+/R,W+*/R,N,W+/R","N+/N")
+		@ 10,31 SAY "  APAGAR "
+		@ 11,30 SAY "Ç"+REPLICATE("Ä",10)+"¶"
+		@ 12,31 SAY " Confirma"
+		@ 13,30 SAY "Ç"+REPLICATE("Ä",10)+"¶"
+		op = 2
+		SET CONFIRM OFF
+		@ 14,32 PROMPT "Sim"
+		@ 14,37 PROMPT "Nao"
+		_bell()
+		_bell()
+		MENU TO op
+		SET CONFIRM ON
+      RESTSCREEN(09,30,16,43,conf_tel)
+      SET COLOR TO enter_cor
+      IF op # 1	
+			restkey()
+         RETURN
+      ENDIF
+		   DO TELA_ENT+"_DELETE"
+         IF erro_ocor
+				restkey()
+				RETURN
+         ENDIF
+		   DO TELA_ENT+"_EDIT"
+			IF erro_ocor
+				restkey()
+				RETURN
+			ENDIF
+         ord_delete = INDEXORD()
+         SET ORDER TO 0
+			COPY FIELDS BLANK TO MEMORY
+			_store(replicate("þ",len(fieldcont(enter_var[1]))),enter_var[1])
+			if bloqreg( 10 ) && rlock()
+			
+		   	_replace(enter_nome,enter_var)
+				unlock
+
+			endif
+			if bloqreg( 10 ) && rlock()
+
+	         DELETE 
+				unlock     
+
+			endif
+         SET ORDER TO ord_delete
+         limpa_enter()         
+
+
+	ENDIF
+	restkey()
+RETURN
+
+FUNCTION limpa_enter  && F8    LIMPA TELA
+
+	savekey()
+	erro_ocor = .F.
+   autofind=.F.
+   enter_alteracao=.F.
+   COPY FIELDS BLANK TO MEMORY
+   KEYBOARD 21 , 21 , 3
+	restkey()
+RETURN
+*
+
+*
+FUNCTION grava_enter  && F10   GRAVA
+*
+if enter_alteracao
+* alteracao
+	if .not.nivel_acesso(113)
+		return
+	endif
+else
+* inclusao
+	if .not.nivel_acesso(112)
+		return
+	endif
+endif
+
+savekey()
+		erro_ocor = .F.
+   	IF editing()
+	      autofind = .F.
+      	KEYBOARD 5, 13, -9
+			restkey()
+   	   RETURN
+	   ENDIF
+      CLEAR TYPEAHEAD
+		conf_tel = SAVESCREEN(09,30,16,43)
+		quadro(09,30,15,41,"W+/R,W+*/R,N,W+/R","N+/N")
+		@ 10,31 SAY "  GRAVAR "
+		@ 11,30 SAY "Ç"+REPLICATE("Ä",10)+"¶"
+		@ 12,31 SAY " Confirma"
+		@ 13,30 SAY "Ç"+REPLICATE("Ä",10)+"¶"
+		SET CONFIRM OFF
+		@ 14,32 PROMPT "Sim"
+		@ 14,37 PROMPT "Nao"
+		  MENU TO op
+		SET CONFIRM ON
+      RESTSCREEN(09,30,16,43,conf_tel)
+      SET COLOR TO enter_cor
+      IF op # 1	
+				restkey()
+	         RETURN
+      ENDIF
+
+	IF .NOT.enter_alteracao
+      SET DELETED OFF
+******************
+* EM TESTE 25/06/91
+      ord_delete = INDEXORD()
+* SOLUCAO PROVISORIA POR O CLIENTES NAO TER O CODIGO COMO CAMPO
+* DO INDICE DE ORDEM 1
+		IF _ALIAS() = "CLIENTES"
+			SET ORDER TO 3
+		ELSE
+			SET ORDER TO 1
+		ENDIF
+		GO BOTTOM
+******************
+* TIRAR * DA LINHA ABAIXO CASO RETIRAR LINHA EM TESTE LOGO ACIMA
+*      GO TOP
+		IF _deleted()
+			flock( 15 )
+         RECALL
+			unlock
+      ELSE
+			flock( 15 )
+	      APPEND BLANK
+			unlock
+      ENDIF
+      SET DELETED ON
+      SET ORDER TO ord_delete
+   ELSE
+	   DO TELA_ENT+"_EDIT"
+   ENDIF
+	DO TELA_ENT+"_SAVE"
+	IF erro_ocor
+
+		if ENTER_ALTERACAO
+		
+			restkey()
+			return
+			
+      endif
+		ord_delete = INDEXORD()
+      SET ORDER TO 0
+		rlock( 15 )
+      DELETE 
+		unlock     
+      SET ORDER TO ord_delete
+		restkey()
+      RETURN
+	ENDIF
+   ord_delete = INDEXORD()
+	SET ORDER TO 0
+	if bloqreg( 10 ) && rlock()
+
+   	_replace(enter_nome,enter_var)
+		unlock
+
+	endif
+   SET ORDER TO ord_delete
+   IF .NOT.enter_alteracao 
+		KEYBOARD 21 , 21 , 3
+      vai_get = 1
+		COPY FIELDS TO MEMORY
+		enter_alteracao = .T.
+	ELSE
+	   limpa_enter()
+  	ENDIF
+	restkey()
+	COMMIT
+RETURN
+*
+
+*
+FUNCTION avanca_enter && F5 AVANCA FICHA
+*
+
+savekey()
+erro_ocor = .F.
+   autofind = .F.
+   IF editing()
+      KEYBOARD 13, 5, -4
+		restkey()
+      RETURN
+   ENDIF
+	SET KEY -4 TO  && F5 AVANCA FICHA
+   busca=readvar()
+   ordem_num=ascan(chave_busca,busca)
+	IF ordem_num = 0
+		Mens_rerro(" Este campo n„o permite pesquisas", 10 )
+	   SET KEY -4 TO avanca_enter() && F5 AVANCA FICHA
+		restkey()
+		RETURN .T.
+	ENDIF
+	IF enter_alteracao .AND. FIELDCONT(busca,"M") = FIELDCONT(busca,arq_nome) .AND. INDEXORD() = ordem_num
+	   IF .NOT.EOF()
+	  	   SKIP 1
+   	ENDIF
+	  	IF EOF()
+   	  	GO TOP
+	   ENDIF
+	ELSE
+	   IF .NOT.PESQ_ENTER() && CHAMA ROTINA DE PESQUISA IGUAL
+		   IF .NOT.EOF()     && SO QUANDO NECESSARIO
+   		   SKIP 1
+		   ENDIF
+   		IF EOF()
+      		GO TOP
+		   ENDIF
+   	ENDIF
+	ENDIF
+
+   IF .NOT. erro_ocor
+	   enter_alteracao=.T.
+   	COPY FIELDS TO MEMORY
+		KEYBOARD 21 , 21 , 3
+	   vai_get = GOTOGET()
+	ENDIF
+   SET KEY -4 TO avanca_enter() && F5 AVANCA FICHA
+	restkey()
+RETURN
+
+FUNCTION recua_enter  && F4 VOLTA FICHA
+
+	savekey()
+	erro_ocor = .F.
+   autofind = .F.
+   IF editing()
+      KEYBOARD 13, 5, -3
+		restkey()
+      RETURN
+   ENDIF
+
+	SET KEY -3 TO  && F4 VOLTA FICHA
+
+   busca=readvar()
+
+   ordem_num=ascan(chave_busca,busca)
+	IF ordem_num = 0
+		Mens_rerro(" Este campo n„o permite pesquisas", 10 )
+		SET KEY -3 TO recua_enter()  && F4 VOLTA FICHA
+		restkey()
+		RETURN .T.
+	ENDIF
+
+	IF enter_alteracao .AND. FIELDCONT(busca,"M") = FIELDCONT(busca,arq_nome) .AND. INDEXORD() = ordem_num
+	ELSE
+	   PESQ_ENTER() && CHAMA ROTINA DE PESQUISA IGUAL
+	ENDIF
+   IF .NOT. erro_ocor
+	  	IF .NOT.BOF()
+	      SKIP -1
+   	ENDIF
+	  	IF BOF()
+   	   GO BOTTOM
+	   ENDIF
+	   enter_alteracao=.T.
+	   COPY FIELDS TO MEMORY
+		KEYBOARD 21 , 21 , 3
+	   vai_get = GOTOGET()
+	ENDIF
+	SET KEY -3 TO recua_enter()  && F4 VOLTA FICHA
+	restkey()
+RETURN
+
+FUNCTION sai_enter    && ESC   ABANDONA PROGRAMA
+	savekey()
+	erro_ocor = .F.
+   autofind = .F.
+	KEYBOARD 21 , 21 , 3
+   fim=.T.
+	restkey()
+RETURN
+*
+
+
+********************
+*function Lpesq   && ^F3    PESQUISA LENTA
+********************
+
+*	savekey()
+* 	erro_ocor = .F.
+*   IF editing()
+*      KEYBOARD 13, 5, -12
+*		restkey()
+*      RETURN
+*   ENDIF
+*   busca=readvar()
+*	var = "_at(trim(m->"+BUSCA+"),"+ARQ_NOME+"->"+BUSCA+",0) # 0"
+*	acha_lenta = evalcomp(var,erroc,qualc)
+*	locate for evalexec(acha_lenta,erroc,qualc)
+*	if found()
+*		PESQ_LENTA = .t.
+*	   enter_alteracao = .T.
+*      vai_get = GOTOGET()
+*      COPY FIELDS TO MEMORY
+*		KEYBOARD 21 , 21  , 3
+*	endif
+*	restkey()
+*
+*return
+*
+
+
+**************
+function LPROX			   && ^F4  CONTINUA PESQUISA LENTA
+**************  
+
+savekey()
+if PESQ_LENTA
+	continue
+	if found()
+		PESQ_LENTA = .t.
+	   enter_alteracao = .T.
+      vai_get = GOTOGET()
+      COPY FIELDS TO MEMORY
+		KEYBOARD 21 , 21  , 3
+	endif
+endif
+restkey()
+
+return
+*
+
+
+&& FIM DA FUNCAO ENTER_FILE

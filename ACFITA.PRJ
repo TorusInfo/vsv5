@@ -1,0 +1,15 @@
+CLEAR
+@ 10,10 SAY "Aguarde...." color "w+*/b"
+use "fitas"
+
+*repla all FITAS->SEQUENCIAL WITH "5"+SUBSTR(FITAS->SEQUENCIAL,2,3) FOR SUBSTR(FITAS->SEQUENCIAL,1,1)=="D"
+repla all FITAS->SEQUENCIAL WITH "7"+SUBSTR(FITAS->SEQUENCIAL,1,3) FOR len(alltrim(FITAS->SEQUENCIAL))=3
+use
+if _file ("FITAS.K3")
+   delete file "FITAS.K3"
+endif
+
+
+@ 10,10 SAY "Terminada altera‡Æo ...." color "w+*/b"
+INKEY(1)
+

@@ -1,0 +1,20 @@
+select 1
+use "prnfita"
+PRIVATE CABEC[2], CAMPOS[2]
+CABEC[1]  = "Fita"
+CABEC[2]  = "Porcent."
+CAMPOS[1] = "QT_FITA"
+CAMPOS[2] = "PC_DESC"
+set color to "N/W"
+@ 02,24 clear to 17,42
+set color to "W+/B,N/W"
+browse window   03,26,16,40          ;
+       frame    double               ;
+       color    "W+/B,N/W,W+/B,W+/B" ;
+       fields   CAMPOS               ;
+       heading  CABEC                ;
+       noappend                      ;
+       nodelete
+close all
+set color to
+clear

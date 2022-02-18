@@ -1,0 +1,221 @@
+******************************************************************************
+*                                                                            *
+*   PROGRAMA PARA CONFERIR ACERVO POR GENERO NA TELA OU IMPRESSORA           *
+*                                                                            *
+*    FAGZ - 10/02/91                                                         *
+*                                                                            *
+******************************************************************************
+******************
+procedure Conferir 
+******************
+
+restore from "SYSFILE.MEM" additive
+Abrir_Imp( NOM_TERM )
+
+SC_MES = savescreen(03,01,21,78)
+select 2
+use "GENERO.TPO"
+count to NUM_GEN
+NUM_GEN = NUM_GEN - 1
+declare GENEROS[NUM_GEN],GEN_COR[NUM_GEN]
+go 2
+for A = 1 to NUM_GEN
+
+	GENEROS[A] = GENERO->DADOS
+	GEN_COR[A] = _left(GENERO->DADOS,1)
+	skip
+
+next
+close "GENERO"
+select "TITULOS"
+set order to 1
+select "FITAS"
+set order to 1
+set relation to FITAS->T_CODIGO into "TITULOS"
+set filter to loja = NUM_LOJA
+@ 03,01 clear to 21,78 color "W/B"
+GEN  = "  "
+TELA = "T"
+NUM_MAX = iif( NUM_GEN > 16, 16, NUM_GEN )
+do while .T.       &&  LASTKEY() # 27
+
+	@ 03,01 clear to 21,78   color "W/B"
+	@ 23,01 say space( 78 )  color "W/B"
+	Quadro( 03, 02, NUM_MAX + 4, 17, "W/R,W+/R,N,W/R", "N+/N" )
+	popup	window	04, 04, NUM_MAX + 3, 16;
+			to			GEN;
+			options	GENEROS;
+			hilite 	GEN_COR,"GR+/R";
+			color    "W/R,N/W,W/R,W/R"
+	set color to "W/B,W+/B,N,W/B"
+	if GEN < 1
+
+		exit
+
+	endif
+	GEN1 = GENEROS[GEN]
+	gen  = _right("0"+ALLTRIM(STR(gen)),2)
+	SET CURSOR ON
+   @ 23,02 say "na Impressora ou na Tela" get tela pict "!A"
+   READ
+	SET CURSOR OFF
+	@ 23,01 SAY SPACE(78)
+	@ 23,02 SAY "< End > - Interrompe a impress„o "
+	@ 23,04 SAY "End" COLOR "W+*/B"
+	INKEY(1)
+	a = 3
+	GO TOP
+	SEEK gen
+	IF FOUND()
+
+		IF UPPER(tela) = "I"
+
+			SET PRINTER TO IMP_REL
+			pg = 1
+			acervo_cabec( pg )
+
+		ELSE
+
+			@ 03,01 clear to 21,78 color "W/B"
+			@ 23,01 SAY SPACE(78)
+
+		ENDIF
+		num_fitas   = 0
+		num_locadas = 0
+	   DO WHILE _left( FITAS->CODFITA, 2 ) = gen
+
+   	   IF FITAS->LOJA = num_loja
+
+				IF UPPER(tela) = "T"
+
+					imp_tela()
+					a = a + 1
+					IF a = 22
+
+						INKEY(0)
+						SCROLL(03,01,21,78,0)
+						a = 3
+
+					ENDIF
+
+				ELSE
+
+					imp_impressora()
+
+				ENDIF
+				num_fitas = num_fitas + 1
+				IF FITAS->COD_CLI # "000000"
+
+					num_locadas = num_locadas + 1
+
+				ENDIF
+
+			ENDIF
+			INKEY()
+			IF LASTKEY() = 6
+
+				EXIT
+
+			ENDIF
+			IF UPPER(tela) = "T"
+
+				@ 23,02 		 SAY "["
+				@ 23,COL() 	 SAY "N§ DE FITAS "
+				@ 23,COL() 	 SAY num_fitas PICTURE "#####" COLOR "W+/B"
+				@ 23,COL() 	 SAY "]"
+				@ 23,COL()+3 SAY "[NA LOJA "
+				@ 23,COL() 	 SAY num_fitas-num_locadas PICTURE "#####" COLOR "W+/B"
+				@ 23,COL() 	 SAY "]"
+				@ 23,COL()+3 SAY "[LOCADAS "
+				@ 23,COL()   SAY num_locadas PICTURE "#####" COLOR "W+/B"
+				@ 23,COL() 	 SAY "]"
+				@ 23,COL()+4 SAY "["
+				@ 23,COL()   SAY gen1 COLOR "W+/B"
+				@ 23,COL() 	 SAY "]"
+
+			ELSE
+
+				IF PROW() = 64
+
+					EJECT
+					pg = pg + 1
+					acervo_cabec( pg )
+
+				ENDIF
+
+			ENDIF
+			SKIP
+
+	   ENDDO
+		IF LASTKEY() # 6 .AND. UPPER(tela) = "T"
+
+			inkey(0)
+
+		ENDIF
+		IF UPPER(tela) = "I"
+
+			IF PROW() > 60
+
+				EJECT
+
+			ENDIF
+			LPRINT
+			LPRINT "      N. DE FITAS DO GENERO  " NOLINEFEED
+			LPRINT num_fitas PICTURE "##,###"
+			LPRINT "      N. DE FITAS NA LOJA    " NOLINEFEED
+			LPRINT num_fitas-num_locadas PICTURE "##,###"
+			LPRINT "      N. DE FITAS LOCADAS    " NOLINEFEED
+			LPRINT num_locadas PICTURE "##,###"
+			EJECT
+			SET PRINTER TO
+
+		endif
+
+	else
+
+		@ 23,01 SAY SPACE(78) COLOR "W/B"
+		@ 23,01 SAY "GENERO NAO ENCONTRADO"
+
+	endif
+
+enddo
+set filter   to
+set relation to
+restscreen(03,01,21,78,SC_MES)
+
+return
+
+*
+PROCEDURE imp_tela
+*
+@ A,01 say " - " + _left( FITAS->SEQUENCIAL,4 ) + " - " + FITAS->CODFITA + ;
+           " - [ " + TITULOS->T_PORT + " ] -> " + FITAS->COD_CLI
+
+RETURN
+*
+
+*
+PROCEDURE imp_impressora
+*
+LPRINT " " + _left( FITAS->SEQUENCIAL, 4 ) + " - " + FITAS->CODFITA + "- [" + ;
+       TITULOS->T_PORT + "] ->" + FITAS->COD_CLI + " [F] [C]"
+
+RETURN
+*
+
+*
+PROCEDURE acervo_cabec
+*
+PARAMETERS pg
+*
+IF ISPRINTER()
+	LPRINT
+	LPRINT "      LISTAGEM DE ACERVO - GENERO : " NOLINEFEED
+	LPRINT gen1 + space( 15 ) + "Pagina : " NOLINEFEED
+	LPRINT pg PICTURE "####"
+	LPRINT
+ENDIF
+
+RETURN
+
+

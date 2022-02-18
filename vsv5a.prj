@@ -1,0 +1,8 @@
+* EXTERNAL _at( )
+* EXTERNAL trim( )
+NOME_NET=SPACE(20)
+demo=.f.
+vsv_main2()
+quit
+
+	

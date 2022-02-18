@@ -1,0 +1,273 @@
+*
+* antes de iniciar a transferencia acertar o arquivo genero.tpo e o arquivo glvgener.dbf
+* e tambem o arquivo mes.dbf
+*
+set century on
+set date "DD/MM/YYYY"
+MDIST=SPACE(20)
+ngrupo=0
+distribui()
+clien()
+titu()
+fit()
+clear
+@ 10,10 say "Finalizando ..." color "w+*/n"
+
+select 1
+use "fitas.dbf"
+zap
+append from "fitastrf.dbf"
+close all
+run "copy fitas.dbf c:\vsv5 >nul"
+run "copy titulos.dbf c:\vsv5 >nul"
+run "copy clientes.dbf c:\vsv5 >nul"
+run "copy distrib.tpo c:\vsv5 >nul"
+
+
+quit
+
+function distribui
+clear
+select 1
+use "distrib.tpo"
+zap
+append blank
+replace dados with "   "
+replace letra with ""
+select 2
+use "distr.dbf"
+@ 05,10 say "Fase Distribuidoras"
+go 1
+a=recno()
+do while .not.eof()
+    @ 10,10 say "Registro = "
+    @ 10,col()+2 say a picture "999999999"
+    select 1
+    append blank
+    replace DISTRIB->dados with distr->NOMEFANT
+    replace DISTRIB->LETRA with substr(distr->nomefant,1,1)
+    select 2
+    skip
+    a=recno()
+enddo
+
+
+return
+
+
+function fit
+clear
+select 1
+use "fitastrf.dbf"
+zap
+select 2
+use "PRODU.DBF"
+@ 05,10 say "Fase Fitas"
+go 1
+a=recno()
+do while .not.eof()
+    @ 10,10 say "Registro = "
+    @ 10,col()+2 say a picture "999999999"
+    select 1
+    append blank
+    replace fitastrf->CODPRO with produ->codigo
+    replace fitastrf->CODFITA with iif(val(produ->genero)<10,"0", "")+ alltrim(str(val(produ->genero)))  +  substr(produ->codigo,2,4)+"0111"
+    replace fitastrf->T_CODIGO with iif(val(produ->genero)<10,"0", "")+ alltrim(str(val(produ->genero)))  +  substr(produ->codigo,2,4)
+    replace fitastrf->DATA_COMP with produ->datac
+    replace fitastrf->COD_CLI with "000000"
+    replace fitastrf->DISPONIVEL with "S"
+    replace fitastrf->LOJA with "001"
+    replace fitastrf->RECEBIDO with produ->valorret
+    replace fitastrf->CUSTO with produ->preco
+    replace fitastrf->CLI_1 with "0"+produ->cli1
+    replace fitastrf->DAT_1 with produ->locdat1
+    replace fitastrf->CLI_2 with "0"+produ->cli2
+    replace fitastrf->DAT_2 with produ->locdat2
+    replace fitastrf->CLI_3 with "0"+produ->cli3
+    replace fitastrf->DAT_3 with produ->locdat3
+    replace fitastrf->NUMNF with produ->notaf
+    replace fitastrf->SEQUENCIAL with substr(produ->codigo,2,4)
+    select 2
+    skip
+    a=recno()
+enddo
+SELECT 1
+clear
+USE "fitastrf.DBF"
+SELECT 2
+USE "MOVIM.DBF"
+@ 05,10 say "Fase Fitas 2"
+a=recno()
+GO 1
+MCODPRO=MOVIM->CODPRO
+do while .not.eof()
+   @ 10,10 say "Registro = "
+   @ 10,col()+2 say a picture "999999999"
+   MCODPRO=MOVIM->CODPRO
+   select 1
+   locate for fitastrf->CODPRO == MCODPRO
+   IF found()
+      replace fitastrf->COD_CLI with "0"+movim->codcli
+      replace fitastrf->DATA_RET with movim->datare
+      replace fitastrf->DATA_PREV with movim->datapr
+      replace fitastrf->valor with movim->preco
+   endif
+   select 2
+   skip
+   a=recno()
+enddo
+
+
+return
+
+
+
+
+
+function titu
+clear
+select 1
+use "titulos.dbf"
+zap
+select 3
+use "DISTRI.DBF"
+select 2
+use "PRODU.DBF"
+@ 05,10 say "Fase Titulos"
+go 1
+a=recno()
+do while .not.eof()
+    @ 10,10 say "Registro = "
+    @ 10,col()+2 say a picture "999999999"
+    select 1
+    append blank
+    replace TITULOS->T_CODIGO with iif(val(produ->genero)<10,"0", "")+ alltrim(str(val(produ->genero)))  +  substr(produ->codigo,2,4)
+    replace TITULOS->T_PORT with produ->titport
+    replace TITULOS->T_ORIGINAL with produ->titorig
+    replace TITULOS->T_DIRETOR with produ->diretor
+    replace TITULOS->T_ATOR1 with produ->ator1
+    replace TITULOS->T_ATOR2 with produ->ator2
+    replace TITULOS->T_ATOR3 with produ->ator3
+    replace TITULOS->T_GENERO with Val(produ->genero,4)+1
+    acha_grupo()
+    replace TITULOS->T_CATEGOR with ngrupo
+    replace TITULOS->T_CLASSE with 2
+    replace TITULOS->T_PAIS with produ->pais
+    replace TITULOS->T_ANO_PROD with produ->anoprod
+    replace TITULOS->T_LEGENDA with "AMARELA"
+    replace TITULOS->T_DUBLADO with "N"
+    replace TITULOS->T_DURACAO with produ->duracao
+    replace TITULOS->T_COPIAS with 0
+    replace TITULOS->T_DATA_ENT with produ->datac
+    replace TITULOS->T_CUSTO with produ->preco
+    ACHA_DIST()
+    replace TITULOS->T_DISTRIB with mdist
+    select 2
+    skip
+    a=recno()
+enddo
+
+
+
+
+return
+
+
+
+
+
+
+function clien
+
+select 1
+use "clientes.dbf"
+ZAP
+append blank
+repla CLIENTES->COD_CLI with "000000"
+repla CLIENTES->CPF_CLI with "0000000000000"
+repla CLIENTES->NOME with "VIDEO LOCADORA"
+repla CLIENTES->C_TIPOC with "X"
+
+select 2
+use "clien.dbf"
+clear
+@ 05,10 say "Fase Clientes"
+go 1
+a=recno()
+do while .not.eof()
+    @ 10,10 say "Registro = "
+    @ 10,col()+2 say a picture "999999999"
+    select 1
+    append blank
+    replace CLIENTES->COD_CLI with "0"+clien->CODIGO
+    replace CLIENTES->NOME with clien->NOME
+    replace CLIENTES->C_TIPOC with clien->bloqueio
+    replace CLIENTES->NASC with clien->datanas
+    replace CLIENTES->DATA_CRED with clien->datains
+    replace CLIENTES->CPF_CLI with SUBST(clien->cpf_titu,1,3)+SUBST(clien->cpf_titu,5,3)+SUBST(clien->cpf_titu,9,3)+SUBST(clien->cpf_titu,13,2)
+    replace CLIENTES->RG_CLI with clien->rg_titu
+    replace CLIENTES->UF_RG with clien->estado
+    replace CLIENTES->END_RES with clien->endereco
+    replace CLIENTES->BAI_RES with clien->bairro
+    replace CLIENTES->CID_RES with clien->cidade
+    replace CLIENTES->UF_RES with clien->estado
+    replace CLIENTES->CEP_RES with clien->cep
+    replace CLIENTES->TEL_RES with clien->telefone
+    replace CLIENTES->EMPRESA with clien->empresa
+    replace CLIENTES->END_COM with clien->endecom
+    replace CLIENTES->BAI_COM with clien->baircom
+    replace CLIENTES->CID_COM with clien->cidacom
+    replace CLIENTES->UF_COM with clien->estacom
+    replace CLIENTES->CEP_COM with clien->cep_com
+    replace CLIENTES->TEL_COM with clien->telecom
+    replace CLIENTES->DEBITOS with -1*clien->saldo
+    replace CLIENTES->CRED_1 with clien->autori1
+    replace CLIENTES->CRED_2 with clien->autori2
+    replace CLIENTES->CRED_3 with clien->autori3
+    replace CLIENTES->CRED_4 with clien->autori4
+    replace CLIENTES->ULT_FREQ with clien->dataloc
+    replace CLIENTES->RET_TOTAL with clien->locacoes
+    replace CLIENTES->VC_QTDE with VAL(clien->numtick)
+    replace CLIENTES->VC_DATA with ctod("01/01/2003")
+    replace CLIENTES->PROF with clien->profiss
+    replace CLIENTES->VIDEOCLUBE with VAL(clien->conveni)
+    select 2
+    skip
+    a=recno()
+enddo
+return
+
+
+FUNCTION ACHA_DIST
+MDIST=SPACE(20)
+MCODIGO = produ->coddis
+SELECT 3
+LOCATE FOR distri->codigo = mcodigo
+do while .not. eof()
+     if codigo == mcodigo
+         mdist=distri->nomefant
+         exit
+     endif
+     continue
+enddo
+select 1
+
+RETURN
+
+function acha_grupo
+mgrupo=produ->grupo
+ngrupo=0
+select 5
+use "categor.tpo"
+locate for mgrupo = categor->codigo
+do while .not. eof()
+     if found()
+        if mgrupo == categor->codigo
+          ngrupo = recno()
+          exit
+        endif
+     endif
+enddo
+select 1
+
+return

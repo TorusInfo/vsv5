@@ -1,0 +1,189 @@
+CLEAR
+@ 01,01 SAY "TRANSFERENCIA DO ARQUIVO DE CLIENTES"
+*SELECT 1
+*USE "\PODIUM\POD_14.1"
+*GO 1
+*VALOR_1 = POD_14->VALOR
+valor=1
+*CLOSE
+SELECT 1
+* retirar o campo 54 memo
+USE "C:\PODIUM\POD_04.1"
+IF _FILE("C:\PODIUM\POD_04.2")
+
+        DELETE FILE "C:\PODIUM\POD_04.2"
+
+ENDIF
+num_total = RECCOUNT()
+num_atual = 1
+num_certo = 1
+num_erros = 1
+IF FIELDNAME(37) = "NUM_DIA" .AND. FIELDNAME(38) = "ABOPESSOAL"
+
+	passa = .T.
+
+ELSE
+
+	passa = .F.
+
+ENDIF
+SET INDEX TO "POD_04.2" KEY POD_04->CODCLIE
+SELECT 2
+USE "CLIENTES"
+ZAP
+RUN "DEL CLIENTES.K*"
+COPY STRUCTURE TO "PROCLI.DBF"
+SELECT 3
+USE "PROCLI.DBF"
+ZAP
+SELECT 1
+GO TOP
+SET CURSOR OFF
+@ 08,10	SAY "Transferindo o arquivo de clientes "
+@ 12,10	SAY "N£mero de clientes existentes      "
+@ 12,45	SAY num_total PICTURE "#####"
+@ 14,10	SAY "N£mero de clientes transferidos    "
+DO WHILE .NOT. EOF()
+
+	IF POD_04->CODCLIE = "000000"
+
+		REPLACE 	POD_04->CIC 	WITH "00000000000",;
+					POD_04->CRED	WITH _DATE()
+
+	ENDIF
+	IF CPF( POD_04->CIC )
+
+   	SELECT "CLIENTES"
+	   APPEND BLANK
+		@ 14,45 	SAY num_certo PICTURE "#####"
+	   REPLACE 	CLIENTES->COD_CLI 	WITH POD_04->CODCLIE,;
+   	        	CLIENTES->NOME 		WITH POD_04->NOME,;
+	           	CLIENTES->NASC 		WITH POD_04->NASC,;
+   	        	CLIENTES->C_TIPOC 	WITH POD_04->SITUACAO,;
+      	     	CLIENTES->DATA_CRED 	WITH POD_04->CRED,;
+         	  	CLIENTES->CPF_CLI 	WITH POD_04->CIC,;
+	           	CLIENTES->RG_CLI 		WITH POD_04->RG,;
+   	        	CLIENTES->UF_RG 		WITH POD_04->UFRG,;
+      	     	CLIENTES->END_RES 	WITH POD_04->ENDRES,;
+         	  	CLIENTES->BAI_RES 	WITH POD_04->ERBA,;
+         		CLIENTES->CID_RES 	WITH POD_04->ERCID,;
+	      	   CLIENTES->CEP_RES 	WITH POD_04->ERCEP,;
+   		      CLIENTES->TEL_RES 	WITH POD_04->ERTEL
+		REPLACE	CLIENTES->EMPRESA 	WITH POD_04->INSTIT,;
+   	      	CLIENTES->END_COM 	WITH POD_04->ENDCOM,;
+	      	   CLIENTES->BAI_COM 	WITH POD_04->ECBA,;
+   		      CLIENTES->CID_COM 	WITH POD_04->ECCID,;
+	   	      CLIENTES->CEP_COM 	WITH POD_04->ECCEP,;
+         		CLIENTES->TEL_COM 	WITH POD_04->ECTEL,;
+                   CLIENTES->DIA_PAG    WITH POD_04->DIAPAG
+&&*                      CLIENTES->DEBITOS         WITH POD_04->DEB_LOC * VALOR_1,;
+          replace                      CLIENTES->DEVE_LOCA       WITH POD_04->DEB_LOC,;
+	         	CLIENTES->CRED_1 		WITH POD_04->CRED1,;
+   	   	   CLIENTES->CRED_2 		WITH POD_04->CRED2
+		REPLACE  CLIENTES->CRED_3 		WITH POD_04->CRED3,;
+   	      	CLIENTES->CRED_4 		WITH POD_04->CRED4,;
+	   	      CLIENTES->ULT_FREQ 	WITH POD_04->ULTDATA,;
+					CLIENTES->RET_TOTAL 	WITH POD_04->MESANT,;
+   		      CLIENTES->RET_MES		WITH POD_04->MEASTUAL,;
+   		      CLIENTES->CARTEIRA	WITH 1
+		IF passa = .T.
+  		
+			REPLACE 	CLIENTES->DIAS_FITA 	WITH POD_04->NUM_DIA,;
+                                CLIENTES->ABONO_PES     WITH val(POD_04->ABOPESSOAL)
+
+		ENDIF
+	   IF POD_04->SITUACAO="I"
+		
+      	REPLACE CLIENTES->DESC_PESS WITH 100
+			
+	   else
+   
+			if empty( POD_04->VENCIMENTO )
+
+		   	replace CLIENTES->DESC_PESS WITH POD_04->DESC_PRO
+				
+			else
+			
+				if _date() > POD_04->VENCIMENTO
+				
+			   	replace CLIENTES->DESC_PESS with 0
+					
+				else
+				
+			   	replace CLIENTES->DESC_PESS WITH POD_04->DESC_PRO
+
+				endif	
+
+			endif
+
+	   endif
+		NUM_CERTO = NUM_CERTO + 1
+
+	ELSE
+
+   	SELECT "PROCLI"
+	   APPEND BLANK
+		@ 16,10	SAY "N£mero de clientes com problemas   "
+		@ 16,45 	SAY num_erros PICTURE "#####"
+	   REPLACE 	PROCLI->COD_CLI 		WITH POD_04->CODCLIE,;
+   	        	PROCLI->NOME 			WITH POD_04->NOME,;
+      	     	PROCLI->NASC 			WITH POD_04->NASC,;
+         	  	PROCLI->C_TIPOC 		WITH POD_04->SITUACAO,;
+           		PROCLI->DATA_CRED 	WITH POD_04->CRED,;
+	           	PROCLI->CPF_CLI 		WITH POD_04->CIC,;
+   	        	PROCLI->RG_CLI 		WITH POD_04->RG,;
+      	     	PROCLI->UF_RG 			WITH POD_04->UFRG,;
+         	  	PROCLI->END_RES 		WITH POD_04->ENDRES,;
+           		PROCLI->BAI_RES 		WITH POD_04->ERBA,;
+	         	PROCLI->CID_RES 		WITH POD_04->ERCID,;
+   	   	   PROCLI->CEP_RES 		WITH POD_04->ERCEP,;
+   		      PROCLI->TEL_RES 		WITH POD_04->ERTEL
+		REPLACE	PROCLI->EMPRESA 		WITH POD_04->INSTIT,;
+   	      	PROCLI->END_COM 		WITH POD_04->ENDCOM,;
+      		   PROCLI->BAI_COM 		WITH POD_04->ECBA,;
+   	   	   PROCLI->CID_COM 		WITH POD_04->ECCID,;
+	         	PROCLI->CEP_COM 		WITH POD_04->ECCEP,;
+	         	PROCLI->TEL_COM 		WITH POD_04->ECTEL,;
+   	   	   PROCLI->DIA_PAG 		WITH POD_04->DIAPAG,;
+   		      PROCLI->DEBITOS 		WITH POD_04->DEBITO,;
+	      	   PROCLI->DEVE_LOCA 	WITH POD_04->DEB_LOC,;
+	         	PROCLI->CRED_1 		WITH POD_04->CRED1,;
+   	   	   PROCLI->CRED_2 		WITH POD_04->CRED2,;
+			      PROCLI->CRED_3 		WITH POD_04->CRED3,;
+         		PROCLI->CRED_4 		WITH POD_04->CRED4
+		REPLACE  PROCLI->ULT_FREQ 		WITH POD_04->ULTDATA,;
+					PROCLI->RET_TOTAL 	WITH POD_04->MESANT,;
+   		      PROCLI->RET_MES		WITH POD_04->MEASTUAL,;
+	   	      PROCLI->CARTEIRA		WITH 1
+		IF passa = .T.
+   	
+			REPLACE 	PROCLI->DIAS_FITA WITH POD_04->NUM_DIA,;
+                        PROCLI->ABONO_PES WITH val(POD_04->ABOPESSOAL)
+
+		ENDIF
+	   IF POD_04->SITUACAO="I"
+   
+		   REPLACE PROCLI->DESC_PESS WITH 100
+	
+	   ELSE
+   
+		   REPLACE PROCLI->DESC_PESS WITH POD_04->DESC_PRO
+
+	   ENDIF 
+		num_erros = num_erros + 1
+
+	ENDIF
+	SELECT "POD_04"
+	SKIP
+	num_atual = num_atual + 1
+
+ENDDO          
+FOR a = 1 TO 10
+
+	TONE(1500+200*a,8)
+
+NEXT
+* CLEAR
+CLOSE ALL
+SET CURSOR ON
+

@@ -1,0 +1,2764 @@
+*
+*----------- PROGRAMA P/ IMPRIMIR CODIGO DE BARRAS P/ V.S.V. 4.0 --------------
+*
+**********************
+procedure Codigo_barra 
+**********************
+
+set deleted ON
+AREA = _select()
+select "TITULOS"
+ORD_TIT = indexord()
+select "FITAS"
+ORD_FIT = indexord()
+select "CLIENTES"
+ORD_CLI = indexord()
+
+restore from "SYSFILE.MEM" additive
+Abrir_Imp( NOM_TERM )
+
+select  2
+use    "GENERO.TPO"
+count   to NUM_GEN
+NUM_GEN =  NUM_GEN - 1
+declare GENEROS [ NUM_GEN ], GEN_COR [ NUM_GEN ]
+go 2
+for A = 1 to NUM_GEN
+
+	GENEROS [ A ] = GENERO->DADOS
+	GEN_COR [ A ] = _left( GENERO->DADOS,1 )
+	skip
+
+next
+close "GENERO"
+SC_CORB = setcolor()
+SC_CODB = savescreen( 03,01,21,78 )
+@ 03,01 clear to 21,78 color "W/B"
+@ 23,01 say space( 78 ) color "W/B"
+SC_CUR  = _set( "CURSOR" ) == "ON"
+set cursor OFF
+AV_1_216	 = chr( 27 ) + "3" + chr( 01 )		&&  seta espacamento de   1/216 "
+AV_1_72	 = chr( 27 ) + "3" + chr( 03 )		&&  seta espacamento de   1/72  "
+AV_1_8	 = chr( 27 ) + "3" + chr( 27 )		&&	 seta espacamento de   1/8   "
+AV_1_6	 = chr( 27 ) + "3" + chr( 36 )		&&	 seta espacamento de   1/6   "
+ENT_NEGR  = chr( 27 ) + "E"						&&  ativa negrito
+SAI_NEGR	 = chr( 27 ) + "F"						&&  desativa negrito
+declare ESCOLHE [ 6 ], ESC_L [ 6 ]
+ESCOLHE [ 1 ] = "Clientes    "
+ESCOLHE [ 2 ] = "Fitas       "
+ESCOLHE [ 3 ] = "fUncion rios"
+ESCOLHE [ 4 ] = "Produtos    "
+ESCOLHE [ 5 ] = "Atendimento "
+ESCOLHE [ 6 ] = "Retornar    "
+ESC_L   [ 1 ] = "C"
+ESC_L   [ 2 ] = "F"
+ESC_L   [ 3 ] = "U"
+ESC_L   [ 4 ] = "P"
+ESC_L   [ 5 ] = "A"
+ESC_L   [ 6 ] = "R"
+Quadro( 13, 02, 20, 15, "W+/R,N/R,N,W+/R", "N+/N" )
+SC_ESCOLHA = savescreen( 03,01,21,78 )
+do while .T.
+
+	popup	window	14,03,19,14;
+			to			OP_1;
+			options	ESCOLHE;
+			hilite 	ESC_L,"GR+/R";
+			color 	"W+/R,N/W,N,W+/R"
+	@ 03,01 clear to 21,78 color "W/B"
+	if 	OP_1 = 1
+	
+		Rot_esc_cli()
+		
+	elseif OP_1 = 2
+	
+		Rot_esc_tit()
+		
+	elseif OP_1 = 3
+	
+		Rot_esc_fun()
+		
+	elseif OP_1 = 4
+	
+		Cod_produto()
+
+	elseif OP_1 = 5
+	
+		Cb_atend()
+
+	elseif OP_1 = 6 .or. OP_1 = 0
+	
+		exit
+				
+	endif
+	restscreen( 03, 01, 21, 78, SC_ESCOLHA )
+	
+enddo
+setcolor( SC_CORB )
+set cursor SC_CUR
+select "TITULOS"
+set order to ORD_TIT
+select "FITAS"
+set order to ORD_FIT
+select "CLIENTES"
+set order to ORD_CLI
+restscreen( 03,01,21,78,SC_CODB )
+AREA = _select()
+return
+
+*********************
+procedure Rot_esc_tit 
+*********************
+
+if .not. _file( "PADRAO.FIT" )
+
+	P_PAD = 1
+	P_TAB = 8
+	P_ESP = 6
+	P_CAR = 2
+   P_COD = "S"
+
+else
+
+	restore from "PADRAO.FIT" additive
+
+endif
+QT_CADA   = 02
+N_COLUNAS = 01
+CONTA_LIN = 00
+K1 		 = iif( P_PAD = 1 , 155 , 194 )		&& tamanho do codigo em alta res.
+CODRES	 = 17 - P_TAB								&& espacos apos o codigo de barras
+
+declare QUEM[6], Q_LL[6]
+QUEM[1] = "Fazer lista-t¡tulo"
+QUEM[2] = "Genero     "
+QUEM[3] = "Imprimir"
+QUEM[4] = "Tirar marcas-todas"
+QUEM[5] = "Definir  etiquetas"
+QUEM[6] = "Retornar"
+Q_LL[1] = "F"
+Q_LL[2] = "G"
+Q_LL[3] = "I"
+Q_LL[4] = "T"
+Q_LL[5] = "E"
+Q_LL[6] = "R"
+
+do while .T.
+
+	clear typeahead
+	set color to "W+/B,N/W,N,W+/B"
+	@ 03,01 clear to 21,78
+	Quadro( 03,02,05,43,"N/GR,N/GR,N,N/GR","N/N" )
+	@ 04,03 say "ETIQUETAS DE CODIGO DE BARRAS PARA FITAS" color "W+/GR"
+	Quadro( 13,02,20,21,"W+/R,N/R,N,W+/R","N/N" )
+	popup	window	14,03,19,20;
+			to			OP;
+			options	QUEM;
+			hilite 	Q_LL,"GR+/R";
+			color 	"W+/R,N/W,N,W+/R"
+	if OP = 1
+
+		if lastkey() # 27
+
+			Marca_titulo()
+
+		endif
+
+	elseif OP = 2
+
+		if lastkey() # 27
+
+			Genero()
+
+		endif
+
+	elseif OP = 3
+
+		Quantas()
+
+		if lastkey() # 27
+
+			Imprime_etiqueta_fita()		
+
+		endif
+
+	elseif OP = 4
+
+		Tira_marca()
+
+	elseif OP = 5
+
+		Definir()
+
+	else
+
+		exit
+
+	endif
+
+enddo
+
+return
+
+**********************
+procedure Marca_titulo 
+**********************
+
+select "TITULOS"
+ORD_TIT = indexord()
+set order to 1
+select "FITAS"
+ORD_FIT = indexord()
+set order to 1
+Quadro( 03,48,18,76,"N/GR,N/GR,N,N/GR","N/N" )
+@ 04,49 say "<ENTER> =  Para  marcar  ou"
+@ 05,49 say "        desmarcar cada fita"
+@ 06,49 say "<ESC>   =  Para  voltar   e"
+@ 07,49 say "        digitar novo codigo"
+@ 08,49 say "<F9>    =  Para   desmarcar"
+@ 09,49 say "        todas  as  fitas do"
+@ 10,49 say "        titulo escolhido   "
+@ 11,49 say "<F10>   =  Para voce marcar"
+@ 12,49 say "        todas as  fitas  do"
+@ 13,49 say "        titulo escolhido   "
+@ 14,49 say "SETAS   =  Para  se   mover"
+@ 15,49 say "        e se  posicionar na"
+@ 16,49 say "        fita  que  se  quer"
+@ 17,49 say "        marcar ou desmarcar"
+Quadro( 09,02,20,43,"N/BG,W+/N,N,N/BG","N/N" )
+@ 11,02 say "Ì" + replicate( "Í",40 ) + "¹" 		color "N/BG"
+@ 14,02 say "Ì" + replicate( "Í",40 ) + "¹" 		color "N/BG"
+@ 17,02 say "Ì" + replicate( "Í",40 ) + "¹" 		color "N/BG"
+@ 12,03 say "Genero" + space( 24 ) + "C¢pias" 	color "N/BG"
+@ 15,03 say "T¡tulo em portugues" 					color "N/BG"
+@ 18,03 say "T¡tulo original" 						color "N/BG"
+clear typeahead
+do while .T.
+
+	CODTIT = space( 06 )
+	set cursor ON
+	@ 10,03 say "Digite o c¢digo do t¡tulo : " get CODTIT picture "@R 99.9999"
+	read
+	set cursor OFF
+	if lastkey() = 27
+
+		exit
+
+	endif
+	if len( alltrim( CODTIT ) ) < 6 .or. CODTIT = "000000"
+
+		loop
+
+	endif
+	Marca_fita()
+
+enddo
+select "TITULOS"
+set order to ORD_TIT
+select "FITAS"
+set order to ORD_FIT
+
+return
+
+********************
+procedure Marca_Fita 
+********************
+
+select "TITULOS"
+seek CODTIT
+if found()
+
+	@ 13,03 			say GENEROS[ TITULOS->T_GENERO - 1 ] 	color "W+/BG"
+	@ 13,col()+19 	say TITULOS->T_COPIAS	picture "##"	color "W+/BG"
+	@ 16,03 			say TITULOS->T_PORT 							color "W+/BG"
+	@ 19,03 			say TITULOS->T_ORIGINAL 					color "W+/BG"
+	if TITULOS->T_COPIAS = 0
+
+		@ 23,01 say "Este t¡tulo n„o tem fitas" color "W+*/B"
+		_bell()
+		inkey(30)
+		Limpadora()
+		return
+
+	endif
+	SC_TEL	 =	savescreen( 07,51,21,78 )
+	QTDE_CO   = TITULOS->T_COPIAS
+	if TITULOS->T_CLASSE  = 2   && "SIMPLES"
+	
+		QQQ = 1
+		
+	elseif TITULOS->T_CLASSE  = 3 && "DUPLO"	
+
+		QQQ = 2
+		
+	elseif TITULOS->T_CLASSE  = 4 && "TRIPLO"	
+
+		QQQ = 3
+
+   elseif TITULOS->T_CLASSE = 5 && "QUADRUPLO"
+      QQQ = 4
+	endif
+	QTDE_CO  = QTDE_CO * QQQ
+	NUM_LIN 	 = iif( QTDE_CO > 10, 10 , QTDE_CO )
+	set precedence to FIELDS
+	declare CAMPOS[2], CABEC[2], MASCAR[2]
+	CAMPOS[1] = "FITAS->CODFITA"
+	CAMPOS[2] = "FITAS->MARCA"
+	CABEC[1] = "CODIGO DA FITA"
+	CABEC[2] = "MARCA"
+	MASCAR[1] = "@R 99.9999.99.9-9"
+	MASCAR[2] = " "
+	select "FITAS"
+	seek CODTIT
+	set key 	30	to BloqueiaB()
+	set key 	 3	to BloqueiaB()
+	@ 21,53 fill to 21,74 				color "N+/N"
+	@ 18-NUM_LIN,73 fill to 21,74 	color "N+/N"
+	browse 	while   	FITAS->T_CODIGO = CODTIT;
+				window	17-NUM_LIN,51,20,72;
+				frame		double;
+				color		"W+/BG,W+/N,N/BG,W+/BG";
+				fields	CAMPOS;
+				picture	MASCAR;
+				heading	CABEC;
+				edit		.F.;
+				noappend	;
+				nodelete	;
+				function Testa_enter()
+	set key	 3	to
+	set key	30	to
+	restscreen( 07,51,21,78,SC_TEL )
+	set precedence to VARIABLES
+
+endif
+Limpadora()
+
+return
+
+********************
+function Testa_enter  
+********************
+
+parameters TE_MODO, TE_COLUNA
+private    TECLA
+TECLA = lastkey()
+if TE_MODO == 1 .or. TE_MODO == 2 .or. TE_MODO == 3 .or. TE_MODO == 5
+
+	if     TE_MODO == 1
+
+		@ 23,01 say "Vocˆ j  est  na primeira fita " color "W+*/B"
+
+	elseif TE_MODO == 2 
+
+		@ 23,01 say "Vocˆ j  est  na £ltima fita " color "W+*/B"
+	
+	elseif TE_MODO == 5
+
+		if TECLA == 5 
+
+			@ 23,01 say "Vocˆ j  est  na primeira fita " color "W+*/B"
+
+		elseif TECLA == 24
+
+			@ 23,01 say "Vocˆ j  est  na £ltima fita " color "W+*/B"
+
+		else
+
+			@ 23,01 say "N„o existem mais fitas deste t¡tulo " color "W+*/B"
+
+		endif
+
+	elseif TE_MODO == 3
+
+		@ 23,01 say "Este t¡tulo n„o tem fitas " color "W+*/B"
+		_bell()
+		inkey( 10 )
+		_bell()
+		return
+
+	endif
+	_bell()
+	inkey( 50 )
+	@ 23,01 say space( 78 ) color "W/B"
+
+	return 1
+
+endif	
+if TECLA == 27
+
+	return 0
+
+endif
+if TECLA == 13
+
+	if FITAS->MARCA == " "
+
+		rlock()
+		replace FITAS->MARCA with "*"
+		unlock
+
+	else
+
+		rlock()
+		replace FITAS->MARCA with " "
+		unlock
+
+	endif
+	if TITULOS->T_COPIAS = 1
+
+		keyboard 9, 27
+
+	else
+
+		keyboard 9, 24
+
+	endif
+
+endif
+TESTA_TECLA = .F.
+if TECLA == -9 .or. TECLA == -8
+
+	TESTA_TECLA = .T.
+	if TECLA == -9
+
+		MINHA_MARCA = "*"
+
+	else
+
+		MINHA_MARCA = " "
+
+	endif
+
+endif
+if	TESTA_TECLA == .T.
+
+	seek CODTIT
+	do while _left( FITAS->T_CODIGO, 6 ) == CODTIT .and. .not. eof()
+
+		rlock()
+		replace FITAS->MARCA with MINHA_MARCA
+		unlock
+		if .not. eof()
+
+			skip
+
+		endif
+
+	enddo
+	return 0
+
+endif
+
+return 1
+
+******************
+function BloqueiaB  
+******************
+
+return
+
+******************
+function Limpadora  
+******************
+
+@ 23,01 say space( 78 ) color "W/B"
+@ 13,03 say space( 40 ) color "N/BG"
+@ 16,03 say space( 40 ) color "N/BG"
+@ 19,03 say space( 40 ) color "N/BG"
+
+return
+
+********************
+procedure Tira_marca 
+********************
+
+if Pergunta( " Confirma ? ( S/N ) " )
+
+	ANT_AREA = _select()
+	select "FITAS"
+	ORD_FIT = indexord()
+	set order to 1
+	@ 23,01 say space( 78 ) color "W/B"
+	@ 23,01 say "Aguarde... estou tirando as marcas das fitas " color "W+*/B"
+	locate for FITAS->MARCA # " "
+	do while .not. eof()
+		
+      trava() &&rlock()
+		replace FITAS->MARCA with " "
+      dtrava()
+      &&unlock
+	   continue
+	
+	enddo
+	set order to ORD_FIT
+	select ANT_AREA
+	@ 23,01 say space(78) color "W/B"
+
+endif
+
+return
+
+*****************
+procedure Quantas 
+*****************
+
+SC_TEL = savescreen( 05,49,18,72 )
+Quadro( 05,49,09,70,"W+/R,W+/N,N,W+/R","N/N" )
+@ 06,51 say "Quantas  etiquetas"	color "W+/R"
+@ 07,51 say "de cada fita  devo"	color "W+/R"
+@ 08,51 say "imprimir ?"			color "W+/R"
+Quadro( 13,49,17,70,"W+/R,W+/N,N,W+/R","N/N" )
+@ 14,51 say "Em quantas colunas"	color "W+/R"
+@ 15,51 say "deve  ser  feita a"	color "W+/R"
+@ 16,51 say "impressao ?"			color "W+/R"
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say " Colunas  ->  no M¡nimo = 1  e  no M ximo = 3"	color "W+/B"
+S_CONF = _set( "CONFIRM" ) == "ON"
+set confirm ON
+set cursor  ON
+@ 08,67 	get QT_CADA   picture "99" ;
+			valid ( QT_CADA >= 1 )
+@ 16,68 	get N_COLUNAS picture "9" ;
+			valid ( N_COLUNAS >= 1 .and. N_COLUNAS <= 3 )
+read
+set cursor OFF
+restscreen( 05,49,18,72,SC_TEL )
+set confirm S_CONF
+@ 23,01 say space( 78 ) color "W/B"
+
+return
+
+****************
+procedure Genero 
+****************
+
+@ 23,01 say space( 78 ) color "W/B"
+ANT_AREA = _select()
+ANT_COR  = setcolor()
+NUM_LIN = iif( NUM_GEN > 15, 15 , NUM_GEN )
+do while .T.
+
+	Quadro( 03,59,NUM_LIN+4,75,"W+/R,N/W,N,W+/R","N/N" )
+	popup	window	04,61,NUM_LIN+3,73;
+			to			GEN;
+			options	GENEROS;
+			hilite 	GEN_COR,"GR+/R"
+			
+	if GEN < 1
+
+		exit
+
+	else
+
+		GEN1 = GENEROS[GEN]
+		GEN  = _right( "0" + alltrim( str( GEN ) ),2 )
+		select "FITAS"
+		ORD_FIT = indexord()
+		set order to 1
+		@ 23,01 say "Aguarde... estou marcando as fitas do genero " + ;
+						GEN1 color "W+*/B"
+		seek GEN
+		do while _left( FITAS->CODFITA,2 ) = GEN .and. .not. eof()
+
+			rlock()
+			replace FITAS->MARCA with "*"
+			unlock
+			if .not. eof()
+
+				skip
+
+			endif
+
+		enddo
+		set order to ORD_FIT
+
+	endif
+	@ 23,01 say space( 78 ) color "W/B"
+
+enddo
+set color to ANT_COR
+select ANT_AREA
+
+return
+
+*****************
+procedure Definir 
+*****************
+
+SC_DEF = savescreen( 03,01,21,78 )
+SC_COR = setcolor()
+set color to "W/B"
+@ 03,01 clear to 21,78
+Quadro( 03,05,20,71,"W+/BG,W/BG,N,W+/BG","N/N" )
+@ 04,07 SAY "Tipo da impressora" COLOR "N/BG"
+@ 05,07 SAY "Padr„o 1 - Epson,  Rima,  Am‚lia PC,  Emilia PS e PC  " + ;
+				"= 120 dpi" COLOR "N/BG"
+@ 06,07 SAY "Padr„o 2 - Monica                                     " + ;
+				"= 150 dpi" COLOR "N/BG"
+@ 08,07 SAY "Caracteres comprimidos-> [1=16,7]  [2=17]  [3=17,1]  "  + ;
+				"[4=20] cpi" COLOR "N/BG"
+@ 10,07 SAY "Para posicionar o c¢digo de barras na etiqueta, voce "  + ;
+				"pode defi-" COLOR "N/BG"
+@ 11,07 SAY "ni-lo aqui, indicando quantos espa‡os devem existir "   + ;
+				"entre a  1¦" COLOR "N/BG"
+@ 12,07 SAY "coluna, da esquerda, da etiqueta e inicio do  c¢digo"   + ;
+				" de barras," COLOR "N/BG"
+@ 13,07 SAY "sendo 8 espa‡os para deix -lo centralizado." COLOR "N/BG"
+@ 15,07 SAY "Se voce est  utilizando etiquetas de 89 X 23  dever " ;
+				COLOR "N/BG"
+@ 16,07 say	"digitar 6 espa‡os ou 1 para etiquetas de 79 X 23" color "N/BG"
+set cursor ON
+@ 07,07 say "Qual ‚ o padr„o da sua impressora gr fica ?   " ;
+		  color "W+/BG,W+/N,N,W+/BG" ;
+		  get P_PAD picture "9" valid ( P_PAD > 0 .AND. P_PAD < 3 ) ; 
+		  color "W+/BG,W+/N,N,W+/BG"
+@ 09,07 say "Com qual  tipo  de  caracter  comprimido  ?   " ;
+		  color "W+/BG,W+/N,N,W+/BG" ;
+		  get P_CAR picture "9" valid ( P_CAR > 0 .AND. P_CAR < 5 ) ; 
+		  color "W+/BG,W+/N,N,W+/BG"
+@ 14,07 say "Digite quantos espa‡os voce vai desejar  ?   " ;
+		  color "W+/BG,W+/N,N,W+/BG" ;
+		  get P_TAB picture "99" valid ( P_TAB < 17 ) ; 
+		  color "W+/BG,W+/N,N,W+/BG"
+@ 17,07 say "Digite os espa‡os entre as etiquetas     ?   " ;
+		  color "W+/BG,W+/N,N,W+/BG" ;
+		  get P_ESP picture "99" valid ( P_ESP < 99 ) ; 
+		  color "W+/BG,W+/N,N,W+/BG"
+@ 19,07 say "Etiquetas com o c¢digo de barras ? ( S/N ) " ;
+        get P_COD picture "!A" valid ( P_COD $ "SN" ); 
+		  color "W+/BG,W+/N,N,W+/BG"
+read
+set cursor OFF
+if flock( 15, "GREDE" )
+
+	save to "PADRAO.FIT" all like  "P_*"
+	unlock in "GREDE"
+
+else
+
+	Mens_rerro( " Erro de espera na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+
+endif
+restscreen( 03,01,21,78,SC_DEF )
+setcolor( SC_COR )
+
+return
+
+*******************************
+procedure Imprime_etiqueta_fita 
+*******************************
+
+set cursor ON
+@ 23,01 say space( 78 )               color "W/B"
+@ 23,02 say "Imprime teste ? (S/N)  " color "W+/B"
+Liga_impressora()
+do while .T.
+
+*   TESTE = 00  &&  inkey( 0 )
+		set cursor ON
+		TESTE = inkey( 0 )
+		set cursor OFF
+
+	if TESTE =  83 .or. TESTE = 115
+
+			?? replicate( "X", 30 )
+			?  replicate( "X", 30 )
+			?  replicate( "X", 30 )
+			?  replicate( "X", 30 )
+			?  replicate( "X", 30 )
+			?
+			?
+		
+	else
+	
+		exit
+
+	endif
+
+enddo
+Desliga_impressora()
+set cursor OFF
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say "Aguarde... Estou preparando o arquivo" color "W+*/B"
+select "TITULOS"
+ORD_TIT = indexord()
+set order to 1
+select "FITAS"
+ORD_FIT = indexord()
+set order to 1
+set filter to FITAS->MARCA = "*"
+go top
+declare 	MTPORT[N_COLUNAS], MTORIG[N_COLUNAS], MTGENE[N_COLUNAS],;
+			MTCLAS[N_COLUNAS], MTCODI[N_COLUNAS], MTBARR[N_COLUNAS]
+L2 = 1
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say "<End> - Interrompe a impress„o" color "W+*/B"
+Liga_impressora()
+?
+CONTA_LINHA = 0
+do while .not. eof()
+
+	TECLA = inkey()
+	if TECLA = 6
+
+		_bell()
+		_bell()
+		exit
+
+	endif
+	for L1 = 1 to N_COLUNAS
+
+		MTPORT[L1] = replicate( "X", 40 )
+		MTORIG[L1] = replicate( "X", 40 )
+		MTGENE[L1] = replicate( "X", 15 )
+		MTCLAS[L1] = 1
+		MTCODI[L1] = "0000000000"
+		MTBARR[L1] = Cb_25( "0000000000" )
+
+	next
+	for L1 = 1 to N_COLUNAS
+
+		select "FITAS"
+		MTCODI[L1] = FITAS->CODFITA
+		MTBARR[L1] = Cb_25( MTCODI[L1] )
+		rlock()
+		replace FITAS->MARCA with " "
+		unlock
+		select "TITULOS"
+		seek FITAS->T_CODIGO
+		if found()
+
+			MTPORT[L1] = TITULOS->T_PORT
+			if len(alltrim(fitas->sequencial)) # 0
+
+				MTORIG[L1] = TITULOS->T_ORIGINAL + chr( IMP_C_COMP ) + ;
+				             "  " +  ENT_NEGR + _left( FITAS->SEQUENCIAL, 4 ) + ;
+								 SAI_NEGR + chr( IMP_COMP )
+
+			else
+
+				MTORIG[L1] = TITULOS->T_ORIGINAL + chr( IMP_C_COMP ) + ;
+				             "  " +  ENT_NEGR + "    " + ;
+								 SAI_NEGR + chr( IMP_COMP )
+
+  		endif
+			MTGENE[L1] = GENEROS[ TITULOS->T_GENERO - 1 ]
+			MTCLAS[L1] = TITULOS->T_CLASSE
+
+		endif
+		SELECT "FITAS"
+		if L2 = QT_CADA
+
+			if .not. eof()
+
+				skip
+				if eof()
+
+					exit
+
+				endif
+				L2 = 1
+
+			else
+
+				exit
+
+			endif
+
+		else
+
+			L2 = L2 + 1
+
+		endif
+
+	next
+	Rot_imprime()
+   CONTA_LINHA += 1
+   if CONTA_LINHA = 10
+
+      Eject
+      ?
+      CONTA_LINHA = 0
+
+   endif   
+
+enddo
+Eject                       && COLOCADO
+Desliga_impressora()
+set filter   to
+set relation to
+select "TITULOS"
+set order to ORD_TIT
+select "FITAS"
+set order to ORD_FIT
+_bell()
+@ 23,01 say space( 78 ) color "W/B"
+
+return
+
+*********************
+procedure Rot_imprime 
+*********************
+
+if P_COD = "S"
+
+**************************************** && barra de protecao superior *******
+for LB01 = 1 to 2
+
+	?? AV_1_216 + chr( 18 ) + space( P_TAB )  +;	&& esp. 1. col. esq. e cod.
+		chr( 27 ) + "L" + chr( K1 ) + chr( 0 ) +;	&& com. de entrada alta res.
+		replicate( chr( 192 ), K1 )		  		   && carac. da barra superior
+	for LB02 = 2 to N_COLUNAS
+
+		?? space( CODRES+P_ESP+P_PAD-1 )	         +; && esp. com padrao de impr.
+		 	space( P_TAB ) 					         +; && esp. 1. col. esq. e cod.
+			chr( 27 ) + "L" + chr( K1 ) + chr( 0 ) +; && com. de entra  alta res.
+			replicate( chr( 192 ), K1 ) 	            && carac. da barra superior
+
+	next
+	? 
+
+next
+******************************************************************************
+**************************************** && corpo  do codigo de barras *******
+for LB03 = 1 to 18
+
+	?  space( P_TAB ) 					         +;	&& esp. com padrao de impr.
+		chr( 27 ) + "L" + chr( K1 ) + chr( 0 )	+;	&& com. de entrada alta res.
+		MTBARR[1] 			 				 		      && codigo de barras
+	for LB04 = 2 to N_COLUNAS
+
+		?? space( CODRES + P_ESP + P_PAD - 1 )	   +;	&& esp. com padrao de impr.
+		 	space( P_TAB ) 					         +; && esp. 1. col. esq. e cod.
+			chr( 27 ) + "L" + chr( K1 ) + chr( 0 ) +; && com. de entrada alta res.
+			MTBARR[LB04]  							         && codigo de barras
+
+	next
+	?? iif( _int( LB03/2 ) = 	LB03/2, AV_1_216, AV_1_72 )
+
+next
+******************************************************************************
+**************************************** && barra de protecao inferior *******
+?? AV_1_216
+for LB06 = 1 to 2
+
+	?  space( P_TAB ) 						      +; && esp. 1. col. esq. e cod.
+		chr( 27 ) + "L" + chr( K1 ) + chr( 0 ) +; && com. de entrada alta res.
+		replicate( chr( 003 ), K1 ) 			  	   && carac. da barra superior
+
+	for LB07 = 2 to N_COLUNAS
+
+		?? space( CODRES + P_ESP + P_PAD - 1 )    +; && esp. com padrao de impr.
+		 	space( P_TAB ) 					         +; && esp. 1. col. esq. e cod.
+			chr( 27 ) + "L" + chr( K1 ) + chr( 0 ) +; && com. de entrada alta res.
+			replicate( chr( 003 ), K1 ) 			      && carac. da barra superior
+
+	next
+	
+next
+******************************************************************************
+**************************************** && linha codigo fita e genero *******
+?? chr( 27 ) + "3" + chr( 31 )
+?  ENT_NEGR 										      && ativa negrito
+?? MTCODI[1] picture "@R 99.9999.99.9-9"	      && cod. da fita
+??	space( 16 - len( alltrim( MTGENE[1] ) ) ) +; && esp. p/ alinhar gen. no fim
+ 	alltrim( MTGENE[ 1 ] ) 					      +; && genero da fita
+ 	space( P_ESP + P_PAD - 1 )						   && esp. com padrao de impr.
+for LB08 = 2 to N_COLUNAS
+
+	?? MTCODI[LB08] picture "@R 99.9999.99.9-9"		   && codigo da fita
+	??	space( 16 - len( alltrim( MTGENE[LB08] ) ) ) +; && esp.alinhar gen.no fim
+		alltrim( MTGENE[LB08] )				             && genero da fita
+
+next
+******************************************************************************
+**************************************** && linha titulo port e volume *******
+?? chr( 27 ) + "3" + chr( 30 )
+?  SAI_NEGR  + chr( 15 ) + MTPORT[1] + space( 04 )	+;
+ 	iif(MTCLAS[1] = 2, space( 06 ),                  ;	
+					    "Vol. " 			               +; 
+ 					     mid( MTCODI[1], 9, 1 ) )	         
+for LB09 = 2 to N_COLUNAS
+
+	?? chr( 18 ) + space( P_ESP + 1 ) + chr( 15 )  +; && desativa carac. compr.
+		MTPORT[LB09] 				                    +; && tit. portugues da fita
+ 		space( 04 ) 				                    +; && espac. de complemento
+ 		iif(MTCLAS[LB09] = 2, space( 06 ),           ; && def. se e p/imprimir o
+							    "Vol. "			           +; && vol. fita ou nao,se for
+ 							    mid(MTCODI[LB09], 9, 1 ) )  && acerta o volume a impr.
+
+next
+*******************************************************************************
+***************************************** && linha titulo original ************
+?? chr( 27 ) + "3" + chr( 30 )
+?  chr( 15 ) + MTORIG[1] +	space( 10 )
+for LB10 = 2 to N_COLUNAS
+
+	?? chr( 18 ) + space( P_ESP - 5 ) + chr( 15 ) +; && desativa caracter comp.
+		MTORIG[LB10] + space( 10 )                    && titulo original da fita
+
+next
+*****************************************************************************
+? chr( 18 ) + chr( 27 ) + "3" + chr( 55 )		&& desativa caracter comprimido
+? AV_1_6                                     && ativa linha de 1/6"
+
+*----------------------------------------------------------------------------
+else                && imprime sem o codigo de barras   ---------------------
+*----------------------------------------------------------------------------
+
+?  ENT_NEGR 										      && ativa negrito
+?? MTCODI[1] picture "@R 99.9999.99.9-9"	      && cod. da fita
+?? space( 16 - len( alltrim( MTGENE[1] ) ) ) +; && esp. p/ alinhar gen. no fim
+   alltrim( MTGENE[ 1 ] ) 					      +; && genero da fita
+   space( P_ESP + P_PAD - 1 )						   && esp. com padrao de impr.
+for LB08 = 2 to N_COLUNAS
+
+	 ?? MTCODI[LB08] picture "@R 99.9999.99.9-9"	    && codigo da fita
+	 ?? space( 16 - len( alltrim( MTGENE[LB08] )))+; && esp.alinhar gen.no fim
+	 	 alltrim( MTGENE[LB08] )				       +; && genero da fita
+		 space( P_ESP + P_PAD - 1 )					    && esp. padrao impressao
+
+next
+******************************************************************************
+**************************************** && linha titulo port e volume *******
+? SAI_NEGR  + chr( 15 ) + MTPORT[1] + space( 04 )	+;
+  iif( MTCLAS[ 1 ] = 2, space( 06 ),  "Vol. " +  mid( MTCODI[1], 9, 1 ) )
+for LB09 = 2 to N_COLUNAS
+
+	?? chr( 18 ) + space( P_ESP + 1 ) + chr( 15 )  +; && desativa carac. compr.
+		MTPORT[LB09] 				                    +; && tit. portugues da fita
+ 		space( 04 ) 				                    +; && espac. de complemento
+ 		iif(MTCLAS[LB09] = 2, space( 06 ),           ; && def. se e p/imprimir o
+							    "Vol. "			           +; && vol. fita ou nao,se for
+ 							    mid(MTCODI[LB09], 9, 1 ) )  && acerta o volume a impr.
+
+next
+******************************************************************************
+**************************************** && linha titulo original ************
+?  chr( 15 ) + MTORIG[1] + space( 10 )
+for LB10 = 2 to N_COLUNAS
+
+	?? chr( 18 ) + space( P_ESP - 5 ) + chr( 15 ) +; && desativa caracter comp.
+		MTORIG[LB10] + space( 10 )                    && titulo original da fita
+
+next
+******************************************************************************
+? chr( 18 )
+?
+?
+
+endif
+return
+
+*********************
+procedure Rot_esc_cli  
+*********************
+
+if .not. _file( "PADRAO.CLI" )
+
+	P_PAD = 1
+	P_TAB = 8
+	P_ESP = 6
+	P_CAR = 2
+
+else
+
+	restore from "PADRAO.CLI" additive
+
+endif
+select "CLIENTES"
+set order to 3
+seek "000000"
+NOME_LOCADORA = CLIENTES->NOME
+ENDE_LOCADORA = CLIENTES->END_RES
+CIDA_LOCADORA = CLIENTES->CID_RES
+FONE_LOCADORA = iif( empty( CLIENTES->TEL_RES ), space( 23 ),;
+							"Fone : " + CLIENTES->TEL_RES )
+QT_CADA   = 01
+N_COLUNAS = 01
+ETIQUETAS = .T.
+K1 		 = iif( P_PAD = 1 , 99 , 124 )		&& tamanho do codigo em alta res.
+declare QUEM[6], Q_LL[6]
+QUEM[1] = "Fazer lista-cliente"
+QUEM[2] = "Imprimir - etiqueta"
+QUEM[3] = "imprimir - Carteira"         
+QUEM[4] = "Tirar marcas-todas"
+QUEM[5] = "Definir  etiquetas"
+QUEM[6] = "Retornar"
+Q_LL[1] = "N"
+Q_LL[2] = "I"
+Q_LL[3] = "C"
+Q_LL[4] = "T"
+Q_LL[5] = "E"
+Q_LL[6] = "R"
+do while .T.
+
+	clear typeahead
+	set color to "W+/B,N/W,N,W+/B"
+	@ 03,01 clear to 21,78
+	Quadro( 03,02,05,46,"N/GR,N/GR,N,N/GR","N/N" )
+	@ 04,03 say "ETIQUETAS DE CODIGO DE BARRAS PARA CLIENTES" color "W+/GR"
+	Quadro( 13,02,20,22,"W+/R,N/R,N,W+/R","N/N" )
+	popup	window	14,03,19,21;
+			to			OP;
+			options	QUEM;
+			hilite 	Q_LL,"GR+/R";
+			color 	"W+/R,N/W,N,W+/R"
+	if 	OP = 1
+
+		if lastkey() # 27
+
+			Marca_cliente()
+
+		endif
+
+	elseif OP = 2
+
+		ETIQUETAS = .T.
+		Quantas_cli()
+
+		if lastkey() # 27
+
+			Imprime_etiqueta_cli()		
+
+		endif
+
+	elseif OP = 3
+
+		ETIQUETAS = .F.
+		CONTA_CAR = 00
+		Quantas_cli()
+
+		if lastkey() # 27
+
+			Imprime_etiqueta_cli()		
+
+		endif
+
+	elseif OP = 4
+
+		tira_marca_cli()
+
+	elseif OP = 5
+
+		Definir_cli()
+
+	else
+
+		exit
+
+	endif
+
+enddo
+
+return
+
+***********************
+procedure Marca_cliente 
+***********************
+
+sc_tel = savescreen( 03,01,22,78 )
+clear typeahead
+CONTA_LIN = 00
+Quadro(03,31,20,70,"W+/R,W+/N,N,W+/R","N/N" )
+@ 04,32 say "   LISTA DOS CLIENTES JA MARCADOS"
+@ 05,31 say "Ì" + replicate( "Í", 38) + "¹"
+@ 05,38       say "Ë"
+for LOOP_1 = 06 to 19
+
+	@ LOOP_1,38 say "º"
+	
+next	
+@ 20,38 say "Ê"
+set confirm ON
+do while .T.
+
+	CODTIT = space( 06 )
+	set cursor ON
+	@ 23,01 	say "Digite o c¢digo do cliente : " ;
+				get CODTIT picture "@R 999999" color "W+/B,W+/N,N,W+/B"
+	read
+	set cursor OFF
+	if lastkey() = 27
+
+		exit
+
+	endif
+	if len( alltrim( CODTIT ) ) < 6 .or. CODTIT = "000000"
+
+		loop
+
+	endif
+	Marca_cli()
+
+enddo
+set confirm OFF
+restscreen( 03,01,22,78,sc_tel )
+@ 23,01 say space( 78 ) color "W/B"
+
+return
+
+*******************
+PROCEDURE Marca_cli 
+*******************
+
+seek CODTIT
+if found()
+
+	if MARCA = "*"
+
+		s_1 = savescreen( 23,01,23,78 )
+		@ 23,01 say space( 78) color "W/B"
+		DESMARCA = "S"
+		@ 23,01    say "O cliente " + CLIENTES->COD_CLI + " j  est  marcado. " ;
+		           color "W+/B"
+		@ 23,col() say "Devo desmarc -lo ? (S/N) " color "W+/B"
+		_bell()
+		set cursor ON
+		TECLA = inkey( 0 )
+		set cursor OFF
+		if TECLA = 83 .or. TECLA = 115
+
+			rlock()
+			replace CLIENTES->MARCA with " "
+			unlock
+
+		endif
+		restscreen( 23,01,23,78,s_1 )
+		return
+		
+	else
+	
+		rlock()
+		replace CLIENTES->MARCA with "*"
+		unlock
+	
+	endif	
+	if CLIENTES->MARCA == "*"
+
+		if CONTA_LIN < 14
+
+			@ 06 + CONTA_LIN,32 say CLIENTES->COD_CLI
+			@ 06 + CONTA_LIN,39 say CLIENTES->NOME
+			CONTA_LIN += 1
+	
+		else
+	
+			scroll(06,32,19,69,1)
+			@ 19,32 say CLIENTES->COD_CLI + "º"
+			@ 19,39 say CLIENTES->NOME
+	
+		endif
+		
+	endif	
+	
+else
+
+	CLI_NAO = savescreen( 23, 01, 23, 78 )
+	@ 23,01 say space( 78 ) color "W/B"
+	@ 23,01 say " -=< C¢digo n„o encontrado >=-" color "W+*/B"
+	_bell()
+	clear typeahead
+	inkey( 50 )
+	restscreen( 23, 01, 23, 78, CLI_NAO )
+
+endif
+
+return
+
+************************
+procedure Tira_marca_cli 
+************************
+
+if Pergunta( " Confirma ? ( S/N ) " )
+
+	@ 23,01 say space( 78 ) color "W/B"
+	@ 23,01 say "Aguarde... estou tirando as marcas dos clientes " color "W+*/B"
+	locate for CLIENTES->MARCA # " "
+	do while .not. eof()
+
+		trava() &&rlock()
+		replace CLIENTES->MARCA with " "
+		dtrava() &&unlock
+	   continue
+
+	enddo
+	@ 23,01 say space(78) color "W/B"
+
+endif
+
+return
+
+*********************
+procedure Quantas_cli
+*********************
+
+SC_TEL = savescreen( 05,49,18,72 )
+Quadro( 05,49,09,70,"W+/R,W+/N,N,W+/R","N/N" )
+@ 06,51 say "Quantas  carteiras"	color "W+/R"
+@ 07,51 say "de cada cliente p/"	color "W+/R"
+@ 08,51 say "imprimir ?"			color "W+/R"
+if ETIQUETAS
+
+	Quadro( 13,49,17,70,"W+/R,W+/N,N,W+/R","N/N" )
+	@ 14,51 say "Em quantas colunas"	color "W+/R"
+	@ 15,51 say "deve  ser  feita a"	color "W+/R"
+	@ 16,51 say "impressao ?"			color "W+/R"
+	@ 23,01 say space( 78 ) color "W/B"
+	@ 23,01 say " Colunas  ->  no M¡nimo = 1  e  no M ximo = 3"	color "W+/B"
+
+endif
+S_CONF = _set( "CONFIRM" ) == "ON"
+set confirm ON
+set cursor  ON
+@ 08,68 	get QT_CADA  picture "9" ;
+			valid ( QT_CADA >= 1 )
+if ETIQUETAS
+
+	@ 16,68 	get N_COLUNAS picture "9" ;
+				valid ( N_COLUNAS >= 1 .and. N_COLUNAS <= 3 )
+
+endif
+read
+set cursor OFF
+restscreen( 05,49,18,72,SC_TEL )
+set confirm S_CONF
+@ 23,01 say space( 78 ) color "W/B"
+
+return
+
+*********************
+procedure Definir_cli  
+*********************
+
+SC_DEF = savescreen( 03,01,21,78 )
+SC_COR = setcolor()
+set color to "W/B"
+@ 03,01 clear to 21,78
+Quadro( 04,05,13,71,"W+/BG,W/BG,N,W+/BG","N/N" )
+@ 05,07 SAY "Tipo da impressora" COLOR "N/BG"
+@ 06,07 SAY "Padr„o 1 - Epson,  Rima,  Am‚lia PC,  Emilia PS e PC  " + ;
+				"= 120 dpi" COLOR "N/BG"
+@ 07,07 SAY "Padr„o 2 - Monica                                     " + ;
+				"= 150 dpi" COLOR "N/BG"
+@ 10,07 SAY "Se voce est  utilizando etiquetas de 89 X 23  dever " ;
+				COLOR "N/BG"
+@ 11,07 say	"digitar 6 espa‡os ou 1 para etiquetas de 79 X 23" color "N/BG"
+set cursor ON
+@ 08,07 say "Qual ‚ o padr„o da sua impressora gr fica ?   " ;
+		  color "W+/BG,W+/N,N,W+/BG" ;
+		  get P_PAD picture "9" valid ( P_PAD > 0 .AND. P_PAD < 3 ) ; 
+		  color "W+/BG,W+/N,N,W+/BG"
+@ 12,07 say "Digite os espa‡os entre as etiquetas     ?   " ;
+		  color "W+/BG,W+/N,N,W+/BG" ;
+		  get P_ESP picture "99" valid ( P_ESP < 12 ) ; 
+		  color "W+/BG,W+/N,N,W+/BG"
+read
+set cursor OFF
+if flock( 15, "GREDE" )
+	save to "PADRAO.CLI" all like  "P_*"
+	unlock in "GREDE"	
+else
+	Mens_rerro( " Erro de espera na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+endif
+restscreen( 03,01,21,78,SC_DEF )
+setcolor( SC_COR )
+
+return
+
+******************************
+procedure Imprime_etiqueta_cli 
+******************************
+
+if ETIQUETAS
+
+	@ 23,01 say space( 78 )               color "W/B"
+	@ 23,02 say "Imprime teste ? (S/N)  " color "W+/B"
+	Liga_impressora()
+	do while .T.
+
+		set cursor ON
+		TESTE = inkey( 0 )
+		set cursor OFF
+		if TESTE =  83 .or. TESTE = 115
+	
+			?? replicate( "X", 31 )
+			?  replicate( "X", 31 )
+			?  replicate( "X", 31 )
+			?  replicate( "X", 31 )
+			?  replicate( "X", 31 )
+			?
+			?
+		
+		else
+	
+			exit
+
+		endif
+
+	enddo
+
+endif
+Desliga_impressora()
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say "Aguarde... Estou preparando o arquivo" color "W+*/B"
+set filter to CLIENTES->MARCA = "*"
+go top
+declare 	MTNOME[N_COLUNAS], MTCODI[N_COLUNAS], MTBARR[N_COLUNAS]
+L2 = 1
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say "<End> - Interrompe a impress„o" color "W+*/B"
+Liga_impressora()
+do while .not. eof()
+
+	TECLA = inkey()
+	if TECLA = 6
+
+		_bell()
+		_bell()
+		exit
+
+	endif
+	for L1 = 1 to N_COLUNAS
+
+		MTNOME[L1] = replicate( "X", 31 )
+		MTCODI[L1] = "000000"
+		MTBARR[L1] = Cb_25( "000000" )
+
+	next
+	for L1 = 1 to N_COLUNAS
+
+		MTCODI[L1] = CLIENTES->COD_CLI
+		MTBARR[L1] = Cb_25( MTCODI[L1] )
+		MTNOME[L1] = space( _int( ( 31-len( alltrim( CLIENTES->NOME )))/2 ) ) +;
+						 alltrim( CLIENTES->NOME )
+		MTNOME[L1] = MTNOME[L1] + space( 31 - len( MTNOME[L1] ) )
+		rlock()
+		replace CLIENTES->MARCA    with " ",;
+		        CLIENTES->CARTEIRA with CLIENTES->CARTEIRA + 1
+		unlock		  
+		if L2 = QT_CADA
+
+			if .not. eof()
+
+				skip
+				if eof()
+
+					exit
+
+				endif
+				L2 = 1
+
+			else
+
+				exit
+
+			endif
+
+		else
+
+			L2 = L2 + 1
+
+		endif
+
+	next
+	if ETIQUETAS
+
+		Rot_imprime_cli()
+
+	else
+
+		Rot_imprime_cart()
+
+	endif
+	
+enddo
+Desliga_impressora()
+set filter to
+_bell()
+@ 23,01 say space( 78 ) color "W/B"
+
+return
+
+*************************
+procedure Rot_imprime_cli 
+*************************
+
+***************************************** && barra de protecao superior *******
+for LB01 = 1 to 2
+
+	?? AV_1_216 + chr( 18 ) + space( 11 )     +;	&& esp. 1. col. esq. e cod.
+		chr( 27 ) + "L" + chr( K1 ) + chr( 0 ) +;	&& com. de entrada alta res.
+		replicate( chr( 192 ), K1 )		  		   && carac. da barra superior
+	for LB02 = 2 to N_COLUNAS
+
+		?? space( 22 + P_ESP + P_PAD )	      +; && esp. com padrao de impr.
+			chr( 27 ) + "L" + chr( K1 ) + chr( 0 ) +; && com. de entrada alta res.
+			replicate( chr( 192 ), K1 ) 	            && carac. da barra superior
+
+	next
+	? 
+
+next
+*******************************************************************************
+***************************************** && corpo  do codigo de barras *******
+for LB03 = 1 to 18
+
+	?  space( 11 ) 					         +;	&& esp. com padrao de impr.
+		chr( 27 ) + "L" + chr( K1 ) + chr( 0 )	+;	&& com. de entrada alta res.
+		MTBARR[1] 			 				 		      && codigo de barras
+	for LB04 = 2 to N_COLUNAS
+
+		?? space( 22 + P_ESP + P_PAD )	         +;	&& esp. com padrao de impr.
+			chr( 27 ) + "L" + chr( K1 ) + chr( 0 ) +; && com. de entrada alta res.
+			MTBARR[LB04]  							         && codigo de barras
+
+	next
+	?? iif( _int( LB03/2 ) = 	LB03/2, AV_1_216, AV_1_72 )
+
+next
+*******************************************************************************
+***************************************** && barra de protecao inferior *******
+?? AV_1_216
+for LB06 = 1 to 2
+
+	?  space( 11 ) 						      +; && esp. 1. col. esq. e cod.
+		chr( 27 ) + "L" + chr( K1 ) + chr( 0 ) +; && com. de entrada alta res.
+		replicate( chr( 003 ), K1 ) 			  	   && carac. da barra superior
+
+	for LB07 = 2 to N_COLUNAS
+
+		?? space( 22 + P_ESP + P_PAD  )           +; && esp. com padrao de impr.
+			chr( 27 ) + "L" + chr( K1 ) + chr( 0 ) +; && com. de entrada alta res.
+			replicate( chr( 003 ), K1 ) 			      && carac. da barra superior
+
+	next
+	
+next
+*******************************************************************************
+***************************************** && linha codigo do cliente **********
+?? chr( 27 ) + "3" + chr( 40 )
+?  ENT_NEGR + space( 12 )      		   	      && ativa negrito
+?? MTCODI[1] picture "@R 999999"	               && cod. da fita
+for LB08 = 2 to N_COLUNAS
+
+	?? space( 24 + P_ESP + P_PAD )
+	?? MTCODI[LB08] picture "@R 999999"		            && codigo da fita
+
+next
+*******************************************************************************
+***************************************** && linha nome do cliente ************
+?? chr( 27 ) + "3" + chr( 40 )
+?  MTNOME[1]
+for LB09 = 2 to N_COLUNAS
+
+	?? space( P_ESP ) + MTNOME[LB09]
+
+next
+*******************************************************************************
+?  SAI_NEGR + chr( 27 ) + "3" + chr( 56 )
+?  AV_1_6
+
+return
+
+**************************
+procedure Rot_imprime_cart
+**************************
+
+CONTA_CAR += 1
+if CONTA_CAR > 04
+
+	eject
+	CONTA_CAR = 01
+	
+endif	
+***************************************** && borda sup. da carteira ***********
+?? ENT_NEGR
+? "  +---------------------------------+---------------------------------+"
+? "  |                                 |                                 |"
+? "                                          CARTEIRA  DE  CLIENTE        "
+*******************************************************************************
+***************************************** && barra de protecao superior *******
+for LB01 = 1 to 2
+
+	? AV_1_216 + chr( 18 ) + space( 14 )         +;
+	  chr( 27 ) + "L" + chr( K1 )  + chr( 00 )   +;	
+	  replicate( chr( 192 ), K1 )
+
+next
+*******************************************************************************
+***************************************** && corpo  do codigo de barras *******
+for LB03 = 1 to 18
+
+	?  space( 14 )+ chr( 27 ) + "L" + chr( K1 ) + chr( 0 ) + MTBARR[1]
+	?? iif( _int( LB03/2 ) = LB03/2, AV_1_216, AV_1_72 )
+
+next
+*******************************************************************************
+***************************************** && barra de protecao inferior *******
+?? AV_1_216
+for LB06 = 1 to 2
+
+	?  space( 14 ) + chr( 27 ) + "L" + chr( K1 ) + chr( 00 ) +;
+		replicate( chr( 003 ), K1 )
+
+next
+*******************************************************************************
+***************************************** && linha codigo do cliente **********
+?? chr( 27 ) + "3" + chr( 41 )
+?  space( 15 )
+?? MTCODI[1] picture "@R 999999"
+?? space( 17 ) + NOME_LOCADORA
+*******************************************************************************
+***************************************** && linha nome do cliente ************
+?? chr( 27 ) + "3" + chr( 05 )
+?  AV_1_6
+?
+? space( 38 ) + ENDE_LOCADORA
+? "                                      " + CIDA_LOCADORA
+? "    -------------------------------   "
+? "    " + MTNOME[1] + "   " + FONE_LOCADORA
+? "  |                                 |                                 |"
+? "  +---------------------------------+---------------------------------+"
+*******************************************************************************
+?  SAI_NEGR
+?
+
+return
+*
+****** FORMATO DA CARTEIRINHA DE CLIENTE **************************************
+*
+* "  +-----------------------------------+-----------------------------------+"
+* "  |12345678901234567890123456789012345|12345678901234567890123456789012345|"
+* "  |                                   |                                   |"
+* "  |                                   |                                   |"
+* "  |                                   |                                   |"
+* "  |                                   |                                   |"
+* "  |                                   |                                   |"
+* "  |                                   |                                   |"
+* "  |                                   |                                   |"
+* "  |                                   |                                   |"
+* "  | --------------------------------- |                                   |"
+* "  |      ASSINATURA DO CLIENTE        |                                   |"
+* "  |                                   |                                   |"
+* "  +-----------------------------------+-----------------------------------+"
+*
+*******************************************************************************
+*
+*********************
+procedure Rot_esc_fun 
+*********************
+
+if .not. _file( "PADRAO.FUN" )
+
+	P_PAD = 1
+	P_TAB = 8
+	P_ESP = 6
+	P_CAR = 2
+
+else
+
+	restore from "PADRAO.FUN" additive
+
+endif
+select "CLIENTES"
+ORD_CLI = indexord()
+set order to 3
+seek "000000"
+NOME_LOCADORA = CLIENTES->NOME
+ENDE_LOCADORA = CLIENTES->END_RES
+CIDA_LOCADORA = CLIENTES->CID_RES
+FONE_LOCADORA = iif( empty( CLIENTES->TEL_RES ), space( 23 ),;
+							"Fone : " + CLIENTES->TEL_RES )
+select  "FUNCION" 
+count to NUM_FUN
+declare 	CODFUN [ NUM_FUN ],;
+			NOMFUN [ NUM_FUN ],;
+			MARFUN [ NUM_FUN ],;
+			K_1FUN [ NUM_FUN ],;
+			GRDFUN [ NUM_FUN ]
+go top
+LOOP_1 = 00
+do while .not. eof()
+
+	if .not. _deleted()
+
+		LOOP_1 += 1
+		CODFUN [ LOOP_1 ] = FUNCION->F_CODIGO
+		NOMFUN [ LOOP_1 ] = FUNCION->NOME
+		MARFUN [ LOOP_1 ] = " "
+		GRDFUN [ LOOP_1 ] = MARFUN[ LOOP_1 ] + "º" + CODFUN[ LOOP_1 ] + "º" +;
+							  NOMFUN[ LOOP_1 ] 	
+		if P_PAD = 1
+
+			K_1FUN [ LOOP_1 ] = iif( len( alltrim( CODFUN[LOOP_1] )) = 2, 43, 71 )
+
+		else
+
+			K_1FUN [ LOOP_1 ] = iif( len( alltrim( CODFUN[LOOP_1] )) = 2, 54, 89 )
+
+		endif
+
+	endif
+	if .not. eof()
+	
+		skip
+	
+	endif		
+
+enddo	
+QT_CADA   = 01
+CONTA_CAR = 00
+N_COLUNAS = 01
+declare     QUEM[5], Q_LL[5]
+QUEM[1]   = "Fazer lista- func."
+QUEM[2]   = "Imprimir carteiras"
+QUEM[3]   = "Lista p/ antendim."
+QUEM[4]   = "Definir  carteiras"
+QUEM[5]   = "Retornar"
+Q_LL[1]   = "F"
+Q_LL[2]   = "I"
+Q_LL[3]   = "L"
+Q_LL[4]   = "D"
+Q_LL[5]   = "R"
+do while .T.
+
+	clear typeahead
+	set color to "W+/B,N/W,N,W+/B"
+	@ 03,01 clear to 21,78
+	Quadro( 03,02,05,26,"N/GR,N/GR,N,N/GR","N/N" )
+	@ 04,03 say "CARTEIRA DE FUNCIONARIO" color "W+/GR"
+	Quadro( 14,02,20,22,"W+/R,N/R,N,W+/R","N/N" )
+	popup	window	15,03,19,21;
+			to			OP;
+			options	QUEM;
+			hilite 	Q_LL,"GR+/R";
+			color 	"W+/R,N/W,N,W+/R"
+	if 	OP = 1
+
+		if lastkey() # 27
+
+			Marca_func()
+
+		endif
+
+	elseif OP = 2
+
+		Quantas_vezes()
+
+		if lastkey() # 27
+
+			Imprime_cart_func()		
+
+		endif
+
+	elseif OP = 3
+
+		Lista_atender()
+
+	elseif OP = 4
+
+		Definir_fun()
+
+	else
+
+		exit
+
+	endif
+
+enddo
+
+return
+
+********************
+procedure Marca_func 
+********************
+
+sc_tel = savescreen( 03,01,22,78 )
+clear typeahead
+CONTA_LIN = 00
+ALTURA    = iif( NUM_FUN > 11, 20, NUM_FUN + 9 )
+Quadro( 03,48,07,76,"N/GR,N/GR,N,N/GR","N/N" )
+@ 04,49 say "<ENTER> = Marca ou desmarca"
+@ 05,49 say "          funcion rios     "
+@ 06,49 say "<ESC>   = Para  voltar     "
+Quadro(08, 40, ALTURA, 69, "W+/BG,N/W,N,W+/BG", "N/N" )
+@ 08,42     say "Ë"
+@ 08,47     say "Ë"
+@ ALTURA,42 say "Ê"
+@ ALTURA,47 say "Ê"
+do while .T.
+
+	popup	window 	09, 41, ALTURA - 1, 68;
+			to     	ESC_FUN;
+			options	GRDFUN;
+			hilite   GRDFUN, "N/BG";
+			color		"W+/BG,N/W,W+/BG,W+/BG";
+			function Poe_marca()
+	if ESC_FUN < 1
+	
+		exit
+		
+	endif							
+
+enddo
+restscreen( 03,01,22,78,sc_tel )
+@ 23,01 say space( 78 ) color "W/B"
+
+return
+
+******************
+function Poe_marca
+******************
+
+parameters MODO, ELEMENTO
+private    TECLA
+TECLA = lastkey()
+if TECLA == 27
+
+	return 0
+
+elseif TECLA == 13
+
+	if MARFUN [ ELEMENTO ] = " "
+
+		MARFUN [ ELEMENTO ] = "*"
+		GRDFUN [ ELEMENTO ] = stuff( GRDFUN [ ELEMENTO ], 1, 1, "*" )
+
+	else
+
+		MARFUN [ ELEMENTO ] = " "
+		GRDFUN [ ELEMENTO ] = stuff( GRDFUN [ ELEMENTO ], 1, 1, " " )
+
+	endif
+	keyboard 24
+	return 4
+
+endif
+
+return
+
+***********************
+procedure quantas_vezes
+***********************
+
+SC_TEL = savescreen( 05,49,18,72 )
+Quadro( 05,49,09,70,"W+/R,W+/N,N,W+/R","N/N" )
+@ 06,51 say "Quantas  carteiras"	color "W+/R"
+@ 07,51 say "p/ cada func. devo"	color "W+/R"
+@ 08,51 say "imprimir ?"			color "W+/R"
+S_CONF = _set( "CONFIRM" ) == "ON"
+set confirm ON
+set cursor  ON
+@ 08,68 get QT_CADA picture "9" valid ( QT_CADA >= 1 )
+read
+set cursor OFF
+restscreen( 05,49,18,72,SC_TEL )
+set confirm S_CONF
+N_COLUNAS = 01
+@ 23,01 say space( 78 ) color "W/B"
+
+return
+
+*********************
+procedure Definir_fun  
+*********************
+
+SC_DEF = savescreen( 03,01,21,78 )
+SC_COR = setcolor()
+set color to "W/B"
+@ 03,01 clear to 21,78
+Quadro( 04,05,10,71,"W+/BG,W/BG,N,W+/BG","N/N" )
+@ 05,07 SAY "Tipo da impressora" COLOR "N/BG"
+@ 06,07 SAY "Padr„o 1 - Epson,  Rima,  Am‚lia PC,  Emilia PS e PC  " + ;
+				"= 120 dpi" COLOR "N/BG"
+@ 07,07 SAY "Padr„o 2 - Monica                                     " + ;
+				"= 150 dpi" COLOR "N/BG"
+set cursor ON
+@ 08,07 say "Qual ‚ o padr„o da sua impressora gr fica ?   " ;
+		  color "W+/BG,W+/N,N,W+/BG" ;
+		  get P_PAD picture "9" valid ( P_PAD > 0 .AND. P_PAD < 3 ) ; 
+		  color "W+/BG,W+/N,N,W+/BG"
+read
+set cursor OFF
+if flock( 15, "GREDE" )
+	save to "PADRAO.FUN" all like  "P_*"
+	unlock in "GREDE"
+else
+	Mens_rerro( " Erro de espera na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+endif
+restscreen( 03,01,21,78,SC_DEF )
+setcolor( SC_COR )
+
+return
+
+***************************
+procedure imprime_cart_func 
+***************************
+
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say "<End> - Interrompe a impress„o" color "W+*/B"
+Liga_impressora()
+declare 	MTNOME[N_COLUNAS], MTCODI[N_COLUNAS], MTBARR[N_COLUNAS],MTK[N_COLUNAS]
+for LOOP_1 = 1 to NUM_FUN
+
+	TECLA = inkey()
+	if TECLA = 6
+
+		_bell()
+		_bell()
+		exit
+
+	endif
+	if MARFUN [ LOOP_1 ] == "*"
+
+		for L1 = 1 to N_COLUNAS
+
+			MTNOME[L1] = replicate( "X", 20 )
+			MTCODI[L1] = "00"
+			MTBARR[L1] = Cb_25( "00" )
+			MTK   [L1] = iif( P_PAD = 1, 43, 54 )
+		next
+		for L1 = 1 to N_COLUNAS
+
+			MTCODI[L1] = alltrim( CODFUN [ LOOP_1 ] )
+			if     len( MTCODI[L1] ) = 1
+
+				MTCODI[L1] = _left( "0" + MTCODI[L1], 4 )
+
+			elseif len( MTCODI[L1] ) = 3
+
+				MTCODI[L1] = _left( "0" + MTCODI[L1], 4 )
+
+			endif
+			MTBARR[L1] = Cb_25( MTCODI[L1] )
+			MTNOME[L1] = space( _int( ( 31-len( alltrim( NOMFUN[LOOP_1])))/2))+;
+							 alltrim( NOMFUN[LOOP_1] )
+			MTNOME[L1] = MTNOME[L1] + space( 31 - len( MTNOME[L1] ) )
+			MTK   [L1] = K_1FUN [ LOOP_1 ]   
+			MARFUN[ LOOP_1] = " "
+
+		next
+		for L2 = 1 TO QT_CADA
+
+			Rot_imprime_cart_fun()
+
+		next
+
+	endif
+
+next
+Desliga_impressora()
+set filter   to
+_bell()
+@ 23,01 say space( 78 ) color "W/B"
+
+return
+
+******************************
+procedure Rot_imprime_cart_fun 
+******************************
+
+CONTA_CAR += 1
+if CONTA_CAR > 04
+
+	eject
+	CONTA_CAR = 01
+	
+endif	
+***************************************** && borda sup. da carteira ***********
+?? ENT_NEGR
+? "  +---------------------------------+---------------------------------+"
+? "  :                                 :                                 :"
+? "                                          F U N C I O N A R I O        "
+*******************************************************************************
+***************************************** && barra de protecao superior *******
+for LB01 = 1 to 2
+
+	? AV_1_216  + space( 14 )                 +;
+	  chr( 27 ) + "L" + chr( MTK[1] ) + chr( 00 ) +;	
+	  replicate( chr( 192 ), MTK[1] )
+
+next
+*******************************************************************************
+***************************************** && corpo  do codigo de barras *******
+for LB03 = 1 to 18
+
+	?  space(14) + chr( 27 ) + "L" + chr( MTK[1] ) + chr( 00 ) + MTBARR[1]
+	?? iif( _int( LB03/2 ) = 	LB03/2, AV_1_216, AV_1_72 )
+
+next
+*******************************************************************************
+***************************************** && barra de protecao inferior *******
+?? AV_1_216
+for LB06 = 1 to 2
+
+	?  space( 14 ) + chr( 27 ) + "L" + chr( MTK[1] ) + chr( 00 ) +;
+		replicate( chr( 003 ), MTK[1] )
+
+next
+*******************************************************************************
+***************************************** && linha codigo do cliente **********
+?? chr( 27 ) + "3" + chr( 41 )
+?  space( 14 )
+?? MTCODI[1] picture iif( len( alltrim( MTCODI[1] ) ) = 4, "@R 9999", "@R 99" )
+?? space( iif( len( alltrim( MTCODI[1] ) ) = 4, 20, 22 ) ) + NOME_LOCADORA
+*******************************************************************************
+***************************************** && linha nome do cliente ************
+?? chr( 27 ) + "3" + chr( 05 )
+?  AV_1_6
+?
+? space( 38 ) + ENDE_LOCADORA
+? "                                      " + CIDA_LOCADORA
+? "    -------------------------------   "
+? "    " + MTNOME[1] + "   " + FONE_LOCADORA
+? "  :                                 :                                 :"
+? "  +---------------------------------+---------------------------------+"
+*******************************************************************************
+?  SAI_NEGR
+?
+
+return
+
+**********************
+function Lista_atender  
+**********************
+
+private MTCODI [ NUM_FUN ], MTBARR [ NUM_FUN ], MTNOME [ NUM_FUN ],;
+        MTK    [ NUM_FUN ]
+@ 23,01 say "Aguarde a impress„o ... " color "W+*/B"
+Liga_impressora()
+? space( 20 ) + "Tabela de Funcionarios"
+? space( 20 ) + "----------------------"
+?
+for LOOP_3 = 1 to NUM_FUN
+
+	MTCODI [ LOOP_3 ] = alltrim( CODFUN [ LOOP_3 ] )
+	if     len( MTCODI [ LOOP_3 ] ) = 1
+
+		MTCODI [ LOOP_3 ] = _left( "0" + MTCODI [ LOOP_3 ], 4 )
+
+	elseif len( MTCODI [ LOOP_3 ] ) = 3
+
+		MTCODI [ LOOP_3 ] = _left( "0" + MTCODI [LOOP_3 ], 4 )
+
+	endif
+	MTBARR [ LOOP_3 ] = Cb_25( MTCODI [ LOOP_3 ] )
+	MTNOME [ LOOP_3 ] = NOMFUN [ LOOP_3 ]
+	MTK    [ LOOP_3 ] = K_1FUN [ LOOP_3 ]   
+	************************************* && barra de protecao superior *******
+	for LB01 = 1 to 2
+	
+		? AV_1_216  + space( 20 )                 +;
+		  chr( 27 ) + "L" + chr( MTK [ LOOP_3 ] ) + chr( 00 ) +;	
+		  replicate( chr( 192 ), MTK [ LOOP_3 ] )
+
+	next
+	****************************************************************************
+	************************************** && corpo  do codigo de barras *******
+	for LB03 = 1 to 14
+
+		?  space(20) + chr( 27 ) + "L" + chr( MTK [ LOOP_3 ] ) + chr( 00 ) + ;
+         MTBARR [ LOOP_3 ]
+		?? iif( _int( LB03/2 ) = 	LB03/2, AV_1_216, AV_1_72 )
+
+	next
+	****************************************************************************
+	************************************** && barra de protecao inferior *******
+	?? AV_1_216
+	for LB06 = 1 to 2
+
+		?  space( 20 ) + chr( 27 ) + "L" + chr( MTK [ LOOP_3 ] ) + chr( 00 ) +;
+			replicate( chr( 003 ), MTK [ LOOP_3 ] )
+	
+	next
+	****************************************************************************
+	?? chr(   27 ) + "3" + chr( 41 )
+	?  space( 20 ) + ENT_NEGR + MTNOME [ LOOP_3 ] + SAI_NEGR
+
+next	
+?
+?
+Desliga_impressora()
+@ 23,01 say space( 78 ) color "W/B"
+
+return
+
+********************
+function Cod_produto  
+********************
+
+if .not. _file( "PADRAO.PRO" )
+
+	P_PAD = 1
+	P_TAB = 8
+	P_ESP = 6
+	P_CAR = 2
+
+else
+
+	restore from "PADRAO.PRO" additive
+
+endif
+if REGISTRO_PRODUTO = 99
+
+	Mens_rerro( " N„o existem PRODUTOS ", 2, "W+*/B" )
+	return
+	
+else
+
+	NUM_PROD = REGISTRO_PRODUTO
+
+endif
+select "TITULOS"
+set order to 1
+QT_CADA   = 01
+N_COLUNAS = 01
+CONTA_LIN = 00
+K1 		 = iif( P_PAD = 1 , 127 , 159 )		&& tamanho do codigo em alta res.
+CODRES	 = 17 - P_TAB								&& espacos apos o codigo de barras
+private QUEM[6], Q_LL[6]
+QUEM[1] = "Fazer lista       "
+QUEM[2] = "Marcar todos      "
+QUEM[3] = "Imprimir          "
+QUEM[4] = "Tirar marcas-todas"
+QUEM[5] = "Definir  etiquetas"
+QUEM[6] = "Retornar"
+Q_LL[1] = "F"
+Q_LL[2] = "M"
+Q_LL[3] = "I"
+Q_LL[4] = "T"
+Q_LL[5] = "E"
+Q_LL[6] = "R"
+do while .T.
+
+	clear typeahead
+	set color to "W+/B,N/W,N,W+/B"
+	@ 03,01 clear to 21,78
+	Quadro( 03,02,05,46,"N/GR,N/GR,N,N/GR","N/N" )
+	@ 04,03 say "ETIQUETAS DE CODIGO DE BARRAS PARA PRODUTOS" color "W+/GR"
+	Quadro( 13,02,20,21,"W+/R,N/R,N,W+/R","N/N" )
+	popup	window	14,03,19,20;
+			to			OP;
+			options	QUEM;
+			hilite 	Q_LL,"GR+/R";
+			color 	"W+/R,N/W,N,W+/R"
+	if OP = 1
+
+		if lastkey() # 27
+
+			Marca_produto()
+
+		endif
+
+	elseif OP = 2
+
+		if lastkey() # 27
+
+			Marca_todos()
+
+		endif
+
+	elseif OP = 3
+
+		Quantas()
+
+		if lastkey() # 27
+
+			Imprime_etiqueta_produto()		
+
+		endif
+
+	elseif OP = 4
+
+		Tira_marca_produto()
+
+	elseif OP = 5
+
+		Definir_pro()
+
+	else
+
+		exit
+
+	endif
+
+enddo
+
+return
+
+**********************
+function Marca_produto 
+**********************
+
+select "TITULOS"
+ORD_TIT = indexord()
+set order to 1
+@ 23,01 say space( 78 ) color "W/B"
+do while lastkey() # 27
+
+	TTPRO = "      "
+	@ 23,01        say "C¢digo do Produto : "       color "W+/B"
+	@ 23,col()     get TTPRO  picture "@R 99.9999"  color "W+/B,W+/N,N,W+/B"
+	set cursor ON
+	read
+	set cursor OFF
+	if lastkey() # 27
+	
+		seek TTPRO
+		if TITULOS->T_CODIGO = TTPRO 
+
+
+			if TITULOS->T_GENERO = NUM_PROD
+
+				rlock()
+				replace TITULOS->MARCA with "*"
+				unlock
+	
+			endif		
+
+		endif
+
+	endif
+
+enddo
+@ 23,01 say space( 78 ) color "W/B"
+
+return
+
+********************
+function Marca_todos 
+********************
+
+select "TITULOS"
+ORD_TIT = indexord()
+set order to 1
+NNN = str( NUM_PROD - 1, 2, 0, "0" )
+seek NNN
+do while _left( TITULOS->T_CODIGO, 2 ) = NNN .and. .not. eof()
+
+	rlock()
+	replace TITULOS->MARCA with "*"
+	unlock
+	if eof()
+	
+		exit
+		
+	endif	
+	skip
+
+enddo
+
+return
+
+*********************************
+function Imprime_etiqueta_produto		
+*********************************
+
+set cursor ON
+@ 23,01 say space( 78 )               color "W/B"
+@ 23,02 say "Imprime teste ? (S/N)  " color "W+/B"
+Liga_impressora()
+do while .T.
+
+	TESTE = inkey( 0 )
+	if TESTE =  83 .or. TESTE = 115
+
+		?? replicate( "X", 30 )
+		?  replicate( "X", 30 )
+		?  replicate( "X", 30 )
+		?  replicate( "X", 30 )
+		?  replicate( "X", 30 )
+		?
+		?
+		
+	else
+	
+		exit
+
+	endif
+
+enddo
+set cursor OFF
+Desliga_impressora()
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say "Aguarde... Estou preparando o arquivo" color "W+*/B"
+select "TITULOS"
+ORD_TIT = indexord()
+set order to 1
+set filter to TITULOS->T_GENERO = NUM_PROD .and. TITULOS->MARCA = "*"
+go top
+declare 	MTPORT[N_COLUNAS], MTORIG[N_COLUNAS], MTGENE[N_COLUNAS],;
+			MTCLAS[N_COLUNAS], MTCODI[N_COLUNAS], MTBARR[N_COLUNAS]
+L2 = 1
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say "<End> - Interrompe a impress„o" color "W+*/B"
+Liga_impressora()
+do while .not. eof()
+
+	TECLA = inkey()
+	if TECLA = 6
+
+		_bell()
+		_bell()
+		exit
+
+	endif
+	for L1 = 1 to N_COLUNAS
+
+		MTPORT[L1] = replicate( "X", 40 )
+		MTCODI[L1] = "00000000"
+		MTBARR[L1] = Cb_25( "00000000" )
+
+	next
+	for L1 = 1 to N_COLUNAS
+
+		MTCODI[L1] = TITULOS->T_CODIGO + "00"
+		MTBARR[L1] = Cb_25( MTCODI[L1] )
+		MTPORT[L1] = TITULOS->T_PORT
+		rlock()
+		replace TITULOS->MARCA with " "
+		unlock
+		if L2 = QT_CADA
+
+			if .not. eof()
+
+				skip
+				if eof()
+
+					exit
+
+				endif
+				L2 = 1
+
+			else
+
+				exit
+
+			endif
+
+		else
+
+			L2 = L2 + 1
+
+		endif
+
+	next
+	Rot_imprime_prod()
+
+enddo
+Desliga_impressora()
+set filter   to
+set relation to
+select "TITULOS"
+set order to ORD_TIT
+select "FITAS"
+set order to ORD_FIT
+_bell()
+@ 23,01 say space( 78 ) color "W/B"
+
+return
+
+*************************
+function Rot_imprime_prod 
+*************************
+
+***************************************** && barra de protecao superior *******
+for LB01 = 1 to 2
+
+	?? AV_1_216 + chr( 18 ) + space( P_TAB )    +;	&& esp. 1. col. esq. e cod.
+		chr( 27 ) + "L" + chr( K1 ) + chr( 0 ) +;	&& com. de entrada alta res.
+		replicate( chr( 192 ), K1 )		  		   && carac. da barra superior
+	for LB02 = 2 to N_COLUNAS
+
+		?? space( CODRES+P_ESP+P_PAD + 2 )	      +; && esp. com padrao de impr.
+		 	space( P_TAB ) 					         +; && esp. 1. col. esq. e cod.
+			chr( 27 ) + "L" + chr( K1 ) + chr( 0 ) +; && com. de entrada alta res.
+			replicate( chr( 192 ), K1 ) 	            && carac. da barra superior
+
+	next
+	? 
+
+next
+*******************************************************************************
+***************************************** && corpo  do codigo de barras *******
+for LB03 = 1 to 18
+
+	?  space( P_TAB ) 					         +;	&& esp. com padrao de impr.
+		chr( 27 ) + "L" + chr( K1 ) + chr( 0 )	+;	&& com. de entrada alta res.
+		MTBARR[1] 			 				 		      && codigo de barras
+	for LB04 = 2 to N_COLUNAS
+
+		?? space( CODRES + P_ESP + P_PAD + 2 )	   +;	&& esp. com padrao de impr.
+		 	space( P_TAB ) 					         +; && esp. 1. col. esq. e cod.
+			chr( 27 ) + "L" + chr( K1 ) + chr( 0 ) +; && com. de entrada alta res.
+			MTBARR[LB04]  							         && codigo de barras
+
+	next
+	?? iif( _int( LB03/2 ) = 	LB03/2, AV_1_216, AV_1_72 )
+
+next
+*******************************************************************************
+***************************************** && barra de protecao inferior *******
+?? AV_1_216
+for LB06 = 1 to 2
+
+	?  space( P_TAB ) 						      +; && esp. 1. col. esq. e cod.
+		chr( 27 ) + "L" + chr( K1 ) + chr( 0 ) +; && com. de entrada alta res.
+		replicate( chr( 003 ), K1 ) 			  	   && carac. da barra superior
+
+	for LB07 = 2 to N_COLUNAS
+
+		?? space( CODRES + P_ESP + P_PAD + 2 )    +; && esp. com padrao de impr.
+		 	space( P_TAB ) 					         +; && esp. 1. col. esq. e cod.
+			chr( 27 ) + "L" + chr( K1 ) + chr( 0 ) +; && com. de entrada alta res.
+			replicate( chr( 003 ), K1 ) 			      && carac. da barra superior
+
+	next
+	
+next
+*******************************************************************************
+***************************************** && linha codigo fita e genero *******
+?? chr( 27 ) + "3" + chr( 31 )
+?  ENT_NEGR 										      && ativa negrito
+?? MTCODI[1] picture "@R 99.9999.99" 	         && cod. da fita
+??	space( 5 )                                +; && esp. p/ alinhar gen. no fim
+ 	space( 15 )            					      +; && genero da fita
+ 	space( P_ESP + P_PAD - 1 )						   && esp. com padrao de impr.
+for LB08 = 2 to N_COLUNAS
+
+	?? MTCODI[LB08] picture "@R 99.9999.99"	   	   && codigo da fita
+	??	space( 5 )                                   +; && esp.alinhar gen.no fim
+		space( 15 )            				            +; && genero da fita
+		space( P_ESP + P_PAD - 1 )					         && esp. padrao impressao
+
+next
+*******************************************************************************
+***************************************** && linha titulo port e volume *******
+?? chr( 27 ) + "3" + chr( 30 )
+?  SAI_NEGR  + chr( 15 ) + MTPORT[1] + space( 04 )	+;
+ 	space( 06 )
+for LB09 = 2 to N_COLUNAS
+
+	?? chr( 18 ) + space( P_ESP + 1 ) + chr( 15 )  +; && desativa carac. compr.
+		MTPORT[LB09] 				                    +; && tit. portugues da fita
+ 		space( 04 ) 				                    +; && espac. de complemento
+ 		space( 06 )                                  ; && def. se e p/imprimir o
+
+next
+*******************************************************************************
+***************************************** && linha titulo original ************
+?? chr( 27 ) + "3" + chr( 30 )
+?  chr( 15 ) + space( 50 ) 
+for LB10 = 2 to N_COLUNAS
+
+	?? chr( 18 ) + space( P_ESP + 1 ) + chr( 15 ) +; && desativa caracter comp.
+		space( 50 )                                   && titulo original da fita
+
+next
+*******************************************************************************
+? chr( 18 ) + chr( 27 ) + "3" + chr( 55 )		&& desativa caracter comprimido
+? AV_1_6                                     && ativa linha de 1/6"
+
+return
+
+***************************
+function Tira_marca_produto 
+***************************
+
+if Pergunta( " Confirma ? ( S/N ) " )
+
+	ANT_AREA = _select()
+	select "TITULOS"
+	ORD_TIT = indexord()
+	set filter to TITULOS->T_GENERO = REGISTRO_PRODUTO
+	go top
+	@ 23,01 say space( 78 ) color "W/B"
+	@ 23,01 say "Aguarde... estou tirando as marcas das fitas " color "W+*/B"
+	do while .not. eof()
+		
+		rlock()
+		replace titulos->marca WITH " "
+		unlock
+		if eof()
+		
+			exit
+			
+		endif	
+		skip
+	
+	enddo
+	select ANT_AREA
+	@ 23,01 say space(78) color "W/B"
+
+endif
+
+return
+
+*********************
+function Quantas_cols 
+*********************
+
+SC_TEL = savescreen( 05,49,18,72 )
+Quadro( 13,49,17,70,"W+/R,W+/N,N,W+/R","N/N" )
+@ 14,51 say "Em quantas colunas"	color "W+/R"
+@ 15,51 say "deve  ser  feita a"	color "W+/R"
+@ 16,51 say "impressao ?"			color "W+/R"
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say " Colunas  ->  no M¡nimo = 1  e  no M ximo = 3"	color "W+/B"
+S_CONF = _set( "CONFIRM" ) == "ON"
+set confirm ON
+set cursor  ON
+@ 16,68 	get N_COLUNAS picture "9" ;
+			valid ( N_COLUNAS >= 1 .and. N_COLUNAS <= 3 )
+read
+set cursor OFF
+restscreen( 05,49,18,72,SC_TEL )
+set confirm S_CONF
+@ 23,01 say space( 78 ) color "W/B"
+
+return
+
+*********************
+procedure Definir_pro  
+*********************
+
+SC_DEF = savescreen( 03,01,21,78 )
+SC_COR = setcolor()
+set color to "W/B"
+@ 03,01 clear to 21,78
+Quadro( 04,05,19,71,"W+/BG,W/BG,N,W+/BG","N/N" )
+@ 05,07 SAY "Tipo da impressora" COLOR "N/BG"
+@ 06,07 SAY "Padr„o 1 - Epson,  Rima,  Am‚lia PC,  Emilia PS e PC  " + ;
+				"= 120 dpi" COLOR "N/BG"
+@ 07,07 SAY "Padr„o 2 - Monica                                     " + ;
+				"= 150 dpi" COLOR "N/BG"
+@ 09,07 SAY "Caracteres comprimidos-> [1=16,7]  [2=17]  [3=17,1]  "  + ;
+				"[4=20] cpi" COLOR "N/BG"
+@ 11,07 SAY "Para posicionar o c¢digo de barras na etiqueta, voce "  + ;
+				"pode defi-" COLOR "N/BG"
+@ 12,07 SAY "ni-lo aqui, indicando quantos espa‡os devem existir "   + ;
+				"entre a  1¦" COLOR "N/BG"
+@ 13,07 SAY "coluna, da esquerda, da etiqueta e inicio do  c¢digo"   + ;
+				" de barras," COLOR "N/BG"
+@ 14,07 SAY "sendo 8 espa‡os para deix -lo centralizado." COLOR "N/BG"
+@ 16,07 SAY "Se voce est  utilizando etiquetas de 89 X 23  dever " ;
+				COLOR "N/BG"
+@ 17,07 say	"digitar 6 espa‡os ou 1 para etiquetas de 79 X 23" color "N/BG"
+set cursor ON
+@ 08,07 say "Qual ‚ o padr„o da sua impressora gr fica ?   " ;
+		  color "W+/BG,W+/N,N,W+/BG" ;
+		  get P_PAD picture "9" valid ( P_PAD > 0 .AND. P_PAD < 3 ) ; 
+		  color "W+/BG,W+/N,N,W+/BG"
+@ 10,07 say "Com qual  tipo  de  caracter  comprimido  ?   " ;
+		  color "W+/BG,W+/N,N,W+/BG" ;
+		  get P_CAR picture "9" valid ( P_CAR > 0 .AND. P_CAR < 5 ) ; 
+		  color "W+/BG,W+/N,N,W+/BG"
+@ 15,07 say "Digite quantos espa‡os voce vai desejar  ?   " ;
+		  color "W+/BG,W+/N,N,W+/BG" ;
+		  get P_TAB picture "99" valid ( P_TAB < 17 ) ; 
+		  color "W+/BG,W+/N,N,W+/BG"
+@ 18,07 say "Digite os espa‡os entre as etiquetas     ?   " ;
+		  color "W+/BG,W+/N,N,W+/BG" ;
+		  get P_ESP picture "99" valid ( P_ESP < 12 ) ; 
+		  color "W+/BG,W+/N,N,W+/BG"
+read
+set cursor OFF
+if flock( 15, "GREDE" )
+	save to "PADRAO.PRO" all like  "P_*"
+	unlock in "GREDE"
+else
+	Mens_rerro( " Erro de espera na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+endif
+restscreen( 03,01,21,78,SC_DEF )
+setcolor( SC_COR )
+
+return
+
+*****************
+function Cb_atend 
+*****************
+
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³                                                                           ³
+*³ 	  				CODIGOS DE BARRAS PARA O ATENDIMENTO                       ³
+*³                                                                           ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Quadro( 03,02,05,47,"N/GR,N/GR,N,N/GR","N/N" )
+@ 04,03 say "ETIQUETAS DE CODIGO DE BARRAS DO ATENDIMENTO" color "W+/GR"
+@ 23,01 say "Aguarde a impress„o... " color "W+*/B"
+if .not. _file( "PADRAO.FIT" )
+
+	P_PAD = 1
+	P_TAB = 8
+	P_ESP = 6
+	P_CAR = 2
+
+else
+
+	restore from "PADRAO.FIT" additive
+
+endif
+AV_1_216	 = chr( 27 ) + "3" + chr( 01 )		&&  seta espacamento de   1/216 "
+AV_1_72	 = chr( 27 ) + "3" + chr( 03 )		&&  seta espacamento de   1/72  "
+AV_1_6	 = chr( 27 ) + "3" + chr( 36 )		&&	 seta espacamento de   1/6   "
+ENT_NEGR  = chr( 27 ) + "E"						&&  ativa negrito
+SAI_NEGR	 = chr( 27 ) + "F"						&&  desativa negrito
+Liga_impressora()
+? space( 20 ) + ENT_NEGR + "---------- TORUS  INFORMATICA ----------"
+?
+? space( 20 ) +            "----------    ATENDIMENTO     ----------"
+?
+?
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³		  				                                                            ³
+*³     IMPRIMIR - I  LIMPA - L   ESTORNO - E                                  ³
+*³                                                                            ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+MTBAR    = Cb_39( "I" , P_PAD )
+MTTAM    = len(   MTBAR )
+MTK2     = _int(  MTTAM / 256 )		
+MTK1     = MTTAM - 256  * MTK2 
+MT1BAR   = Cb_39( "L" , P_PAD )
+MT1TAM   = len(   MT1BAR )
+MT1K2    = _int(  MT1TAM / 256 )		
+MT1K1    = MT1TAM - 256  * MT1K2 
+MT2BAR   = Cb_39( "E" , P_PAD )
+MT2TAM   = len(   MT1BAR )
+MT2K2    = _int(  MT1TAM / 256 )		
+MT2K1    = MT1TAM - 256  * MT1K2 
+for LB01 = 01 to 02
+
+	? SPACE(20) + AV_1_216 + chr( 27 ) + "L" + chr( MTK1 ) + chr( MTK2 ) + replicate( chr( 192 ), MTTAM )
+	?? space( 10 ) + chr( 27 ) + "L" + chr( MT1K1 ) + chr( MT1K2 ) + replicate( chr( 192 ), MT1TAM )
+	?? space( 10 ) + chr( 27 ) + "L" + chr( MT2K1 ) + chr( MT2K2 ) + replicate( chr( 192 ), MT2TAM )
+
+next
+*---------------------------------------- && corpo  do codigo de barras -------
+for LB03 = 1 to 18
+
+	? SPACE(20) + chr( 27 ) + "L" + chr( MTK1 ) + chr( MTK2 ) + MTBAR
+	?? space( 10 ) + chr( 27 ) + "L" + chr( MT1K1 ) + chr( MT1K2 ) + MT1BAR
+	?? space( 10 ) + chr( 27 ) + "L" + chr( MT2K1 ) + chr( MT2K2 ) + MT2BAR
+	?? iif( _int( LB03/2 ) = LB03/2, AV_1_216, AV_1_72 )
+
+next
+*------------------------------------------------------------------------------
+*---------------------------------------- && barra de protecao inferior -------
+?? AV_1_216
+for LB06 = 01 to 02
+
+	? SPACE(20) + chr( 27 ) + "L" + chr( MTK1 ) + chr( MTK2 ) +;
+  	  replicate( chr( 003 ), MTTAM )
+	?? space( 10 ) +;
+  	  chr( 27 ) + "L" + chr( MT1K1 ) + chr( MT1K2 ) +;
+  	  replicate( chr( 003 ), MT1TAM )
+	?? space( 10 ) +;
+  	  chr( 27 ) + "L" + chr( MT2K1 ) + chr( MT2K2 ) +;
+  	  replicate( chr( 003 ), MT2TAM )
+
+next
+*------------------------------------------------------------------------------
+*---------------------------------------- && linha codigo do cliente ----------
+?  AV_1_6 
+?  SPACE(20) + "IMPRIME         LIMPA            ESTORNO"
+?
+?
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³		  				                                                            ³
+*³         SIM - S e  NAO - N                                                 ³
+*³                                                                            ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+MTBAR    = Cb_39( "S" , P_PAD )
+MTTAM    = len(   MTBAR )
+MTK2     = _int(  MTTAM / 256 )		
+MTK1     = MTTAM - 256  * MTK2 
+MT1BAR   = Cb_39( "N" , P_PAD )
+MT1TAM   = len(   MT1BAR )
+MT1K2    = _int(  MT1TAM / 256 )		
+MT1K1    = MT1TAM - 256  * MT1K2 
+for LB01 = 01 to 02
+
+	? SPACE(20) + AV_1_216 + chr( 27 ) + "L" + chr( MTK1 ) + chr( MTK2 ) + replicate( chr( 192 ), MTTAM )
+	?? space( 10 ) + chr( 27 ) + "L" + chr( MT1K1 ) + chr( MT1K2 ) + replicate( chr( 192 ), MT1TAM )
+
+next
+*---------------------------------------- && corpo  do codigo de barras -------
+for LB03 = 1 to 18
+
+	? SPACE(20) + chr( 27 ) + "L" + chr( MTK1 ) + chr( MTK2 ) + MTBAR
+	?? space( 10 ) + chr( 27 ) + "L" + chr( MT1K1 ) + chr( MT1K2 ) + MT1BAR
+	?? iif( _int( LB03/2 ) = LB03/2, AV_1_216, AV_1_72 )
+
+next
+*------------------------------------------------------------------------------
+*---------------------------------------- && barra de protecao inferior -------
+?? AV_1_216
+for LB06 = 01 to 02
+
+	? SPACE(20) + chr( 27 ) + "L" + chr( MTK1 ) + chr( MTK2 ) +;
+  	  replicate( chr( 003 ), MTTAM )
+	?? space( 10 ) +;
+  	  chr( 27 ) + "L" + chr( MT1K1 ) + chr( MT1K2 ) +;
+  	  replicate( chr( 003 ), MT1TAM )
+
+next
+*------------------------------------------------------------------------------
+*---------------------------------------- && linha codigo do cliente ----------
+?  AV_1_6 
+?  SPACE(20) + "SIM             NAO"
+?  SAI_NEGR
+? 
+eject
+Desliga_impressora()
+@ 23,01 say space( 78 ) color "W/B"
+
+return
+
+**************
+function Cb_25
+**************
+
+parameters CODIGO, PADRAO
+private T, B0, B1, E0, E1
+*---------------------------------------------------------------------------
+T = "00110100010100111000001011010001100000111001001010"	&& tabela de padrao
+*---------------------------------------------------------------------------
+if P_PAD = 2 										&& padrao monica    -> 150 dpi
+
+	B0 = chr( 255 )								&&	 barra  fina
+	B1 = replicate( chr( 255 ), 4 )			&&  barra  grossa
+	E0 = replicate( chr( 000 ), 4 )			&&  espaco fino
+	E1 = replicate( chr( 000 ), 6 ) 			&&  espaco grosso
+
+else													&& padrao epson     -> 120 dpi
+
+	B0 = chr( 255 )								&&	 barra  fina
+	B1 = replicate( chr( 255 ), 3 )			&&  barra  grossa
+	E0 = replicate( chr( 000 ), 3 )			&&  espaco fino
+	E1 = replicate( chr( 000 ), 5 )			&&  espaco grosso
+
+endif
+COD_BAR  = B0 + E0 + B0 + E0					&&  coloca o inicio em barras
+for X1 = 1 to len( CODIGO ) step 2	   	&&  loop da parte interna
+
+	for X2 = 1 to 5
+
+		N1		  =	val( mid( T, ( val( mid( CODIGO, X1  , 1) ) * 5 ) + X2, 1 ) )
+		N2		  =	val( mid( T, ( val( mid( CODIGO, X1+1, 1) ) * 5 ) + X2, 1 ) )
+		COD_BAR = 	COD_BAR + fieldcont( "B" + str( N1, 1, 0, "0" ) ) + ;
+									 fieldcont( "E" + str( N2, 1, 0, "0" ) )
+
+	next
+
+next													&&  fim do loop
+COD_BAR	= COD_BAR + B1 + E0 + B0			&&	 coloca o final  em barras
+
+return COD_BAR
+*------------------------------------------------------------------------------
+
+**************
+function Cb_39 
+**************
+
+parameters CODENV, PADRAO
+private    CODBAR, B0, B1, E0, E1, X_POS
+CODENV    = upper( alltrim( CODENV ) )
+if PADRAO = 2 										&& padrao monica    -> 150 dpi
+
+	B0 = chr( 255 )								&&	 barra  fina
+	B1 = replicate( chr( 255 ), 4 )			&&  barra  grossa
+	E0 = replicate( chr( 000 ), 4 )			&&  espaco fino
+	E1 = replicate( chr( 000 ), 6 )			&&  espaco grosso
+
+else													&& padrao epson     -> 120 dpi
+
+	B0 = chr( 255 )								&&	 barra  fina
+	B1 = replicate( chr( 255 ), 3 )			&&  barra  grossa
+	E0 = replicate( chr( 000 ), 3 )			&&  espaco fino
+	E1 = replicate( chr( 000 ), 5 )			&&  espaco grosso
+
+endif
+M3942  = "010010100"   && "*"
+M3949  = "100100001"   && "1"
+M3950  = "001100001"   && "2"
+M3951  = "101100000"   && "3"
+M3952  = "000110001"   && "4"
+M3953  = "100110000"   && "5"
+M3954  = "001110000"   && "6"
+M3955  = "000100101"   && "7"
+M3956  = "100100100"   && "8"
+M3957  = "001100100"   && "9"
+M3948  = "000110100"   && "0"
+M3965  = "100001001"   && "A"
+M3966  = "001001001"   && "B"
+M3967  = "101001000"   && "C"
+M3968  = "000011001"   && "D"
+M3969  = "100011000"   && "E"
+M3970  = "001011000"   && "F"
+M3971  = "000001101"   && "G"
+M3972  = "100001100"   && "H"
+M3973  = "001001100"   && "I"
+M3974  = "000011100"   && "J"
+M3975  = "100000011"   && "K"
+M3976  = "001000011"   && "L"
+M3977  = "101000010"   && "M"
+M3978  = "000010011"   && "N"
+M3979  = "100010010"   && "O"
+M3980  = "001010010"   && "P"
+M3981  = "000000111"   && "Q"
+M3982  = "100000110"   && "R"
+M3983  = "001000110"   && "S"
+M3984  = "000010110"   && "T"
+M3985  = "110000001"   && "U"
+M3986  = "011000001"   && "V"
+M3987  = "111000000"   && "W"
+M3988  = "010010001"   && "X"
+M3989  = "110010000"   && "Y"
+M3990  = "011010000"   && "Z"
+M3945  = "010000101"   && "-"
+M3946  = "110000100"   && "."
+M3932  = "011000100"   && " "
+M3936  = "010101000"   && "$"
+M3947  = "010100010"   && "/"
+M3943  = "010001010"   && "+"
+M3937  = "000101010"   && "%"
+CODBAR = B0 + E1 + B0 + E0 + B1 + E0 + B1 + E0 + B0 + E0
+for X_POS = 1 to len( CODENV )
+
+	TENTAR = fieldcont( "M39" + str( asc( mid( CODENV, X_POS, 1 ) ), 2, 0 ) ) 
+	for X_SOP = 1 to 9
+
+		CODBAR = CODBAR + fieldcont( iif( _int( X_SOP/2 ) # X_SOP/2, ;
+		         "B" + mid( TENTAR, X_SOP, 1 ),                      ;
+					"E" + mid( TENTAR, X_SOP, 1 ) ) )
+
+	next
+	CODBAR = CODBAR + E0
+
+next												       && fim do loop
+CODBAR   = CODBAR + B0 + E1 + B0 + E0 + B1 + E0 + B1 + E0 + B0
+
+return CODBAR
+
+************************
+function Liga_impressora 
+************************
+
+set printer to IMP_REL
+set device  to PRINTER
+set console    OFF 
+set print      ON
+
+return
+
+***************************
+function Desliga_impressora 
+***************************
+
+set printer to 
+set device  to SCREEN
+set print      OFF
+set console    ON 
+
+return

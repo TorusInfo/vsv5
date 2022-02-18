@@ -1,0 +1,9 @@
+CLIENTES       /32/18/20
+TITULOS        /27/27/20
+FITAS          /14/14/20
+MOVIMEN        /08/08/20
+CAIXA          /07/07/20
+RESERVA        /09/03/20
+CLIENTES       /32/18/20
+FTO            /04/04/20
+FCLI           /05/04/20

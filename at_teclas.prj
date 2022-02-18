@@ -1,0 +1,35 @@
+*********************
+function A_teclas 
+*********************
+
+set key  9 to make_tpo()        && Tab   UTILIZA TABELA PADRAO
+SET KEY 302 TO CALC_TOR()
+set key  27 to sai_enter()      	&& ESC   ABANDONA PROGRAMA
+set key  28 to ajuda()    	      && F1    HELP
+set key  -2 to pesq_enter()     	&& F3    PESQUISA
+set key  -3 to recua_enter()    	&& F4    RECUA FICHA
+set key  -4 to avanca_enter()   	&& F5    AVANCA FICHA
+set key  -7 to limpa_enter()    	&& F8    LIMPA TELA
+set key  -8 to delete_enter()   	&& F9    APAGA FICHA
+set key  -9 to grava_enter()    	&& F10   GRAVA
+
+RETURN
+*
+
+*
+FUNCTION D_TECLAS
+
+
+set key  9 to
+SET KEY 302 TO 
+set key  27 to 
+set key  28 to 
+set key  -2 to 
+set key  -3 to 
+set key  -4 to 
+set key  -7 to 
+set key  -8 to 
+set key  -9 to 
+
+
+RETURN

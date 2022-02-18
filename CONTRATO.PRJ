@@ -1,0 +1,226 @@
+*****************
+procedure Contrat
+*****************
+
+private C_AREA, ORD_CLI, SC_CUR
+C_AREA = _select()
+select "CLIENTES"
+ORD_CLI = indexord()
+set order to 3
+SC_CUR = _set( "CURSOR" ) == "ON"
+CODIGO = space( 06 )
+set color to "W+/B,W+/N,N,W+/B"
+@ 23,01 say space( 78 ) color "W/B"
+@ 23,01 say "Digite o c¢digo do cliente : ";
+ 		  get CODIGO picture "999999" color "W+/B,W+/N,N,W+/B"
+set cursor ON
+read
+set cursor SC_CUR
+seek CODIGO
+if found()
+
+	copy fields to memory
+	Imprime_contrato()
+
+else
+
+	@ 23,01 say space(78) color "W/B"
+	@ 23,01 say " Cliente n„o encontrado" color "W+/B"
+	_bell()
+	@ 23,01 say space( 78 ) color "W/B"
+	set order to ORD_CLI
+	select C_AREA
+
+	return
+
+endif
+@ 23,01 say space(78) color "W/B"
+set order to ORD_CLI
+select C_AREA
+
+return
+
+*************************
+function Imprime_contrato   
+*************************
+
+private D_AREA
+D_AREA = _select()
+if _file( "CONTRATO.FMC" )
+
+	select 3
+	use "CONTRATO.FMC"
+	count to NUM_REG
+	private  NUMERO[NUM_REG], TROCA[NUM_REG], MASCARA[NUM_REG], FORMULA[NUM_REG]
+	go 1
+	for A = 1 to NUM_REG
+
+		go A
+		NUMERO [ A ] = CONTRATO->NUMERO
+		TROCA  [ A ] = alltrim( CONTRATO->TROCA )
+		MASCARA[ A ] = CONTRATO->MASCARA
+	   FORMULA[ A ] = CONTRATO->FORMULA
+
+	next
+	close 
+
+else
+
+	@ 23,01 say space(78) color "W/B"
+	@ 23,01 SAY " Arquivo n„o encontrado" color "W+/B"
+	_bell()
+	inkey( 0 )
+	@ 23,01 say space( 78 ) color "W/B"
+	select D_AREA
+
+	return
+
+endif	
+select 3
+use "CONTRATO.RPC"
+go 1
+
+restore from "SYSFILE.MEM" additive
+Abrir_Imp( NOM_TERM )
+
+set printer to IMP_REL
+NUM_REG = reccount()
+if IMP_LEFT > 2
+
+   MARG_LEFT = 2
+
+else
+
+	MARG_LEFT = IMP_LEFT
+
+endif
+
+for L1 = 1 TO 2
+
+	for l2 = 1 to NUM_REG
+
+		go L2
+		MINHA_LINHA = CONTRATO->LINHA
+		NUM_LIN = _at( "þ", MINHA_LINHA )
+		lprint space( MARG_LEFT ) nolinefeed
+		if NUM_LIN # 0
+
+			do while .T.
+
+				XX = ascan( NUMERO, mid( MINHA_LINHA, NUM_LIN + 1, 2 ) )
+				if XX # 0
+
+					SS = transform( Acert_var( FORMULA[XX]), alltrim( MASCARA[XX] ))
+					MINHA_LINHA = stuff( MINHA_LINHA, NUM_LIN, 3, SS )
+					NUM_LIN = _at( "þ", MINHA_LINHA )
+					if NUM_LIN # 0
+
+						loop
+
+					else
+
+						exit
+
+					endif
+
+				endif
+
+			enddo
+
+		endif
+		MINHA_LINHA = trim( MINHA_LINHA )
+		lprint MINHA_LINHA
+
+	next
+	eject
+
+next
+
+set printer to
+select D_AREA
+
+return
+
+******************
+function Acert_var 
+******************
+
+parameters FF
+if len( alltrim( FF ) ) = 0
+
+	SS1 = alltrim( fieldcont( TROCA[XX],"M" ) )
+
+elseif FF = "DMA "
+
+	SS1 = _date()	
+
+elseif FF = "DIAS"
+
+	SS1 = transform( str( day( _date() ), 2 ), "##" )
+
+elseif FF = "DIAN"
+
+	SS1 = day( _date() )
+
+elseif FF = "MESS"
+
+	SS1 = upper( cmonth( _date() ) )
+
+elseif FF = "MESN"
+
+	SS1 = month( _date() )
+
+elseif FF = "ANON"
+
+	SS1 = year( _date() )
+
+elseif FF = "ANOS"
+
+	SS1 = str( year( _date() ), 2 )
+
+elseif FF = "ANOC"
+
+	set century ON
+	SS1 = year( _date() )
+	set century OFF
+
+elseif FF = "ANO4"
+
+	set century ON
+	SS1 = str( year( _date() ), 4 )
+	set century OFF
+
+elseif FF = "REPL"
+
+	NN  = len( alltrim( fieldcont( TROCA[XX],"M" ) ) )
+	SS1 = replicate( "-", NN )
+
+elseif FF = "EXPA"
+
+	SS1 = chr( 14 ) +  alltrim( TROCA[XX] )
+
+elseif FF = "COMP"
+
+	SS1 = chr( 15 ) +  alltrim( TROCA[XX] )
+
+elseif FF = "DESC"
+
+	SS1 = chr( 18 ) +  alltrim( TROCA[xx] )
+
+elseif FF = "NORM"
+
+	SS1 = chr( 20 ) +  alltrim( TROCA[XX] )
+
+elseif FF = "LINE"
+
+	SS1 = chr( 13 )
+
+else
+
+	SS1 = " "
+
+endif
+
+return SS1
+*
+

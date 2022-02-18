@@ -1,0 +1,89 @@
+*
+PROCEDURE CUSTOS
+*
+SELECT 1
+USE "CATEGOR.TPO"
+if flock( 15 )
+
+	SET DELETED ON
+	COUNT TO num_reg
+	num_lin = IIF(num_reg > 10 , 18 , num_reg + 7)
+	sc_preco = SAVESCREEN(03,01,21,78)
+	cor_ant 	= SETCOLOR()
+	SET COLOR TO "W/B"
+	SCROLL(03,01,21,78,0)
+	private CAMPOS[ 6 ], CABEC[ 6 ], MASCAR[ 6 ], EDICAO[ 6 ]
+	CAMPOS[1]	= "CATEGOR->DADOS"
+	CAMPOS[2]	= "CATEGOR->PRECO_1"
+	CAMPOS[3]	= "CATEGOR->PRECO_2"
+	CAMPOS[4]	= "CATEGOR->PRECO_3"
+	CAMPOS[5]	= "CATEGOR->PRECO_4"
+	CAMPOS[6]   = "CATEGOR->NUM_VC"
+	CABEC[1]		= "CATEGORIA"
+	CABEC[2]		= "SIMPLES"
+	CABEC[3]		= "DUPLO"
+	CABEC[4]		= "TRIPLO"
+	CABEC[5]		= "QUADRUPLO"
+	CABEC[6]    = "V.C."
+   MASCAR[1]   = "@!"
+   MASCAR[2]   = "@RE 99,999.99"
+   MASCAR[3]   = "@RE 99,999.99"
+   MASCAR[4]   = "@RE 99,999.99" 
+   MASCAR[5]   = "@RE 99,999.99"
+   MASCAR[6]   = "@RE 99"
+	EDICAO[1]	= .F.
+	EDICAO[2]	= .T.
+	EDICAO[3]	= .T.
+	EDICAO[4]	= .T. 
+	EDICAO[5]	= .T.
+	EDICAO[6]	= .T.
+	SET COLOR TO "N/N"
+	SCROLL(06,10,num_lin+1,70,0)
+	SETCOLOR(cor_ant)
+	@ 23,01 SAY SPACE(78) COLOR "W/B"
+	@ 23,01	SAY	"Tab - Shift Tab - "+CHR(24)+" - "+CHR(25)+;
+						" - Para se posicionar  -  "+;
+						"<ENTER> - Confirmar altera‡„o" COLOR "W+/B"
+	set key 30 to Bloqueia()
+	set key  3 to Bloqueia()
+	set key 27 to Escapa()
+   set color to "W+/R,W+/N,,,W+/R"
+	keyboard 9
+	go 2
+	browse 	for 		recno()>1;
+			 	window 	5,09,NUM_LIN,68;
+	       	frame 	double;
+	       	color 	"W+/R,W+/N,,,W+/R";
+	       	fields 	CAMPOS;
+				picture  MASCAR;
+	       	heading 	CABEC;
+				edit		EDICAO;
+		      noappend;
+	       	nodelete
+	RESTSCREEN(03,01,21,78,sc_preco)
+	SET KEY 30 TO
+	SET KEY  3 TO
+
+else
+
+	Mens_rerro( " Arquivo em uso por outro terminal, tearefa n„o efetuada", 4, "W+*/B" )
+
+endif
+close "CATEGOR"
+select 50
+setcolor( COR_ANT )
+@ 23,01 say space(78) color "W/B"
+return
+
+*
+FUNCTION bloqueia
+*
+RETURN
+
+*
+FUNCTION escapa
+*
+
+SET KEY 27 TO
+KEYBOARD 13, 27
+return

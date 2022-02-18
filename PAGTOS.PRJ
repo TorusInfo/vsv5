@@ -1,0 +1,261 @@
+*
+PROCEDURE formpag
+*
+scpr  = SAVESCREEN(10,60,19,77)
+
+IF _file("ARQFPAG.MEM")
+	RESTORE FROM "ARQFPAG.MEM" ADDITIVE
+ELSE
+	form_pag = "D"
+*	desc_deb = "M"
+ENDIF
+
+IF form_pag = "A"
+	formpagto = 2
+ELSE 
+	formpagto = 1
+ENDIF
+
+quadro(10,60,18,75,"N/BG,W+/BG","N/N")
+
+@ 11,62 SAY "Pagamento na"
+@ 12,60 SAY "Ì"+REPLICATE("Í",14)+"¹"
+@ 14,62 PROMPT "Devolu‡„o"
+@ 16,62 PROMPT "Ambos"
+
+@ 23,01 SAY SPACE(78) COLOR "W/B"
+@ 23,01 SAY "<ENTER> - Confirma a op‡„o  -  "+CHR(24)+" "+CHR(25)+;
+				" Para se posicionar" COLOR "W+/B"
+
+  MENU TO formpagto
+
+IF LASTKEY() #27
+	IF formpagto = 2
+		form_pag = "A"
+	ELSE
+		form_pag = "D"
+	ENDIF
+ENDIF
+
+if flock( 15, "GREDE" )
+	SAVE TO "ARQFPAG.MEM" all like "FORM_PAG*"
+	unlock in "GREDE"
+else
+	Mens_rerro( " Erro de espera na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+endif
+RESTSCREEN(10,60,19,77,scpr)
+
+@ 23,01 SAY SPACE(78) COLOR "W/B"
+
+RETURN
+*
+
+*
+PROCEDURE descdeb
+*
+IF _file("DESCDEB.MEM")
+	RESTORE FROM "DESCDEB.MEM" ADDITIVE
+ELSE
+*	form_pag = "D"
+	desc_deb = "M"
+ENDIF
+
+IF desc_deb = "M"
+	descdebito = 1
+ELSE
+	descdebito = 2
+ENDIF
+
+scdesc=SAVESCREEN(13,10,20,33)
+
+quadro(13,10,19,31,'N/BG,W+/BG','N/N')
+
+@ 14,12 SAY 'Em casos de d‚bito'
+@ 15,12 SAY 'como devo proceder'
+@ 16,12 SAY 'com  os  descontos'
+@ 17,10 SAY 'Ì'+REPLICATE('Í',20)+'¹'
+@ 18,20 SAY 'ou'
+@ 18,12 PROMPT 'Manter'
+@ 18,24 PROMPT 'Perder'
+
+@ 23,01 SAY SPACE(78) COLOR "W/B"
+@ 23,01 SAY "<ENTER> - Confirma a op‡„o  -  "+CHR(26)+" "+CHR(27)+;
+				" Para se posicionar" COLOR "W+/B"
+
+MENU TO descdebito
+
+IF descdebito = 2
+	desc_deb = "P"
+ELSE
+	desc_deb = "M"
+ENDIF
+
+if flock( 15, "GREDE" )
+	SAVE TO "DESCDEB.MEM" all like "DESC_DEB*"
+	unlock in "GREDE"
+else
+	Mens_rerro( " Erro de espera na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+endif
+RESTSCREEN(13,10,20,33,scdesc)
+
+@ 23,01 SAY SPACE(78) COLOR "W/B"
+
+RETURN
+*
+
+*
+PROCEDURE eti_pal
+*
+S_PAL = savescreen( 03, 01, 21, 78 )
+S_CUR = _set( "CURSOR" ) == "ON"
+S_COR = setcolor()
+@ 03,01 clear to 21,78 color "W/B"
+@ 23,01 say space( 78 ) 	color "W/B"
+@ 23,01 say " Imprimir etiquetas com palavras escolhidas" color "W+/B"
+Quadro( 04, 42, 13, 75, "W+/R", "N+/N" )
+@ 05,44 say "Vocˆ pode digitar  um  nome de"
+@ 06,44 say "at‚ 14 letras, depois ter  que"
+@ 07,44 say	"digitar em  quantas  etiquetas"
+@ 08,44 say "dever  ser  repetido, e  se  a"
+@ 09,44 say	"impress„o  dever  ser feita em"
+@ 10,44 say	"etiquetas de 1 ou 2 colunas.  "
+@ 11,44 say	"N£mero  de  linhas  entre   os"
+@ 12,44 say	"quadros impressos.            "
+restore from "SYSFILE.MEM" additive
+Abrir_Imp( NOM_TERM )
+do while .T.
+
+	quadro(11,04,19,34,"N/BG,W+/N,N,W+/BG","N+/N")
+	T1 = space(14)
+   VV = 0
+	CC = "2"
+	LL = 2
+	@ 12,07 say "Palavra : " get T1 picture "@S14X"
+	@ 13,04 say "Ì"+REPLICATE("Í",29)+"¹" 
+	@ 14,07 say "N§ de etiquetas  : " get VV picture "999"
+	@ 15,04 say "Ì"+REPLICATE("Í",29)+"¹" 
+	@ 16,07 say "Em 1 ou 2 colunas:   " get CC picture "9" valid ( CC$"12" )
+	@ 17,04 say "Ì"+REPLICATE("Í",29)+"¹" 
+	@ 18,07 say "N£mero de linhas :  " get LL picture "99"
+	set cursor ON
+   read
+	set cursor OFF
+	if lastkey() = 27
+
+		exit
+
+	endif
+	T1  = alltrim( T1 )
+	do while lastkey() # 27
+
+		@ 23,01 say space( 78 ) color "W/B"
+		@ 23,02 prompt "Imprimir"            color "W+/B,W+*/B,N,W+/B"
+		@ 23,14 prompt "Teste de impress„o"  color "W+/B,W+*/B,N,W+/B"
+		_bell()
+		menu to TESTE_IMP
+		@ 23,01 say space( 78 ) color "W/B"
+		if TESTE_IMP = 1
+
+			if CC = "1"
+
+				Pal_pad_1( T1, VV )
+
+			else
+
+				Pal_pad_2( T1, VV )
+
+			endif
+
+		elseif TESTE_IMP = 2
+
+			Testa_imp()
+
+		endif
+		@ 23,01 say space( 78 ) 	color "W/B"
+		@ 23,01 say " Imprimir etiquetas com palavras escolhidas" color "W+/B"
+
+	enddo	
+
+enddo
+set cursor S_CUR
+setcolor(  S_COR )
+restscreen( 03, 01, 21, 78, S_PAL )
+@ 23,01 say space( 78 ) color "W/B"
+
+return
+
+*******************
+procedure Testa_imp 
+*******************
+
+if CC = "1"
+
+	Pal_pad_1( "TESTE DE IMPR.", 1 )
+
+else
+
+	Pal_pad_2( "TESTE DE IMPR.", 2 )
+
+endif
+
+return
+
+*
+PROCEDURE pal_pad_1
+*
+PARAMETERS t1,vv
+*
+SET PRINTER TO IMP_REL
+FOR a = 1 TO vv
+
+	lprint chr(14) + "+" + replicate( "-", len( T1 ) ) + "+"
+	lprint chr(14) + "|" + T1 + "|"
+	lprint chr(14) + "+" + replicate( "-", len( T1 ) ) + "+" nolinefeed
+	for L_PAL = 0 to LL
+
+		lprint
+	
+	next
+
+NEXT
+SET PRINTER TO
+@ 23,01 SAY SPACE(78) COLOR "W/B"
+
+RETURN
+*
+
+*
+PROCEDURE pal_pad_2
+*
+PARAMETERS t1,vv
+
+SET PRINTER TO IMP_REL
+FOR a = 1 TO _int(vv/2)
+
+	LPRINT	CHR(14)+"+"+REPLICATE("-",LEN(t1))+"+" NOLINEFEED
+	SETPRC(PROW(),19,.T.)
+	LPRINT	CHR(14)+"+"+REPLICATE("-",LEN(t1))+"+" 
+	LPRINT	CHR(14)+"|"+t1+"|" NOLINEFEED
+	SETPRC(PROW(),19,.T.)
+	LPRINT	CHR(14)+"|"+t1+"|"
+	LPRINT	CHR(14)+"+"+REPLICATE("-",LEN(t1))+"+" NOLINEFEED
+	SETPRC(PROW(),19,.T.)
+	LPRINT	CHR(14)+"+"+REPLICATE("-",LEN(t1))+"+" nolinefeed
+	for L_PAL = 0 to LL
+
+		lprint
+	
+	next
+
+NEXT
+IF vv/2 # _int(vv/2)
+
+	Pal_pad_1( T1, 1 )
+
+ENDIF		
+SET PRINTER TO
+
+RETURN
+*
+
+

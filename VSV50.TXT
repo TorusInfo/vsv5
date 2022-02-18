@@ -1,0 +1,5 @@
+Coisas a serem feitas no VSV5.0
+
+Extrato de fitas Geral
+Limpeza de extrato a partir de uma data
+Reserva de fitas

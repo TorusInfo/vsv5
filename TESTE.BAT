@@ -1,0 +1,5 @@
+COPY MUDVLVS.EXE \TRF
+cd\TRF
+MUDVLVS
+cd\desen50
+

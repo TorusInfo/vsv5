@@ -1,0 +1,276 @@
+*********************
+procedure Telapro_get
+*********************
+
+set cursor OFF
+if REGISTRO_PRODUTO # 99
+
+	GEN_PROD     = str( REGISTRO_PRODUTO - 1 , 2, 0, "0" )
+	GEN_PROD_NUM = REGISTRO_PRODUTO
+
+else
+
+	GEN_PROD      = "99"
+	GEN_PROD_NUM  = 99
+
+endif
+*select "TITULOS"
+if ENTER_ALTERACAO
+
+	if T_CODIGO < GEN_PROD + "0001"
+
+		T_CODIGO = GEN_PROD + "0000"
+	   set softseek ON
+		set order to 1
+		seek T_CODIGO
+		if .not. eof()
+
+		   copy fields to memory
+
+		endif
+
+	elseif t_codigo > GEN_PROD + "9999"
+
+		t_codigo = GEN_PROD + "9999"
+	   set softseek ON
+		set order to 1
+		seek T_CODIGO
+		if .not. bof()
+
+			skip -1
+			if .not. bof()
+
+			   copy fields to memory
+
+			endif
+
+		endif
+
+	endif
+	if T_CODIGO < GEN_PROD + "0001" .or. T_CODIGO > GEN_PROD + "9999"
+
+		Limpa_enter()
+
+	endif
+
+endif
+set key -5 to Inclui_prod()   && F6	INCLUI FITAS NO TITULO 
+if dtoc( M->T_DATA_ENT ) = " " 
+
+   T_DATA_ENT = _date()
+
+endif
+T_GENERO  = GEN_PROD_NUM
+T_CATEGOR = 2
+T_CLASSE  = 2
+
+@ 23,01 say "F3-Pesq F4-Ant F5-Pos F6-Ins. Produtos     "+;
+				"F8-Limpa F9-Del F10-Grava        " color "W+/B"
+@ 05,02 get T_CODIGO   picture "@R 99.999900"   valid !Pesq_enter( "X" )
+@ 04,38 get T_PORT     picture "@!"
+@ 08,46 say T_COPIAS   picture "@R #,###"	      color "W+/N"
+@ 10,43 say T_DATA_ENT picture "@E"             color "W+/N"
+@ 12,41 get T_CUSTO    picture "###,###.##"     color "W+/N"
+@ 12,65 get T_COMPRA   picture "###,###.##"     color "W+/N"
+@ 14,41 get T_EST_MIN  picture "@R###,#"     color "W+/N"
+@ 16,41 get T_EST_MAX  picture "@R###,#"     color "W+/N"
+
+set cursor on
+read
+set cursor off
+set key -5 to                  && F6	INCLUI FITAS NO TITULO 
+
+return
+
+**********************
+procedure Telapro_save 
+**********************
+
+if .not. ENTER_ALTERACAO
+
+	if REGISTRO_PRODUTO = 99
+
+		Mens_erro( " Tabela de GENERO n„o tem 'PRODUTOS'" )
+		ERRO_OCOR = .T.	
+
+		return
+
+	endif
+	BUSCA = GEN_PROD
+	select 2
+	use "TITDEL"
+	set index to "TITDEL.K1" key _left( TITULO, 2 )
+	seek BUSCA
+	if found() .and. _left( TITULO, 2 ) = BUSCA
+
+		T_CODIGO = TITDEL->TITULO
+		rlock( 15 )
+		delete
+		unlock	
+		close		
+		use "GENERO.TPO"
+		go T_GENERO
+		rlock( 15 )
+		replace GENERO->TITULOS with ( GENERO->TITULOS + 1 )
+		unlock
+
+	else
+
+		select 2
+		use "GENERO.TPO"
+		if M->T_GENERO < 2 .or. M->T_GENERO > lastrec()
+
+			Mens_erro( " Tabela de Genero com problema" )
+			close
+			select "TITULOS"
+			ERRO_OCOR = .T.	
+
+			return
+
+		endif
+		go M->T_GENERO
+		if ULT_NUM = 9999
+		
+			Mens_erro( " Faixa de c¢digo de Titulos esgotada" )
+			ERRO_OCOR = .T.
+			close
+			select "TITULOS"
+
+			return
+
+		endif
+		T_CODIGO = 	_right( "0"   + alltrim( str( recno() - 1 ) ), 2 ) + ;
+    					_right( "000" + alltrim( str( GENERO->ULT_NUM + 1 ) ), 4 ) 
+		rlock( 15 )
+		replace  GENERO->ULT_NUM with   GENERO->ULT_NUM + 1
+		replace  GENERO->TITULOS with ( GENERO->TITULOS + 1 )
+		unlock
+		close
+
+	endif
+	close
+	select "TITULOS"
+	MARCA = "*"
+
+else
+
+	if M->T_GENERO = TITULOS->T_GENERO
+	
+		T_CODIGO = TITULOS->T_CODIGO
+	
+	else
+	
+		*** ALTERA GENERO DO TITULO ***
+		ERRO_OCOR = .T.
+		Mens_erro( " Titulo n„o pode mudar de genero" )
+
+		return
+
+	endif
+	IF M->T_CLASSE # TITULOS->T_CLASSE .AND. M->T_COPIAS > 0
+
+		erro_ocor = .T.
+		mens_erro("TITULO C/ FITAS NAO PODE MUDAR DE CLASSE")
+
+		RETURN
+
+	ENDIF
+
+endif
+
+return
+
+**********************
+procedure Telapro_edit 
+**********************
+
+return
+
+************************
+procedure Telapro_delete 
+************************
+
+select 2 
+use "TITDEL"
+flock( 15 )
+set index to "TITDEL.K1" key _left( TITULO, 2 )
+append blank
+unlock
+rlock( 15 )
+replace TITDEL->TITULO with TITULOS->T_CODIGO
+unlock
+close "TITDEL"
+select 2
+use "TITDELCO"
+flock( 15 )
+set index to "TITDELCO.K1" key _left( TITULO, 6 )
+unlock
+seek TITULOS->T_CODIGO
+if found()
+
+	do while TITDELCO->TITULO = TITULOS->T_CODIGO .and. .not. eof()
+
+		rlock( 15 )
+		delete
+		unlock
+		skip
+
+	enddo
+
+endif
+close "TITDELCO"
+use "GENERO.TPO"
+go TITULOS->T_GENERO
+rlock( 15 )
+replace GENERO->TITULOS with ( GENERO->TITULOS - 1 )
+unlock
+close
+select "TITULOS"
+
+return
+
+********************
+function Inclui_prod   	&& inclui produtos no titulo ativo
+********************
+
+if .not. ENTER_ALTERACAO
+
+	return
+
+endif
+set key -5 to
+set key -9 to
+SC_INC      = savescreen( 18, 01, 21, 78 )
+N_COPIAS    = 0
+pcusto= 0.00
+pvenda=TITULOS->T_CUSTO
+DATA_COMPRA = _date()
+@ 19,04 say "Qt. comprada : "       color "W+/B"
+@ 19,27 get N_COPIAS picture "@R #,###" color "W+/B,W+/N,N,W+/B"
+@ 21,04 SAY "Preco de custo : "  color "W+/B"
+@ 21,25 get pcusto    picture "###,###.##" color "W+/B,W+/N,N,W+/B"
+@ 21,50 say "Valor de venda : "  color "W+/B"
+@ 21,67 get pvenda    picture "###,###.##" color "W+/B,W+/N,N,W+/B"
+read local
+if TITULOS->T_COPIAS + N_COPIAS > 9999
+
+	Mens_erro( " Quantidade deste produto n„o pode ser maior que 9.999" )
+	ERRO_OCOR = .T.
+
+else
+
+	T_COPIAS = TITULOS->T_COPIAS + N_COPIAS
+	rlock( 15 )
+	REPLACE TITULOS->T_COPIAS WITH M->T_COPIAS
+   replace TITULOS->T_COMPRA with pcusto
+   replace TITULOS->T_CUSTO with pvenda
+	unlock
+
+endif
+set key -5 to Inclui_prod()   && F6	INCLUI FITAS NO TITULO 
+set key -9 to grava_enter()
+restscreen( 18, 01, 21, 78, SC_INC )
+VAI_GET = gotoget()
+keyboard 21 , 21 , 3
+
+return

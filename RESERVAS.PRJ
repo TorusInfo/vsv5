@@ -1,0 +1,211 @@
+****************
+procedure reserv
+****************
+
+*savekey()
+SET KEY 289 TO LISTA()
+area = _select()
+ordind = indexord()
+private GUARDA_TELA, COR_ANTERIOR
+dia_ja = .t.
+GUARDA_TELA = savescreen( 00,00,24,79 )
+COR_ANTERIOR = setcolor()
+set color to "W+/BG,W+/N,N,W+/BG" 
+private codigo,nom_cli, tel_r_cli, tel_c_cli
+restore from "SYSFILE.MEM" additive
+do while .t.
+	codigo=space(6)
+	fita=space(10)
+	d_re=space(10)
+	nom_cli = space(31)
+	tel_r_cli = space(16)
+	tel_c_cli = space(16)
+	quadro(10,02,20,77, "W+/B,W+/N,N,W+/B" , "N+/N" )
+	@ 11,04 SAY "C¢digo do Cliente : "
+	@ 11,24 get codigo
+	read local
+	if lastkey()=27
+		exit
+	endif
+	IF len(alltrim(codigo)) # 6 
+		mens_rerro("C¢digo de Cliente inv lido...",1)
+		LOOP
+	ENDIF
+	select "CLIENTES"
+	set order to 3
+	SEEK CODIGO
+	IF .NOT. FOUND()
+		mens_rerro("Cliente n„o encontrado...",1)
+		LOOP
+	ENDIF
+	@ 11,40 SAY CLIENTES->NOME color "RG+/B"
+	nom_cli = CLIENTES->NOME
+	tel_r_cli = CLIENTES->TEL_RES
+	tel_c_cli = CLIENTES->TEL_COM
+	do while .t.
+		d_re=_date()+1
+		fita=space(10)
+		fita_pesq=space(10)
+		@ 13,04 say "C¢digo da Fita : "
+		@ 13,21 get fita 
+		read local
+		if lastkey()=27
+			exit
+		endif
+		select "FITAS"
+		if len(alltrim(fita))=4
+			SET ORDER TO 3
+		elseif len(alltrim(fita))=10
+			set order to 1
+		else
+			mens_rerro("C¢digo de fita inv lido ... use o c¢digo sequencial ou o de 10 d¡gitos",3)
+			loop
+		endif
+		SET RELATION TO FITAS->T_CODIGO INTO "TITULOS"
+		seek fita
+		if .not. found()
+			mens_rerro("Fita n„o encontrada...",2)
+			loop
+		endif
+		if mid(FITAS->CODFITA,9,1) # "1"
+			mens_rerro("T¡tulo m£ltiplo - Esta n„o ‚ a fita 1 deste t¡tulo, digite a fita n§ 1", 3)
+			loop
+		endif
+		fita_pesq = FITAS->CODFITA
+		@ 14,04 say titulos->T_ORIGINAL  color "RG+/B"
+		@ 15,04 SAY titulos->T_PORT  color "RG+/B"
+		dia_ja = .t.
+		do while dia_ja = .t.
+			@ 17,04 say "Data da reserva : "
+			@ 17,22 get d_re picture "@E"
+			read local
+			if lastkey()=27
+				@ 14,04 say space(50) color "W+/B"
+				@ 15,04 SAY space(50) color "W+/B"
+				@ 17,04 say space(50) color "W+/B"
+				exit
+			endif
+			if d_re < _date()
+				d_re = _date()+1
+				mens_rerro("Data inv lida...",1)
+				loop
+			endif
+			testa_res()
+		enddo
+	enddo
+enddo
+*inkey(0)
+restscreen( 00,00,24,79,GUARDA_TELA )
+SET RELATION TO
+select "CLIENTES"
+SET ORDER TO 1
+select "FITAS"
+SET ORDER TO 1
+select "TITULOS"
+SET ORDER TO 1
+select AREA
+set order to ordind 
+
+return
+
+******************
+function testa_res
+******************
+select "RESERVA"
+set order to 1
+SET RELATION COD_CLI INTO "CLIENTES" 
+SEEK fita_pesq
+if eof()
+	dia_ja=.f.
+endif
+DO WHILE .NOT. EOF()
+	IF RESERVA->CODFITA==fita_pesq
+		IF RESERVA->D_RESERVA=D_RE
+			mens_rerro("Fita reservada neste dia para "+RESERVA->COD_CLI+"-"+CLIENTES->NOME,4)
+			dia_ja=.t.
+			EXIT
+		else
+			dia_ja=.f.
+			exit
+		endif
+	else
+			dia_ja=.f.
+			exit
+	endif
+	SKIP
+ENDDO
+if dia_ja = .f.
+	reserva_fita()
+endif
+return
+
+*********************
+function reserva_fita
+*********************
+SET DELETED OFF
+SELECT "RESERVA"
+GO BOTTOM
+IF _deleted()
+	trava()
+	recall
+	dtrava()
+ELSE
+	APPEND BLANK
+ENDIF
+trava()
+replace RESERVA->CODFITA with fita_pesq
+replace RESERVA->COD_CLI with CODIGO
+replace RESERVA->D_RESERVA with D_RE
+replace RESERVA->T_CODIGO with FITAS->T_CODIGO
+replace RESERVA->SEQUENCIAL with FITAS->SEQUENCIAL
+replace RESERVA->NOME with nom_cli
+replace RESERVA->TEL_RES with tel_r_cli
+replace RESERVA->TEL_COM with tel_c_cli
+dtrava()
+SET DELETED ON
+SELECT "FITAS"
+ordfit = indexord()
+set order to 1
+SEEK fita_pesq
+if found()
+	if FITAS->CODFITA == fita_pesq
+		DO CASE
+			CASE FITAS->RESERVA # "S"
+				trava()
+				replace FITAS->D_RESERVA with D_RE
+				replace FITAS->CLI_RESERV with codigo
+				replace FITAS->RESERVA with "S"
+				dtrava()
+			CASE FITAS->D_RESERVA > D_RE
+				trava()
+				replace FITAS->D_RESERVA with D_RE
+				replace FITAS->CLI_RESERV with codigo
+				replace FITAS->RESERVA with "S"
+				dtrava()
+			CASE FITAS->D_RESERVA < _date()
+				trava()
+				replace FITAS->D_RESERVA with D_RE
+				replace FITAS->CLI_RESERV with codigo
+				replace FITAS->RESERVA with "S"
+				dtrava()
+		ENDCASE
+	endif
+endif
+set order to ordfit
+SELECT "RESERVA"
+mens_rerro( "Reserva efetuada ",3)
+@ 14,04 say space(50) color "W+/B"
+@ 15,04 SAY space(50) color "W+/B"
+@ 17,04 say space(50) color "W+/B"
+
+
+RETURN
+
+**************
+FUNCTION LISTA
+**************
+
+SELECT "RESERVA"
+BROWSE
+
+RETURN

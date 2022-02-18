@@ -1,0 +1,122 @@
+set deleted    ON
+set softseek   OFF
+set date      "DMY"
+set mark       to "/"
+set hours      to 24
+set point      to ","
+set separator  to "."
+set recbuffer  to 0
+set color to   "W+/B"
+clear
+@ 00,00 to 24,79 double
+scroll( 01, 01, 23, 78, 0 )
+@ 02,00 say "Ì" + replicate( "Í", 78 ) + "¹"
+@ 01,01 say "   VSV 3.0     º      M¢dulo de Convers„o de Cruzeiros reais para Real       "
+@ 00,16 say "Ë"
+@ 02,16 say "Ê"
+@ 22,00 say "Ì" + replicate( "Í", 78 ) + "¹"
+_bell()
+@ 04,10 say     "              A T E N € Ž O                   " color "W+*/B"
+_bell()
+@ 06,10 say     "Vocˆ j  fez a sua c¢pia de seguran‡a de hoje ?" color "W+/B"
+_bell()
+@ 08,10 say     "Se n„o fez, pressione a letra  N para terminar" color "W+/B"
+_bell()
+@ 10,10 say     "Fa‡a sua c¢pia de  seguran‡a e  depois execute" color "W+/B"
+_bell()
+@ 12,10 say     "este programa novamente."                       color "W+/B"
+_bell()
+@ 16,10 say     "NŽO FA€A a convers„o de d‚bitos ou de valores" color "W+/B"
+_bell()
+@ 18,10 say     "das fitas locadas mais de uma vez.  CUIDADO !" color "W+/B"
+mCont = "N"
+_bell()
+@ 23,02 say     "Vocˆ deseja continuar ? ( S/N ) ";
+        get      mCont ;
+        valid  ( mCont $ "SsNn" ) ;
+        picture "A" ;
+        color   "W+/B,W+*/B,N,W+/B"
+read
+if mCont $ "Nn"
+
+   set color to
+   close all
+   clear
+   quit
+
+endif
+@ 03,01 clear to 20,78
+mCli = "S"
+_bell()
+_bell()
+@ 23,01 say space( 78 ) color "W+/B"
+@ 23,02 say      "Vocˆ deseja converter os " + ;
+                 "D‚bitos de Clientes para o Real ? ( S/N ) ";
+        get       mCli ;
+        valid   ( mCli $ "SsNn" ) ;
+        picture  "A" ;
+        color    "W+/B,W+*/B,N,W+/B"
+read
+@ 03,01 clear to 20,78
+if mCli $ "Ss"
+
+   use "C:\VSV\CLIENTES"
+   @ 12,10 say "Aguarde... Acertando D‚bitos de Clientes" color "W+*/B"
+   replace all DEBITOS with iif( DEBITOS / 2750 < 0.01, 0, DEBITOS / 2750 )
+   close all
+
+endif   
+@ 03,01 clear to 20,78
+mFit = "S"
+_bell()
+_bell()
+@ 23,01 say space( 78 ) color "W+/B"
+@ 23,02 say      "Vocˆ deseja converter os " + ;
+                 "Valores das Fitas Locadas para o Real ? ( S/N ) ";
+        get       mFit ;
+        valid   ( mFit $ "SsNn" ) ;
+        picture  "A" ;
+        color    "W+/B,W+*/B,N,W+/B"
+read
+if mFit $ "Ss"
+
+   restore from "C:\VSV\VALIND.MEM" additive
+   use "C:\VSV\FITAS"
+   @ 12,10 say "Aguarde... Acertando Valor das Fitas Locadas" color "W+*/B"
+   replace all VALOR     with VALOR / 2750,; 
+               CUSTO     with CUSTO / 2750,;
+               RECEBIDO  with RECEBIDO  * IND_VALOR / 2750,;
+               VALOR_IND with VALOR_IND * IND_VALOR / 2750
+   close all            
+   restore from "VALIND.MEM"
+   IND_DATA  = ctod( "01/07/94" )
+   IND_VALOR = 1
+   save to "C:\VSV\VALIND.MEM" all like "IND_*"
+
+endif
+set color to
+Toca()
+clear
+@ 10,10 say "     N„o esque‡a de alterar     " color "W+*/N"
+@ 12,10 say "o valor de loca‡„o de suas fitas" color "W+*/N"
+@ 18,10 say " "
+close all
+quit
+
+*************
+function Toca
+*************
+
+for A = 1000 to 3500 step 500
+	tone( A, 4 )
+next
+for A = 3500 to 1000 step -500
+	tone( A, 4 )
+next
+for A = 2500 to 0 step -500
+	tone( A, 5 )
+next
+for A = 1500 to 0 step -500
+	tone( A, 5 )
+next
+return

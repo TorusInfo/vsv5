@@ -1,0 +1,92 @@
+*
+FUNCTION ativa_fun && FUNCAO DE SENHA E SEGURANCA
+*
+scsenha=SAVESCREEN(03,01,21,78)
+
+area_anterior = _select()
+IF area_anterior # 50
+   RETURN
+ENDIF
+
+mens_erro("")
+SET KEY -20 TO     && ^F1
+CLEAR TYPEAHEAD
+DO WHILE .T.
+   quadro(10,28,18,52,"N/BG,W+/N","N/N")
+   fCODFUNC = "  "
+   @ 11,30 SAY "ATIVA OPERADOR"
+   @ 13,30 SAY "Entre seu c¢digo" get M->FCODFUNC picture "99"
+     read
+   IF M->fCODFUNC = "  "
+      _store( "  ", "CODFUNC" )
+      _store( " ",  "FNOME"   )
+      _store( " ",  "ACESSO"  )
+      SET KEY -20 TO ativa_fun()  && ^f1
+		EXIT
+*      RETURN
+   ENDIF  
+   SELECT "FUNCION"
+   seek M->FCODFUNC
+   if .not. found() .or. M->FCODFUNC # alltrim( FUNCION->F_CODIGO )
+
+      Mens_erro(" Funcion rio n„o cadastrado")
+      loop
+
+   else
+
+      @ 15,30 say FUNCION->NOME
+      @ 17,30 say "Digite sua senha "
+      DECLARE SENHA[4]
+      teste_senha = .F.
+      tentativas=1
+      DO WHILE (.NOT. teste_senha) .AND. tentativas<4
+         POSCUR(17,47)
+	      FOR L1 = 1 TO 4 
+		       teste_senha = .F.
+   	       SENHA[L1]=CHR(INKEY(0))
+      	    ?? "*"
+	      NEXT
+   	   FOR L1 = 1 TO 4
+      	    IF SENHA[L1] # MID(FUNCION->SENHA,L1,1)
+         	    teste_senha = .F.
+			 	    EXIT
+	          ENDIF      
+   	       teste_senha = .T.
+	      NEXT
+	      IF teste_senha
+   	      _store( FUNCION->F_CODIGO, "FCODFUNC" )
+	         _store( FUNCION->NOME,     "FNOME"    )
+   	      _store( FUNCION->ACESSO,   "ACESSO"   )
+      	   mens_erro(" Seu c¢digo est  ativado"  )
+            FOR L1 = 1 TO 3
+   	         TONE(500,8)
+	            TONE(1000,6)
+      	      TONE(1500,4)
+            NEXT 
+*         	INKEY(1)
+            mens_erro("")
+		      EXIT
+   	   ELSE
+      	   _store( "  ", "FCODFUNC" )
+         	_store( " ",  "FNOME"    )
+	         _store( " ",  "ACESSO"   ) 
+            IF tentativas <3
+	    	      Mens_erro(" Senha inv lida  - Tente outra vez " )
+               @ 17,47 SAY "     "
+            ELSE 
+			      mens_erro(" Senha inv lida")
+            ENDIF
+      	ENDIF
+         tentativas = tentativas + 1
+      ENDDO
+      EXIT
+   ENDIF 
+ENDDO
+SET KEY -20 TO ativa_fun()  && ^f1
+SELECT area_anterior
+RESTSCREEN(03,01,21,78,scsenha)
+
+RETURN 
+*
+* FIM DA ROTINA DE SENHA E SEGURANCA
+

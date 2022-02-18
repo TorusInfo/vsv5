@@ -1,0 +1,1713 @@
+******************************************************************************
+*                                                                            *
+*                                 T. E.                                      *
+*                             TORUS  EDITOR                                  *
+*                                                                            *
+*      T o r u s Informatica Ltda                                            *
+*                                                                            *
+*                                                                            *
+*      MAIO / 91                                                             *
+*                                                                            *
+******************************************************************************
+
+parameter  M_ARQ                       && Arquivo a ser editado
+
+UP_LIN   = maxrow()                    && Obt‚m n§ da £ltima Linha  da Tela
+UP_COL   = maxcol()                    && Obt‚m n§ da £ltima Coluna da Tela
+if _file( "TE.ASC" )
+
+   restore from "TE.ASC" additive
+   
+endif   
+if _file( "TE.CFG" )                   && Se existe o arquivo de configurac„o
+
+   restore from "TE.CFG" additive      && Lˆ a configurac„o
+
+else
+
+   E_LIN    = 01                       && Posiciona na linha 1
+   E_TAB    = 03                       && Controla o tamanho da tabulacao
+   E_TLINHA = 80                       && Controla o tamanho da linha
+   E_MARGEM = 00                       && Controla a Margem esquerda impressao 
+  E_SUPER   =  1                      && Margem Superior
+   E_INFER  = 02                       && Margem Inferior
+   E_N_PAG  = "N"                      && Poe numero nas paginas
+   E_T_PAG  = 66                       && Numero de linhas por pagina
+   E_CABEC  = ""                       && Cabecalho
+   E_RODAP  = ""                       && Rodape
+
+endif
+set typeahead to 0 && 500              && Ajusta Tamanho do Buffer de Teclado
+clear typeahead                        && Limpa o Buffer de Teclado
+ST_COR_1 = setcolor()                  && Guarda a cor anterior
+ST_INT_1 = _set( "INTENSITY" )         && Guarda o estado da intensidade
+set color to                           && Coloca a cor para Preto e Branco
+set intensity OFF                      && Desliga o Set Intensity
+Ativa_teclas()                         && Ativa teclas de funcao
+Entrada()                              && Exibe Tela de Entrada
+if pcount() == 0                       && N„o recebeu o nome do arquivo
+
+   M_ARQ = space( 40 )
+   if .not. Pergunta( row() + 2, 0, "Nome do arquivo:", @M_ARQ, "@K" )
+                                     && Pede o nome do arquivo a editar
+      quit                           && encerra
+
+   endif
+  
+endif
+clear screen
+E_LIN     = 1
+E_COL     = 1                          && Coluna inicial
+E_LIN_JAN = 0                          && Linha da janela
+E_COL_JAN = 0                          && Coluna da janela
+EDITA     = "NEW"
+M_ARQ     = upper( rtrim( M_ARQ ) )
+GRAVEI    = .T.
+HANDLE    = _fopen( M_ARQ )
+if HANDLE > 0
+
+   if _fseek( HANDLE, 0, 2 ) + 1  > 65000  .or. ;
+	   len( M_ARQ ) > ( _MEMORY() - 20000 )
+
+      msg( "Arquivo Muito Extenso ! ", 4 )
+      _fclose( HANDLE )
+      quit
+
+   endif
+
+   _fclose( HANDLE )
+
+endif
+
+do while EDITA == "NEW"
+
+   ACENTO    = .T.                     && Controla Troca_Acento()
+   INSERE    = .T.                     && Controla o modo de insers„o
+   SCROLL    = .F.                     && Controla o Modo de scroll Lock
+   FLA_GRAVA = .F.                     && Controla Grava‡„o do Texto
+   FLA_EXIBE = .T.                     && Controla a Exibi‡„o de Trocas
+   EXT       = "TED"                   && Extens„o default
+   NOME      = M_ARQ                   && Nome do Arquivo em Edi‡„o
+   PESQ      = space( 70 )             && Vari vel para  pesquisa
+   ARQ       = ""                      && Vari vel para  Read/Write ARQ/BLOCO
+   POS_INI   = 00                      && Posi‡„o In¡cio do BLOCO
+   POS_FIM   = 00                      && Posi‡„o Final  do BLOCO
+   POSIC     = 00                      && Posi‡„o Atual  no TEXTO
+   PROC_BLK  = "N"                     && Processamento  de BLOCO
+   LIN_MEN   = ""                      && Salva a Linha  de Mensagem
+
+   **
+    * Separa o nome da extens„o
+   **
+
+   POSICAO = _at( ".", M_ARQ )
+   if POSICAO != 0
+
+      NOME = _left(  M_ARQ, POSICAO - 1 )
+      EXT  = _right( M_ARQ, len( M_ARQ ) - POSICAO )
+
+   endif
+
+   EXT_BKP = ".ANT"
+   M_ARQ   = NOME + iif( empty(EXT), "", "." ) + EXT
+   TEXTO   = memoread( M_ARQ )
+   MPATH   = rtrim( M_ARQ )
+
+   @ UP_LIN,0 say space( UP_COL - len( MPATH ) ) + MPATH
+
+   EDITA = "S"
+
+   do while EDITA == "S"
+
+      EDITA = "N"
+      edit memo         TEXTO;
+           to           TEXTO;
+           window       1, 0, UP_LIN-1, UP_COL;
+           frame        double;
+           color        "W/N, W/N, I, N/W";
+           linlength    E_TLINHA;
+           line         E_LIN;
+           tabsize      E_TAB;
+           column       E_COL;
+           linwind      E_LIN_JAN;
+           colwind      E_COL_JAN;
+           scrap        AREA_SCRAP;
+           function     Editor()
+
+   enddo
+
+enddo
+save to "TE.CFG" all like "E_*"        && Grava o estado do editor
+set color to  ST_COR_1
+set intensity ST_INT_1 == "ON"
+clear
+
+***************
+FUNCTION Editor
+***************
+
+parameters   ESTADO,;                  && Estado em que o editor se encontra
+             LIN_MEMO,;                && Coluna no texto
+             COL_MEMO,;                && Linha no texto
+             POS_MEMO                  && Posicao no Texto
+
+private TECLA                          && Ascii = 28 => ESC
+
+set cursor OFF
+if ESTADO == 3                         && O Edit Memo acaba de Come‡ar
+
+   readinsert( INSERE )
+
+   ACENTO = !ACENTO                    && For‡a preserva‡„o do ACENTO
+   Troca_Acento()                      && Ativa Acentua‡„o JOINER
+   Exibe_Troca()
+
+   keyboard 4, 19
+
+   return 0
+
+endif
+
+TECLA = lastkey()                      && Tecla pressionada
+
+if EDITA == "N"
+
+   E_LIN      = LIN_MEMO               && Linha do texto
+   E_COL      = COL_MEMO               && Coluna do texto
+   E_LIN_JAN  = row()-2                && Linha da janela
+   E_COL_JAN  = col()-1                && Coluna da janela
+
+endif
+
+**
+ * Mostra status Troca e LINHA, COLUNA e POSI€O atuais
+**
+
+Exibe_Troca()                          && Exibe STATUS de Edi‡„o
+@ 00,46  say  "Memoria = "
+@ 00,col() SAY _MEMORY()
+
+*                                       && Exibe Posicionamento no TEXTO
+*@ 00, 46 say "Lin " + transform( E_LIN, "9999" ) + space( 03 ) +;
+*             "Col " + transform( E_COL,  "999" ) + space( 03 ) +;
+*             "Pos " + transform( POS_MEMO, "9999999" )    
+*
+poscur( E_LIN_JAN+2, E_COL_JAN+1 )
+set cursor ON
+if (TECLA > 39 .and. TECLA < 91 )
+
+   return 0
+
+elseif (TECLA > 96 .and. TECLA < 123 )
+
+   return 0
+   
+elseif TECLA = 32
+
+   return 0 
+  
+elseif TECLA = 28                      && F1 - Chama help
+
+   poscur( E_LIN_JAN+2, E_COL_JAN+1 )
+   Help()
+   return 32
+
+elseif TECLA = 271                     && Alt-271 - Reacerto geral
+
+   return 37
+
+elseif TECLA = -4                      &&   F5 - Acertos de padroes
+
+   private TECLA_1, ULT_LINHA
+   ULT_LINHA = savescreen( 17,01,22,25 )
+   set cursor OFF
+   @ 17,01 clear to 22,25
+   @ 17,01 say "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»"
+   @ 18,01 say "º <L> Largura do texto º"
+   @ 19,01 say "º <P> Procura palavras º"
+   @ 20,01 say "º <T> Tabula‡„o        º"
+   @ 21,01 say "º <V> Vai p/ uma linha º"
+   @ 22,01 say "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼"
+   TECLA_1 = inkey( 0 )
+   restscreen( 17,01,22,25,ULT_LINHA )
+   set cursor ON
+   if TECLA_1 = asc( "L" ) .or. TECLA_1 = asc( "l" )    && Largura do texto
+
+      LARGURA = str( E_TLINHA,3 )
+      if .not. Pergunta( 00, 00, "Largura do texto :", @LARGURA, "@K 999" )
+
+         return 32
+
+      else
+      
+         E_TLINHA = _abs( val( LARGURA ) )
+         if E_TLINHA > 210
+
+            E_TLINHA = 210
+
+         elseif E_TLINHA <= 5
+
+            E_TLINHA = 5
+
+         endif   
+         return 36
+
+      endif
+
+   elseif TECLA_1 = asc( "V" ) .or. TECLA_1 = asc( "v" ) && Vai para a linha
+
+
+      VAI_LINHA = str( E_LIN,3 )
+      if .not. Pergunta( 00, 00, "Linha :", @VAI_LINHA, "@K 999999" )
+
+         return 32
+
+      else
+      
+          E_LIN = val( rtrim( transform( VAI_LINHA, "@T" ) ) )
+          if E_LIN > 0
+
+           E_COL     = 1
+           E_LIN_JAN = 2
+           E_COL_JAN = 0
+           EDITA     = "S"
+           keyboard 23
+
+          endif
+         FLA_EXIBE = .T.
+
+         return 27
+
+      endif
+
+   elseif TECLA_1 = asc( "T" ) .or. TECLA_1 = asc( "t" ) && Tamanho do TAB
+   
+      NOVO_TAB = str( E_TAB, 3 )
+      if .not. Pergunta( 00, 00, "Tabula‡„o :", @NOVO_TAB, "@K 999" )
+
+         return 32
+
+      else
+      
+         E_TAB = _abs( val( NOVO_TAB ) )
+         if E_TAB >= E_TLINHA
+
+            E_TAB = E_TLINHA - 1
+
+         endif      
+         keyboard 23, 271
+         EDITA     = "S"
+         FLA_EXIBE = .T.
+
+         return 27
+
+      endif
+
+   elseif TECLA_1 = asc( "P" ) .or. TECLA_1 = asc( "p" ) && Procura palavras
+
+      PESQ = space( 70 )
+      if Pergunta( 00, 00, "Procurar :", @PESQ )
+
+         keyboard 17 , "F"    +;             && Executa ^QF
+                  chr(25)     +;             && Apaga Buffer Interno
+                  rtrim(PESQ) +;             && Entra com a String 
+                  chr(13)                    && para pesquisa
+
+      endif
+
+   endif
+   return 32
+
+elseif TECLA = -5
+
+   Imprime_texto()
+
+   return 32
+
+*elseif TECLA = -2                        && F3 - Saida do editor
+elseif TECLA = -9                        && F10 - Saida do editor
+
+   private ULT_LINHA
+   if GRAVEI = .T.   
+
+*      keyboard save 23, -2
+      keyboard save 23, -9
+
+      GRAVEI = .F.
+
+      return 32
+
+   endif      
+
+   ULT_LINHA = savescreen( UP_LIN,00,UP_LIN,79 )
+   TESTA_GRAVA = Sai_editor()
+   GRAVEI = .T.
+   if TESTA_GRAVA # 36
+
+      restscreen( UP_LIN,00,UP_LIN,79,ULT_LINHA )
+
+   else
+
+      @ UP_LIN,0 say space( UP_COL - len( MPATH ) ) + MPATH
+
+   endif   
+
+   return TESTA_GRAVA                     && Rotina de saida
+
+elseif TECLA = 294                        && Alt-L Deleta ate o fim da linha
+
+   if !INSERE
+
+      readinsert( .T. )
+
+   endif
+   keyboard 13, 25, 25, 19, 19
+   if !INSERE
+
+      INSERE = .T.
+      keyboard save 22
+
+   endif
+
+   return 32
+
+elseif TECLA = 306                                 && Alt-M Deleta ate 
+                                                   && o inicio da linha
+   if !INSERE
+
+      readinsert( .T. )
+
+   endif
+   keyboard 13, 5, 5, 25
+   if !INSERE
+
+      INSERE = .T.
+      keyboard save 22
+
+   endif
+
+   return 32
+
+elseif TECLA = 293                                 && Alt-K Deleta a linha
+
+   keyboard 25, 24
+
+elseif TECLA = 22                                 && Ctrl-V ou Ins
+
+   INSERE = !INSERE
+   readinsert( INSERE )
+   Exibe_Troca()
+   if iscolor()
+
+      set cursor to  7, iif( INSERE, 06, 03 )       && Acerta tamanho do cursor
+
+   else
+
+      set cursor to 12, iif( INSERE, 06, 11 )      && Acerta tamanho do cursor
+
+   endif
+
+   return 32
+
+*elseif TECLA = -9                                 && F2 - troca acentuacao
+elseif TECLA = -2                                 && F3 - troca acentuacao
+
+   Troca_Acento()
+
+   return 32
+
+elseif TECLA = -6                                 && Marca inicio Bloco - F7
+
+      keyboard 11, "B"                            && Ctrl-K B
+
+      return 32
+
+elseif TECLA = -7                                 && Marca final Bloco - F8
+
+      keyboard 11, "K"                            && Ctrl-K K
+
+      return 32
+
+elseif TECLA = -3                                 && F4 - Trabalhar com blocos
+
+   private TECLA_1, ULT_LINHA
+   ULT_LINHA = savescreen( 13,01,22,25 )
+   set cursor OFF
+   @ 15,01 clear to 22,25
+   @ 15,01 say "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»"
+   @ 16,01 say "º <C> Copia   um bloco º"
+   @ 17,01 say "º <D> Deleta  um bloco º"
+   @ 18,01 say "º <M> Move    um bloco º"
+   @ 19,01 say "º <R> Desmarca o bloco º"
+   @ 20,01 say "º <S> Importa um bloco º"
+   @ 21,01 say "º <X> Exporta um bloco º"
+   @ 22,01 say "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼"
+   TECLA_1 = inkey( 0 )
+   restscreen( 13,01,22,25,ULT_LINHA )
+   set cursor ON
+   if     TECLA_1 = asc( "C" ) .or. TECLA_1 = asc( "c" ) && Copia o bloco
+
+      keyboard 11, "C", 23                               && Ctrl K C e Ctrl W
+                                                         && (gravar alteracao)
+   elseif TECLA_1 = asc( "M" ) .or. TECLA_1 = asc( "m" ) && Move o bloco
+                                 
+      keyboard 11, "V", 11, "B", 11, "K", 5, 23, 271     && Ctrl K V e Ctrl W
+                                                         && (gravar alteracao)
+   elseif TECLA_1 = asc( "D" ) .or. TECLA_1 = asc( "d" ) && Deleta o bloco
+
+      keyboard 11, "Y", 23, 271                          && Ctrl K Y e Ctrl W 
+                                                         && (gravar alteracao)
+   elseif TECLA_1 = asc( "R" ) .or. TECLA_1 = asc( "r" ) && Retira as marcas
+
+      keyboard 11, "B", 11, "K"                          && Ctrl K B e Ctrl K,K
+
+   elseif TECLA_1 = asc( "S" ) .or. TECLA_1 = asc( "s" ) && Importa bloco
+                                                         && da area de scrap
+      keyboard 11, "I", 23      && Ctrl-K, I, Ctrl-W
+
+   elseif TECLA_1 = asc( "X" ) .or. TECLA_1 = asc( "x" ) && Exporta bloco para
+                                                         && a area de scrap
+      keyboard 11, "S", 23, 11, "B", 11, "K"             && Ctrl K,S,Ctrl W
+                                                         && Ctrl K,B,Ctrl K,K
+   endif
+
+   return 32
+
+elseif TECLA = -8
+
+    @ 0,0 say "  "
+    save screen to TELA_SH              && Salva Tela Editor
+
+    clear screen
+    run gete("COMSPEC")
+
+    restore screen from TELA_SH         && Restaura Tela do Editor
+    poscur(E_LIN_JAN+2, E_COL_JAN+1)    && Restaura posi‡„o do Cursor
+
+endif
+
+return 0
+
+**********************
+function Imprime_texto  
+**********************
+
+private   NUM_LIN , L1, L2, L3, L4, TECLA_1, ULT_LINHA, QT_COPIAS,TECLA_PARA,;
+          ULT_MENS, PRIM_LIN, NUM_PAGINA, LINHA_ATUAL, SOMA_OUTROS
+ULT_LINHA = savescreen( 11,01,22,25 )
+set cursor OFF
+@ 11,01 clear to 22,25
+@ 11,01 say "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»"
+@ 12,01 say "º <B> Cabe‡alho        º"      && E_CABEC
+@ 13,01 say "º <C> Imprime N c¢pias º"
+@ 14,01 say "º <E> Ejeta uma p gina º"
+@ 15,01 say "º <I> Margem inferior  º"      && E_INFER
+@ 16,01 say "º <L> Linhas p/ p gina º"      && E_T_PAG
+@ 17,01 say "º <M> Margem esquerda  º"      && E_MARGEM
+@ 18,01 say "º <N> N§ nas p ginas   º"      && E_N_PAG   
+@ 19,01 say "º <P> Imprime 1 c¢pia  º"
+@ 20,01 say "º <R> Rodap‚           º"      && E_RODAP
+@ 21,01 say "º <S> Margem superior  º"      && E_SUPER
+@ 22,01 say "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼"
+TECLA_1 = inkey( 0 )
+restscreen( 11,01,22,25,ULT_LINHA )
+set cursor ON
+if TECLA_1 = asc( "M" ) .or. TECLA_1 = asc( "m" ) && Define margem esquerda
+
+   PRIM_LIN = savescreen( 00,00,00,79 )
+   @ 0,0
+   accept "Margem esquerda : " to E_MARGEM picture "999"
+   if E_MARGEM >= 80
+
+      E_MARGEM = 79
+
+   endif      
+   restscreen( 00,00,00,79,PRIM_LIN )
+   
+elseif TECLA_1 = asc( "P" ) .or. TECLA_1 = asc( "p" ) .or.; && Imprime 1 cop.
+       TECLA_1 = asc( "C" ) .or. TECLA_1 = asc( "c" )       && Imprime N cop.
+
+   if TECLA_1 = asc( "C" ) .or. TECLA_1 = asc( "c" )
+
+      QT_COPIAS = 0
+      @ 0,0
+      accept "Quantas c¢pias : " to QT_COPIAS picture "999"
+      if QT_COPIAS <= 1
+   
+         QT_COPIAS = 0
+   
+      endif      
+
+   else
+   
+      QT_COPIAS = 1
+      
+   endif      
+   SOMA_OUTROS = 00
+   SOMA_OUTROS = iif( empty( E_CABEC ), SOMA_OUTROS, SOMA_OUTROS + 2 )
+   SOMA_OUTROS = iif( empty( E_RODAP ), SOMA_OUTROS, SOMA_OUTROS + 2 )
+   SOMA_OUTROS = iif( E_N_PAG == "N"  , SOMA_OUTROS, SOMA_OUTROS + 2 )
+   NUM_LIN = mlcount( TEXTO, E_TLINHA, E_TAB )
+   LINHA_ATUAL = 1
+   set printer to "LPT1:"
+   for L1 = 1 to QT_COPIAS
+
+      NUM_PAGINA = 1
+      PRIM_LIN = savescreen( 24,00,24,79 )
+      Mensagem( "<End> para interromper  -  Aguarde,  imprimindo a c¢pia " + ;
+                 str( L1, 3 ) + " de " + str( QT_COPIAS, 3 ) )
+      poscur( 24,01 )
+      for L2 = 1 to _int( NUM_LIN/( E_T_PAG-E_SUPER-E_INFER-SOMA_OUTROS )) + 1
+
+         for L3 = 1 to E_SUPER
+      
+            if Testa_impressora()
+
+               lprint
+
+            else
+
+               L1 = QT_COPIAS
+               exit
+
+            endif      
+
+         next   
+
+         if !empty( E_CABEC )
+      
+            if Testa_impressora()
+
+               lprint space( E_MARGEM ) + E_CABEC
+               lprint
+
+            else
+
+               L1 = QT_COPIAS
+               exit
+
+            endif
+         
+         endif   
+
+         for L3 = 1 to E_T_PAG - E_SUPER - E_INFER - SOMA_OUTROS - 1
+
+            inkey()
+            if lastkey() = 6 .or. nextkey() = 6
+
+               L1 = QT_COPIAS
+               exit
+
+            endif   
+
+            if LINHA_ATUAL <= NUM_LIN
+
+               if Testa_impressora()
+
+                  lprint space( E_MARGEM ) + ;
+                  memoline( TEXTO, E_TLINHA, LINHA_ATUAL, E_TAB )
+                  LINHA_ATUAL += 1
+
+               else
+
+                  L1 = QT_COPIAS
+                  exit
+
+               endif               
+
+            else
+            
+               if Testa_impressora()
+
+                  lprint
+
+               else
+   
+                  L1 = QT_COPIAS
+                  exit
+   
+               endif
+
+            endif
+
+         next
+
+         if !empty( E_RODAP )
+
+            if Testa_impressora()
+
+               lprint
+               lprint space( E_MARGEM ) + E_RODAP
+         
+            else
+
+               L1 = QT_COPIAS
+               exit
+
+            endif
+         
+         endif   
+
+         if E_N_PAG = "S"
+
+            if Testa_impressora()
+
+               lprint
+               lprint space( E_MARGEM ) + ;
+                      space( _int( (E_TLINHA / 2) - 3 ) ) + ;
+                      str( NUM_PAGINA, 3 )
+               NUM_PAGINA = NUM_PAGINA + 1
+         
+            else
+
+               L1 = QT_COPIAS
+               exit
+
+            endif
+         
+               
+         endif
+
+         for L3 = 1 to E_INFER
+      
+            if Testa_impressora()
+
+               lprint
+
+            else
+   
+               L1 = QT_COPIAS
+               exit
+
+            endif
+
+         next   
+
+      next
+
+   next      
+   set printer to
+   restscreen( 24,00,24,79,PRIM_LIN )
+
+elseif TECLA_1 = asc( "B" ) .or. TECLA_1 = asc( "b" )  && Cabecalho
+
+   PRIM_LIN = savescreen( 00,00,01,79 )
+   @ 00,00 say "Digite a linha do cabe‡alho : "
+   @ 01,00
+   accept to E_CABEC 
+   restscreen( 00,00,01,79,PRIM_LIN )
+
+elseif TECLA_1 = asc( "E" ) .or. TECLA_1 = asc( "e" )  && Ejeta uma pagina
+
+   set printer to "LPT1:"
+   if Testa_impressora()
+
+      poscur( 24,01 )
+      lprint chr( 12 )
+
+   endif
+   set printer to
+
+elseif TECLA_1 = asc( "I" ) .or. TECLA_1 = asc( "i" )  && Margem Inferior
+
+   PRIM_LIN = savescreen( 00,00,00,79 )
+   @ 0,0
+   accept "Margem inferior : " to E_INFER picture "999"
+   if E_INFER >= E_T_PAG - E_SUPER
+
+      E_INFER = E_T_PAG - E_SUPER - 2
+
+   elseif E_INFER < 2
+   
+      E_INFER = 4
+   
+   endif      
+   restscreen( 00,00,00,79,PRIM_LIN )
+   
+elseif TECLA_1 = asc( "L" ) .or. TECLA_1 = asc( "l" )  && Linhas p/ pagina
+
+   PRIM_LIN = savescreen( 00,00,00,79 )
+   @ 00,00
+   accept "Linhas por p gina : " to E_T_PAG picture "999"
+   if E_T_PAG <=  E_SUPER + E_INFER + 1
+
+      E_T_PAG = E_INFER + E_SUPER + 1
+
+   endif      
+   restscreen( 00,00,00,79,PRIM_LIN )
+   
+elseif TECLA_1 = asc( "N" ) .or. TECLA_1 = asc( "n" )  && N. nas paginas
+
+   PRIM_LIN = savescreen( 00,00,00,79 )
+   @ 0,0
+   accept "Numerar as p ginas (S/N) ? : " to E_N_PAG picture "!"
+   if E_N_PAG # "S"
+
+      E_N_PAG = "N"
+
+   endif      
+   restscreen( 00,00,00,79,PRIM_LIN )
+   
+elseif TECLA_1 = asc( "R" ) .or. TECLA_1 = asc( "r" )  && Rodape
+
+   PRIM_LIN = savescreen( 00,00,01,79 )
+   @ 00,00 say "Digite a linha do rodap‚ : "
+   @ 01,00
+   accept to E_RODAP
+   restscreen( 00,00,01,79,PRIM_LIN )
+
+elseif TECLA_1 = asc( "S" ) .or. TECLA_1 = asc( "s" )  && Margem Superior
+
+   PRIM_LIN = savescreen( 00,00,00,79 )
+   @ 0,0
+   accept "Margem superior : " to E_SUPER picture "999"
+   if E_SUPER >= E_T_PAG - E_INFER
+
+      E_SUPER = E_T_PAG - E_INFER - 2
+
+   elseif E_SUPER < 1
+   
+      E_SUPER = 3
+
+   endif      
+   restscreen( 00,00,00,79,PRIM_LIN )
+   
+endif
+
+return
+
+*************************
+function Testa_Impressora     && Funcao para testar a impressora
+*************************
+
+private ULT_LINHA, OK
+
+ULT_LINHA = savescreen( 24,00,24,79 )
+if !isprinter()
+
+   clear typeahead
+   OK = .F.
+   _bell()
+   do while .T.
+
+      Mensagem( "Sua impressora n„o est  pronta ou est  com problemas" )
+      inkey()
+      if lastkey() = 27 
+
+         exit
+
+      elseif isprinter()
+      
+         OK = .T.
+         exit
+
+      else
+
+         loop
+         
+      endif
+      
+   enddo   
+
+else
+
+   OK = .T.
+
+endif
+restscreen( 24,00,24,79,ULT_LINHA )
+
+return OK
+
+*******************
+function Sai_editor               && Rotina para sair do editor 
+*******************
+
+private TECLA_1, ULT_LINHA
+ULT_LINHA = savescreen( 17,01,22,25 )
+set cursor OFF
+@ 17,01 clear to 22,25
+@ 17,01 say "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»"
+@ 18,01 say "º <E> Encerra e  salva º"
+@ 19,01 say "º <S> Salva e continua º"
+@ 20,01 say "º <Q> Encerra o editor º"
+@ 21,01 say "º <N> Edita novo texto º"
+@ 22,01 say "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼"
+TECLA_1 = inkey( 0 )
+restscreen( 17,01,22,25,ULT_LINHA )
+set cursor ON
+if TECLA_1 = asc( "E" ) .or. TECLA_1 = asc( "e" ) .or. ;
+   TECLA_1 = asc( "S" ) .or. TECLA_1 = asc( "s" )
+
+   && Grava o texto e sai do editor
+   private  ATRIBUTO
+   msg( "Aguarde, gravando o texto ...", -1 )
+   if _file( M_ARQ )
+   
+      ATRIBUTO = "=" + attrib( M_ARQ )
+      delete file NOME + EXT_BKP
+      rename M_ARQ to NOME + EXT_BKP
+
+   else
+
+      ATRIBUTO = ""
+
+   endif
+   memowrit( M_ARQ, TEXTO )
+   attrib( M_ARQ, ATRIBUTO )
+   restscreen( UP_LIN,0, UP_LIN, UP_COL-1, LIN_MEN )
+   FLA_GRAVA = .F.                   && Indica Texto Gravado
+   if TECLA_1 = asc( "E" ) .or. TECLA_1 = asc( "e" )
+
+      return 35         && Grava e Encerra o editor
+
+   else
+
+      return 32         && Grava e Continua no editor
+
+   endif
+
+elseif  TECLA_1 = asc( "Q" ) .or. TECLA_1 = asc( "q" )
+   
+   return 27            && Encerra o editor sem gravar
+
+elseif  TECLA_1 = asc( "N" ) .or. TECLA_1 = asc( "n" )
+
+   M_ARQ = space( 40 )                && Edita um novo texto
+   if .not. Pergunta( 00, 00, "Nome do arquivo:", @M_ARQ, "@K" )
+   
+      quit
+
+   else
+
+      E_COL     = 1                          && Coluna inicial
+      E_LIN_JAN = 0                          && Linha da janela
+      E_COL_JAN = 0                          && Coluna da janela
+      M_ARQ     = upper( rtrim( M_ARQ ) )
+      HANDLE    = _fopen( M_ARQ )
+      if HANDLE > 0
+			if  network()
+				mw=40000
+			else
+				mw=20000
+			endif
+   
+		   if _fseek( HANDLE, 0, 2 ) + 1  > 65000  .or. ;
+	   		len( M_ARQ ) > ( _MEMORY() - mw )
+      
+            msg( "Arquivo Muito Extenso ! ", 4 )
+            _fclose( HANDLE )
+            quit
+   
+         endif
+
+         _fclose( HANDLE )
+
+      endif
+      POSICAO = _at( ".", M_ARQ )
+      if POSICAO # 0
+   
+         NOME = _left(  M_ARQ, POSICAO - 1 )
+         EXT  = _right( M_ARQ, len( M_ARQ ) - POSICAO )
+   
+      endif
+      EXT_BKP = ".ANT"
+      M_ARQ   = NOME + iif( empty(EXT), "", "." ) + EXT
+      TEXTO   = memoread( M_ARQ )
+      MPATH   = rtrim( M_ARQ )
+      EDITA   = "S"
+      E_LIN   = 1
+      @ UP_LIN,0 say space( UP_COL - len( MPATH ) ) + MPATH
+      
+      return 36
+   
+   endif
+
+endif
+
+@ UP_LIN,01 say space( 50 )
+
+return 0
+
+**********************
+function  Exibe_Troca
+**********************
+
+if FLA_EXIBE
+   @ 00,00 say space(05)+;
+               iif( ACENTO, "Acentua‡„o", space(10) ) + space(03) +;
+               iif( INSERE, "Ins",        space(03) ) + space(03) +;
+               iif( SCROLL, "Scroll",     space(22) ) 
+endif
+
+**********************
+function Troca_Acento
+**********************
+
+ACENTO = !ACENTO                             && Efetua Troca de Acentua‡„o
+
+IF acento
+
+   set key  91 to CedilhaMinusculo()       && [ - c com cedilha
+   set key 123 to CedilhaMaiusculo()       && { - C com cedilha
+   set key  39 to AcentoAgudo()            && ' - acento Agudo
+   set key  94 to AcentoCircunflexo()      && ^ - acento Circunflexo
+   set key 124 to trema()                  && | - trema
+   set key  96 to AcentoGrave()            && ` - acento grave
+   set key 126 to Til()                    && ~ - til
+   set key  93 to Hifen()                  && ] - o=§ a=¦
+
+else
+
+   set key  91 to
+   set key 123 to
+   set key  39 to
+   set key  94 to
+   set key 124 to
+   set key  96 to
+   set key 126 to
+   set key  93 to
+
+endif
+
+Exibe_Troca()
+
+return
+
+*************************
+function CedilhaMinusculo
+*************************
+
+keyboard "‡"
+
+return
+
+*************************
+function CedilhaMaiusculo
+*************************
+
+keyboard "€"
+
+return
+
+********************
+function AcentoAgudo
+********************
+
+private LETRA
+
+LETRA = get_letra()
+
+if LETRA == "a"
+
+    keyboard " "
+
+elseif LETRA == "e"
+
+   keyboard "‚"
+
+elseif LETRA == "i"
+
+   keyboard "¡"
+
+elseif LETRA == "o"
+
+   keyboard "¢"
+
+elseif LETRA == "u"
+
+   keyboard "£"
+
+elseif LETRA == "A"
+
+   keyboard "†"
+
+elseif LETRA == "E"
+
+   keyboard ""
+
+elseif LETRA == "I"
+
+   keyboard "‹"
+
+elseif LETRA == "O"
+
+   keyboard "Ÿ"
+
+elseif LETRA == "U"
+
+   keyboard "–"
+
+else
+
+   _bell()
+*   keyboard -9, 39, LETRA, -9
+	 keyboard -2, 39, m_letra, -2
+
+endif
+
+return
+
+********************
+function AcentoGrave
+********************
+
+private LETRA
+
+LETRA = get_letra()
+if      LETRA == "a"
+
+    keyboard "…"
+
+elseif  LETRA == "e"
+
+    keyboard "Š"
+
+elseif  LETRA == "i"
+
+    keyboard " "
+
+elseif  LETRA == "o"
+
+    keyboard "•"
+
+elseif  LETRA == "u"
+
+    keyboard "—"
+
+elseif  LETRA == "A"
+
+    keyboard "‘"
+
+elseif  LETRA == "E"
+
+    keyboard "’"
+
+elseif  LETRA == "I"
+
+    keyboard "˜"
+
+elseif  LETRA == "O"
+
+    keyboard "©"
+
+elseif  LETRA == "U"
+
+    keyboard ""
+
+else
+
+    _bell()
+    keyboard -9, 96, LETRA, -9
+
+endif
+
+return
+
+**************************
+function AcentoCircunflexo
+**************************
+
+private LETRA
+
+LETRA = get_letra()
+if     LETRA == "a"
+
+    keyboard "ƒ"
+
+elseif LETRA == "e"
+
+    keyboard "ˆ"
+
+elseif LETRA == "o"
+
+    keyboard "“"
+
+elseif LETRA == "A"
+
+    keyboard ""
+
+elseif LETRA == "E"
+
+    keyboard "‰"
+
+elseif LETRA == "O"
+
+    keyboard "Œ"
+
+else
+
+    _bell()
+    keyboard -9, 94, LETRA, -9
+
+endif
+
+return
+
+************
+function Til
+************
+
+private LETRA
+
+LETRA = Get_Letra()
+
+if     LETRA == "a"
+
+   keyboard "„"
+
+elseif LETRA == "n"
+
+   keyboard "¤"
+
+elseif LETRA == "o"
+
+   keyboard "”"
+
+elseif LETRA == "A"
+
+   keyboard ""
+
+elseif LETRA == "N"
+
+   keyboard "¥"
+
+elseif LETRA == "O"
+
+   keyboard "™"
+
+else
+
+   _bell()
+   keyboard -9, 126, LETRA, -9
+
+endif
+
+return
+
+**************
+function Trema
+**************
+
+private LETRA
+
+LETRA = Get_Letra()
+
+if     LETRA == "u"
+
+   keyboard ""
+
+elseif LETRA == "U"
+
+   keyboard "š"
+
+else
+
+   _bell()
+   keyboard -9, 124, LETRA, -9
+
+endif
+
+return
+
+**************
+function Hifen
+**************
+
+private LETRA
+
+LETRA = Get_Letra()
+
+if LETRA $ "aA"
+
+   keyboard "¦"
+
+elseif LETRA $ "oO"
+
+   keyboard "§"
+
+elseif LETRA $ "pP"
+
+   keyboard chr( 232 )
+
+else
+
+   _bell()
+   keyboard -9, 93, LETRA, -9
+
+endif
+
+return
+
+******************
+function Get_Letra
+******************
+
+PRESSIONOU = inkey( 0 )
+
+return chr( _abs( PRESSIONOU ) )
+ 
+****************
+function Key_Off                  && Function Para Desativar uma Tecla
+****************
+
+return
+
+****************
+function Entrada
+****************
+
+private  MARGEM, TECLA
+
+set cursor OFF 
+clear screen
+
+@ 02,38 say "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»"
+@ 03,38 say "º                                 º"
+@ 04,38 say "º   ÛÛÛÛÛÛÛÛÛÛÛÛ   ÛÛÛÛÛÛÛÛÛÛÛÛ   º"
+@ 05,38 say "º   ßßßßÛÛÛÛßßßß   ÛÛÛÛßßßßßßßß   º"
+@ 06,38 say "º       ÛÛÛÛ       ÛÛÛÛ           º"
+@ 07,38 say "º       ÛÛÛÛ       ÛÛÛÛÛÛÛÛÛÛ     º"
+@ 08,38 say "º       ÛÛÛÛ       ÛÛÛÛßßßßßß     º"
+@ 09,38 say "º       ÛÛÛÛ       ÛÛÛÛ           º"
+@ 10,38 say "º       ÛÛÛÛ       ÛÛÛÛÛÛÛÛÛÛÛÛ   º"
+@ 11,38 say "º       ßßßß       ßßßßßßßßßßßß   º"
+@ 12,38 say "º                                 º"
+@ 13,38 say "ÌÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹"
+@ 14,38 say "º                                 º"
+@ 15,38 say "º    T O R U S     E D I T O R    º"
+@ 16,38 say "º                                 º"
+@ 17,38 say "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼"
+
+MARGEM = ( UP_COL+1-62 ) /2
+
+clear typeahead 
+@ 20,0 say "Pressione uma Tecla para Edi‡„o,"
+@ 21,0 say "ou F1 para Help ... "
+if inkey(0) = 28                      && F1
+   clear   screen                     && Limpa a tela antes de ir para help
+   Help()                             && Executa Help
+endif
+set cursor ON 
+
+return
+
+*****************
+function Pergunta                      && Posiciona o cursor e aguarda
+*****************                      && digita‡„o de um valor
+
+parameters LINHA,    ;
+           COLUNA,   ;                 && Coordenadas iniciais do cursor
+           MENSAGEM, ;                 && Mensagem a exibir
+           VARIAVEL, ;                 && Vari vel que receber  o valor
+           MASCARA
+
+savekey( 27 )                                         && Ativa ESC
+set key 27 to
+GUARDA_LINHA = savescreen( LINHA,00,LINHA,79 )        && Guarda a linha
+@ LINHA,00 say space( 80 )                              && Limpa a linha
+poscur( LINHA, COLUNA )                               && Posiciona o cursor
+if pcount() == 4
+
+    accept  MENSAGEM;                                 && Aguarda digita‡„o 
+    to      VARIAVEL                                    && do valor
+else
+
+    accept  MENSAGEM;                                 && Aguarda digita‡„o 
+    to      VARIAVEL;                                 && do valor
+    picture MASCARA
+
+endif
+
+restkey( 27 )                                         && Inibe ESC
+restscreen( LINHA,00,LINHA,79,GUARDA_LINHA )            && Devolve linha
+
+return .not. empty( VARIAVEL ) .and. lastkey() # 27    && Retorna validade 
+                                                      && do nome digitado
+
+***********
+function Sn
+***********
+
+parameter MENSAGEM
+
+Msg(MENSAGEM, 0)                      && Exibe Mensagem
+
+if upper( chr( _abs( lastkey() ) ) ) == "S"
+    return .T.
+endif
+
+return .F.
+
+************
+function Msg
+************
+
+parameter  MENSAGEM, TEMPO
+
+LIN_MEN = savescreen(UP_LIN,0, UP_LIN,UP_COL-1)   && Armazena Linha Mensagem
+
+@ UP_LIN,00 say space( 80 )
+@ UP_LIN,00 say MENSAGEM                 && Exibe Mensagem
+
+if TEMPO >= 0
+    inkey( TEMPO )                       && Aguarda TEMPO ou uma Tecla
+    restscreen( UP_LIN, 0, UP_LIN, UP_COL-1, LIN_MEN )
+endif                                    && Restaura Linha Mensagem
+
+
+*****************
+function Mensagem
+*****************
+
+parameter  MENSAGEM
+
+@ UP_LIN,00 say space( 80 )
+@ UP_LIN,00 say MENSAGEM                    && Exibe Mensagem
+
+*************
+function Help
+*************
+
+private TELA, LIN_CRS, COL_CRS
+
+* Salva a regi„o da Tela a ser utilizada pelo Help
+
+Desativa_teclas()                           && Desativa teclas de funcao
+TELA       = savescreen( 00, 00, UP_LIN, 79 )
+LIN_CRS    = row()                          && Salva Linha  do Cursor
+COL_CRS    = col()                          && Salva Coluna do Cursor
+set cursor OFF
+* Conte£do do Help
+
+@ 00,05 say "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»"
+@ 01,05 say "º                           Tela de Ajuda                           º"
+@ 02,05 say "ÇÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¶"
+@ 03,05 say "º     Movimentos do Cursor        ³     Manipula‡„o de blocos       º"
+@ 04,05 say "º Setas     - Mover-se um a um    ³ F7   - Marca inicio do bloco    º"
+@ 05,05 say "º Home      - Inicio da linha     ³ F8   - Marca final  do bloco    º"
+@ 06,05 say "º End       - Final da linha      ³ F4 C - Copia um bloco           º"
+@ 07,05 say "º Ctrl Home - Inicio da tela      ³ F4 D - Deleta um bloco          º"
+@ 08,05 say "º Ctrl End  - Final da tela       ³ F4 M - Move um bloco            º"
+@ 09,05 say "º Ctrl Seta - Move palavras       ³ F4 R - Remove marcas de bloco   º"
+@ 10,05 say "º PgUp      - P gina anterior     ³ F4 I - Importa um bloco         º"
+@ 11,05 say "º PgDn      - P gina seguinte     ³ F4 X - Exporta um bloco         º"
+@ 12,05 say "º Ctrl PgUp - Inicio do texto     ³ Alt K- Deleta uma linha         º"
+@ 13,05 say "º Ctrl PgDn - Final  do texto     ³ Alt L- Deleta at‚ final  linha  º"
+@ 14,05 say "º      Acentua‡„o                 ³ Alt M- Deleta at‚ inicio linha  º"
+@ 15,05 say "º [  - ‡ - Ce cedilha min£sculo   ³                                 º"
+@ 16,05 say "º {  - € - Ce cedilha mai£sculo   ³      Utilidades Gerais          º"
+@ 17,05 say "º '  - Acento agudo + letra       ³                                 º"
+@ 18,05 say "º `  - Acento grave + letra       ³ F5 L - Largura do texto         º"
+@ 19,05 say "º ~  - Til + letra                ³ F5 P - Procura uma palavra      º"
+@ 20,05 say "º ^  - Circunflexo + letra        ³ F5 T - Tabula‡„o ( tamanho )    º"
+@ 21,05 say "º |  - Trema + u ou U             ³ F5 V - Vai para uma linha       º"
+@ 22,05 say "ÇÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¶"
+@ 23,05 say "º Pressione uma tecla para continuar ou Esc para retornar           º"
+@ 24,05 say "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼"
+
+if inkey(0) != 27                                  && Continua Help
+
+@ 00,05 say "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»"
+@ 01,05 say "º                           Tela de Ajuda                           º"
+@ 02,05 say "ÇÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¶"
+@ 03,05 say "º      Comandos Isolados          ³      Comandos de Impress„o      º"
+@ 04,05 say "º                                 ³                                 º"
+@ 05,05 say "º F9 - Executa um Shell, saindo   ³ F6 B - Cabe‡alho                º"
+@ 06,05 say "º      para o sistema operacio-   ³ F6 C - Imprime n c¢pias         º"
+@ 07,05 say "º      nal, permitindo  que  se   ³ F6 E - Ejeta uma p gina         º"
+@ 08,05 say "º      possa  utilizar  alguns    ³ F6 I - Margem inferior          º"
+@ 09,05 say "º      comandos do DOS, para se   ³ F6 L - N§ de linhas por p gina  º"
+@ 10,05 say "º      retornar ao  texto  vocˆ   ³ F6 M - Margem esquerda          º"
+@ 11,05 say "º      deve digitar  a  palavra   ³ F6 N - Numerar as p ginas       º"
+@ 12,05 say "º      EXIT e teclar enter.       ³ F6 P - Imprime s¢ uma c¢pia     º"
+@ 13,05 say "º                                 ³ F6 R - Rodap‚                   º"
+@ 14,05 say "º F3 - Liga e desliga o m¢dulo    ³ F6 S - Margem superior          º"
+@ 15,05 say "º      de acentua‡„o do editor.   ³                                 º"
+@ 16,05 say "º                                 ³      Tabela de caracteres ASCII º"
+@ 17,05 say "º Ins- Liga e desliga o modo de   ³                                 º"
+@ 18,05 say "º      inserir  e  sobrescrever   ³ Ctrl-F10 - Ativa a  tabela  dos º"
+@ 19,05 say "º      do editor.                 ³ caracteres ASCII, com as  setas º"
+@ 20,05 say "º                                 ³ vocˆ se posiciona e com <ENTER> º"
+@ 21,05 say "º F2 - Descanso de tela           ³ inclui o caracter no seu texto. º"
+@ 22,05 say "ÇÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¶"
+@ 23,05 say "º Pressione qualquer tecla para retornar                            º"
+@ 24,05 say "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼"
+
+inkey(0)
+
+endif
+set cursor ON
+restscreen(0, 0, UP_LIN, 79, TELA)      && Restaura Tela Editor
+poscur(LIN_CRS, COL_CRS)                && Restaura Posi‡„o do Cursor
+Ativa_teclas()                          && Ativa teclas de funcao
+
+return
+
+*****************
+function Descanso 
+*****************
+
+private     COL_CURSOR   , LIN_CURSOR ,;
+            COR_ANTERIOR , DESCA_TELA ,;
+            DESC_LIN     , DESC_COL   ,;
+            TIPO_CURSOR
+
+Desativa_teclas()                            && Desativa teclas de funcao
+COL_CURSOR       = col()                         && coluna do cursor
+LIN_CURSOR       = row()                         && linha  do cursor
+TIPO_CURSOR      = _set( "CURSOR" ) == "ON"    && modo que esta o cursor
+COR_ANTERIOR     = setcolor()                    && cor anterior
+DESCA_TELA       = savescreen( 00,00,24,79 )     && guarda tela anterior
+
+clear typeahead
+clear screen color "W/N"
+set cursor OFF
+
+do while .T.
+   for DESC_LIN = 0 to 24
+       for DESC_COL = 0 to 79
+           @ DESC_LIN , DESC_COL say "*" color "W+/N"
+           if inkey() # 0
+              keyboard 13
+              exit
+           endif
+           @ DESC_LIN , DESC_COL say " "
+       next
+       if lastkey() = 13
+          keyboard 13
+          exit
+       endif
+   next
+   if lastkey() = 13
+      keyboard 13
+      exit
+  endif
+enddo
+
+clear typeahead                         && Limpa buffer de teclado
+setcolor( COR_ANTERIOR )                && Devolve a cor anterior
+restscreen( 0,0,24,79,DESCA_TELA )      && Devolve a tela anterior
+poscur( LIN_CURSOR , COL_CURSOR )       && Posiciona o cursor
+set cursor TIPO_CURSOR                  && Devolve cursor para o estado ant.
+Ativa_teclas()                          && Ativa teclas de funcao
+
+return
+
+**************
+function Ascii
+**************
+
+private I, HEX, MOD, CHAR, OPCAO, TELA, ST_INT
+
+if  _type( TAB_ASCII ) == "U"
+
+    msg("Aguarde. Configurando a Tabela Ascii ...", -1)
+
+    public TAB_ASCII[256]
+
+    for I = 0 to 255
+          HEX = _int(I/16)
+          MOD = I % 16
+          if HEX < 10
+             HEX=chr(HEX+48)
+          else
+             HEX=chr(HEX+55)
+          endif
+
+          if MOD < 10
+             MOD=chr(MOD+48)
+          else
+             MOD=chr(MOD+55)
+          endif
+
+          if I < 32
+             CHAR="  ^"+chr(I+64)
+          else
+             CHAR="   "+chr(I)
+          endif
+
+          TAB_ASCII[I+1] = str( I, 4, 0 ) + "  " + HEX + MOD + CHAR
+
+    next
+
+    save to "TE.ASC" all like "TAB_*"
+    restscreen(UP_LIN,0,UP_LIN,UP_COL-1, LIN_MEN)
+
+endif
+
+TELA = savescreen(1,1, 18,16)
+
+@ 1,1 to 18,16 DOUBLE
+@ 1,2 say "   D   H  Ch  "
+
+ST_INT = _set( "INTENSITY" )
+
+set intensity on
+
+Desativa_teclas()
+
+popup  window  2,2, 17,15;
+       to      OPCAO;
+       options TAB_ASCII;
+       hilite  TAB_ASCII, "W"
+
+if OPCAO > 32
+   keyboard OPCAO-1
+endif
+
+Ativa_teclas()
+
+set intensity ST_INT == "ON"
+restscreen(1,1, 18,16, TELA)
+
+return
+
+*********************
+function Ativa_teclas
+*********************
+
+set key   27 to Key_Off()                && Desativa ESC
+set key   -1 to Descanso()               && F2  - Descanso de tela
+set key  -29 to Ascii()                  && Ctrl F10 - Tabela ASCII
+
+return
+
+************************
+function Desativa_teclas
+************************
+
+set key   27 to                          && Desativa ESC
+set key   -1 to                          && F2  - Descanso de tela
+set key  -29 to                          && Ctrl F10 - Tabela ASCII
+
+return
+
+**********************                 && A fun‡„o CriticalError aqui declarada
+function CriticalError                 && evitar  a inclus„o da fun‡„o original
+**********************                 && da biblioteca do JOINER.
+
+parameters ERRO                        && C¢digo do erro ocorrido
+
+private AREA_VIDEO,;                   && rea de v¡deo a ser armazenada
+        QUAL_ACAO, ;                   && A‡„o a ser tomada (pelo usu rio)
+        MENSAGEM,  ;                   && Mensagem de erro
+        RETORNO                        && Valor de Retorno
+
+*
+* Obt‚m a mensagem correspondente ao erro.
+*
+
+if ERRO == 0
+
+   MENSAGEM = "Disco Protegido contra grava‡„o"
+
+elseif ERRO == 1
+
+   MENSAGEM = "Unidade Desconhecida"
+
+elseif ERRO == 2
+
+   MENSAGEM = "Drive n„o responde"
+
+elseif ERRO == 3
+
+   MENSAGEM = "Comando interno do DOS desconhecido"
+
+elseif ERRO == 4
+
+   MENSAGEM = "Erro de dados (CRC)"
+
+elseif ERRO == 5
+
+   MENSAGEM = "Tamanho da estrutura solicitada inv lido"
+
+elseif ERRO == 6
+
+   MENSAGEM = "Erro no acesso ao cilindro"
+
+elseif ERRO == 7
+
+   MENSAGEM = "Formato de Disco Desconhecido"
+
+elseif ERRO == 8
+
+   MENSAGEM = "Setor n„o encontrado"
+
+elseif ERRO == 9
+
+   MENSAGEM = "Impressora sem papel"
+
+elseif ERRO == 10
+
+   MENSAGEM = "Erro ao enviar dados para o dispositivo"
+
+elseif ERRO == 11
+
+   MENSAGEM = "Erro ao ler dados do dispositivo"
+
+elseif ERRO == 12
+
+   MENSAGEM = "Falha geral do Dispositivo"
+
+elseif ERRO == 15
+
+   MENSAGEM = "Troca de disco inv lida"
+
+elseif ERRO == 15
+
+   MENSAGEM = "Erro desconhecido. C¢digo " + str( ERRO, 3 )
+
+endif
+                                       && Salva  rea do v¡deo
+AREA_VIDEO = savescreen( 08, 18, 17, 63 )
+
+                                       && Monta a sombra
+at  9, 20, 17, 63 box replicate( chr( 219 ), 9 )
+
+explode(  8, 18, 16, 61, "D" )         && Monta a moldura
+
+at 12, 18 say chr( 199 ) + replicate( chr( 196 ), 42 ) + chr( 182 )
+
+                                       && Exibe mensagem de erro
+at  8, 29 say "Erro Cr¡tico Ocorrido !"
+
+at 12, 33 say "Selecione A‡„o"
+
+TAMANHO = len( MENSAGEM )              && Obt‚m o tamanho da Mensagem
+                                       && Exibe mensagem descritiva do erro
+at 10, _int( ( 80 - TAMANHO ) / 2 ) say MENSAGEM
+
+at 14, 20 prompt " Ignorar "
+at 14, 30 prompt " Repetir "
+at 14, 40 prompt " Encerrar "
+at 14, 52 prompt " Falhar "
+
+menu to QUAL_ACAO                      && Aguarda sele‡„o de uma op‡„o
+
+                                       && Restaura a  rea de v¡deo
+restscreen(  8, 18, 17, 63, AREA_VIDEO )
+
+*
+* Retornar  ao controle da aplica‡„o de acordo com a op‡„o escolhida
+*
+
+if QUAL_ACAO == 1 .or. QUAL_ACAO == 0  && Ignorou ou Abortou
+
+   RETORNO =  0
+
+elseif QUAL_ACAO == 2                  && Tenta novamente
+
+   RETORNO =  1
+
+elseif QUAL_ACAO == 3                  && Aborta e retorna ao DOS
+
+   RETORNO =  2
+
+else
+
+   RETORNO =  3                        && Assume o erro como Falha
+
+endif
+
+return RETORNO                         && Retorna a a‡„o a ser tomada.
+

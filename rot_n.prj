@@ -1,0 +1,806 @@
+&& FUNCAO PARA MANIPULACAO DE TABELAS
+&& PARA UTILIZACAO EM ENTRADA DE DADOS
+*****************
+function Make_tpo 
+*****************
+
+parameters RECEBE_TPO
+plz=row()
+pcz=col()
+estava=gotoget()
+
+
+
+if pcount() # 1
+
+	TPO = readvar()
+
+else
+
+	TPO = RECEBE_TPO
+
+endif
+poscur(plz,pcz)
+if TPO = "CT_CLASSE" .or. TPO = "CT_GENERO" .or. TPO = "CT_CATEGOR"
+
+   return Make_tpo1()
+
+endif
+set deleted ON
+ARQ_TPO = _right( TPO, len( TPO ) - 2 ) + ".TPO"
+if .not. _file( ARQ_TPO )
+
+	return .T.
+
+endif
+F_TPO = fieldcont( TPO, "M" )
+if len( alltrim( F_TPO ) ) # 0 .and. lastkey() # 9
+*   a_teclas()
+	TT = inkey(0)
+	if lastkey()=13 .or. lastkey()=24 .or. lastkey()=27 .or.;
+      lastkey()=5  .or. lastkey()=21 .or. lastkey()=-9
+
+      if TT=21
+*         @ 23,01 say "cheguei"
+*         inkey(2)
+         keyboard TT,-7
+      else
+
+*         @ 23,01 say "cheguei2" + " tt = "+ str(tt)
+*         inkey(2)
+         keyboard TT
+
+      endif
+		return (.T.)
+
+	endif
+
+endif
+d_teclas()
+*savekey()
+COR_ANT = setcolor()
+LIN1    = 06
+COL1    = 32
+set color to "W/R"
+AREA_ANTERIOR = _select()
+select 2
+use ARQ_TPO
+count to NUM_TPO
+NUM_TPO  = NUM_TPO - 1
+LARG_TPO = len( DADOS )
+COL2     = LARG_TPO + COL1
+LIN2     = iif( NUM_TPO > 12, 12 + LIN1 , NUM_TPO + LIN1 + 1 )
+declare  MAT_TPO   [ NUM_TPO ],;
+         MAT_TPO_L [ NUM_TPO ]
+L1 = 0
+go 2
+do while .not. eof()
+
+	if .not. _deleted()
+
+		L1 += 1
+   	MAT_TPO   [ L1 ] = DADOS
+	   MAT_TPO_L [ L1 ] = LETRA
+
+	endif
+   skip
+
+enddo
+SCT = savescreen( LIN1, COL1, LIN2 + 1, COL2 + 3 )
+&& Elemento do tpo a ser selecionado na entrada
+go 1
+if fieldcont( TPO, "M" ) # " "
+
+   X1 = ascan( MAT_TPO, fieldcont( TPO, "M" ) )
+   X1 = iif( X1 = 0, 1, X1 )
+
+elseif DADOS # " "
+
+   X1 = ascan( MAT_TPO, DADOS )
+   X1 = iif( X1 = 0, 1, X1 )
+
+else
+
+   X1 = 1
+
+endif     
+@ LIN2 + 1,COL1 + 2 fill to LIN2 + 1,COL2 + 3 color "N+/N"
+@ LIN1 + 1,COL2 + 2 fill to LIN2,    COL2 + 3 color "N+/N"
+do while .T.
+
+	popup window 	LIN1, COL1, LIN2, COL2 + 1;
+	      to 		X1;
+	      options 	MAT_TPO;
+	      hilite 	MAT_TPO_L, "GR+/R";
+	      position 1;
+   	   frame 	double;
+   	   color 	"W/R,N/W"
+	if X1 = 0 .and. fieldcont( TPO, "M" ) = " "
+
+	   loop
+
+	elseif X1 > 0
+
+   	&& deve estar no registro 1 da tpo
+		rlock( 15 )
+   	replace DADOS with MAT_TPO [ X1 ]
+		unlock
+   	_store( MAT_TPO [ X1 ], TPO )
+
+	endif
+ 	keyboard 13 
+  	exit
+
+enddo
+setcolor( COR_ANT )
+restscreen( LIN1, COL1, LIN2+1, COL2+3, SCT )
+CLOSE 
+SELECT area_anterior
+*restkey()
+a_teclas()
+*      if lastkey() = -9
+*         @ 23,01 say "cheguei"
+*         inkey(0)
+*         keyboard TT,-7
+*      endif
+return (.T.)
+&& Fim da funcao Make_tpo
+
+******************
+function Make_tpo1 
+******************
+
+parameters TPO
+plz=row()
+pcz=col()
+*if _file("postpo.mem")
+*   restore from "postpo.mem" additive
+*endif
+*@ plz,pcz say str(estava)+"cheguei"
+*inkey(0)
+set deleted  ON
+if pcount() = 0
+
+	TPO1 = readvar()
+	TPO  = mid( TPO1, 2 )
+
+else
+
+	TPO1 = "c" + TPO
+
+endif
+ARQ_TPO = _right( TPO, len( TPO ) - 2 ) + ".TPO"
+if .not. _file( ARQ_TPO )
+
+	return .T.
+
+endif
+*if _file("postpo.mem")
+*   restore from "postpo.mem" additive
+*endif
+poscur(plz,pcz)
+
+LIN1 = 06
+COL1 = 32
+AREA_ANTERIOR = _select()
+select 2
+use ARQ_TPO
+F_TPO = val( DADOS )
+if fieldcont( TPO, "M") > 1 .and. fieldcont( TPO, "M") <= lastrec()
+
+	go fieldcont( TPO, "M" )
+	_store( DADOS, TPO1 )
+
+else
+
+	_store( space( len( DADOS ) ), TPO1 )
+
+endif
+close 
+select AREA_ANTERIOR
+if pcount() # 0
+
+	return (.T.)
+
+endif
+if TPO="CT_CLASSE"
+   plz = 19
+   pcz = 40
+ELSEIF TPO="CT_GENERO"
+   plz = 19
+   pcz = 63
+ELSEIF TPO="CT_CATEGOR"
+   plz=21
+   pcz = 14
+ENDIF
+poscur(plz,pcz)
+estava=gotoget()
+
+
+if lastkey() # 9 .and. len( alltrim( fieldcont( TPO1 ) ) ) # 0
+
+	TT = inkey(0)
+	if lastkey()=13 .or. lastkey()=24 .or. lastkey()=27 .or.;
+      lastkey()=5  .or. lastkey()=21 .or. lastkey()=-9
+      if TT=21
+*         @ 23,01 say "cheguei"
+*         inkey(2)
+         keyboard TT,-7
+      else
+
+*         @ 23,01 say "cheguei2" + " tt = "+ str(tt)
+*         inkey(2)
+         keyboard TT
+
+      endif
+
+
+		keyboard TT
+		return (.T.)
+
+	endif
+
+endif
+*savekey()
+d_teclas()
+AREA_ANTERIOR = _select()
+select 2
+use ARQ_TPO
+COR_ANT  = setcolor()
+set color to "W/R"
+count to NUM_TPO
+NUM_TPO  = NUM_TPO - 1
+LARG_TPO = len( DADOS )
+COL2     = LARG_TPO + COL1
+LIN2     = iif( NUM_TPO > 12 , 12 + LIN1 , NUM_TPO + LIN1 + 1 )
+declare MAT_TPO   [ NUM_TPO ],;
+        MAT_TPO_L [ NUM_TPO ]
+L1 = 0
+go 2
+do while .not. eof()
+
+	if .not. _deleted()
+
+		L1 += 1
+   	MAT_TPO  [ L1 ] = DADOS
+	   MAT_TPO_L[ L1 ] = LETRA
+
+	endif
+   skip
+
+enddo
+SCT = savescreen( LIN1, COL1, LIN2 + 1, COL2 + 3 )
+&& Elemento do TPO a ser selecionado na entrada
+if fieldcont( TPO, "M" ) > 1 .and. fieldcont( TPO, "M" ) <= lastrec()
+
+	X1 = fieldcont( TPO, "M" ) - 1
+
+elseif F_TPO > 1 .and. F_TPO <= lastrec()
+
+	X1 = F_TPO-1
+
+else
+
+   X1 = 1
+
+endif     
+@ LIN2 + 1,COL1 + 2 fill to LIN2 + 1,COL2 + 3 color "N+/N"
+@ LIN1 + 1,COL2 + 2 fill to LIN2,    COL2 + 3 color "N+/N"
+do while .T.
+
+	popup window 	LIN1, COL1, LIN2, COL2 + 1;
+	      to 		X1;
+	      options 	MAT_TPO;
+	      hilite 	MAT_TPO_L, "GR+/R";
+	      position 1;
+   	   frame 	double;
+   	   color 	"W/R,N/W"
+      
+	if X1=0 .and. ( fieldcont( TPO, "M" ) <= 1 .or. ;
+	                fieldcont( TPO,"M") > lastrec() )
+
+	   loop
+
+	elseif X1 > 0
+
+   	&& deve estar no registro 1 da tpo
+		go 1
+		rlock( 15 )
+   	replace DADOS with alltrim( str( X1 + 1, 4 ) )
+		unlock
+   	_store( MAT_TPO[X1], TPO1 )
+		_store( X1 + 1, TPO )
+
+	endif
+	keyboard 13 
+  	exit
+
+enddo
+setcolor( COR_ANT )
+restscreen( LIN1, COL1, LIN2 + 1, COL2 + 3, SCT )
+close 
+select AREA_ANTERIOR
+*restkey()
+a_teclas()
+
+return (.T.)
+&& Fim da funcao Make_tpo1
+
+*zzzz
+***************
+function Quadro 
+***************
+
+parameters LI, CI, LF, CF, CORBOX, CORSOMBRA
+@ LI + 1,CI + 2 fill to LF + 1,CF + 2 color CORSOMBRA
+set color to CORBOX
+@ LI,CI clear to LF,CF color CORBOX
+@ LI,CI to LF,CF double
+
+return
+
+*****************
+function Userexit        && ROTINA DE SAIDA P/ O DOS
+*****************
+
+set color  to
+set cursor ON
+close all
+COMMIT
+if SAIDA_NORMAL = .F. 
+
+	clear typeahead
+	vartel = savescreen( 00, 00, 24, 79 )
+	nomtel = "E" + ;
+				 str( day( _date() ), 2, 0, "0" ) + ;
+				 mid( _time(), 1, 2 ) + ;
+				 mid( _time(), 4, 2 ) + ;
+				".ERR"
+	save to nomtel all like "VARTEL*"
+	inkey( 0 )
+	
+endif
+
+return
+
+**********************
+procedure Linha_boleto 
+**********************
+
+PARAMETERS QUAL_BOLETO      && RETIRADA OU DEVOLUCAO
+
+RESTORE FROM "sysfile" ADDITIVE
+Abrir_Imp( NOM_TERM )
+
+if QUAL_BOLETO = "R"
+	LINHAS = IMP_LINR
+	TIPO_BOLETO = "RETIRADA"
+else
+	LINHAS = IMP_LIND
+	TIPO_BOLETO = "DEVOLUCAO"
+endif
+sc_prom = SAVESCREEN(14,56,20,78)
+cor_ant = SETCOLOR()
+
+quadro(14,56,19,76,"N/BG,W+/N,N,N/BG","N/N")
+
+SET CURSOR ON
+
+@ 15,57 SAY "LINHAS APOS BOLETO"
+@ 16,57 SAY "DE "+TIPO_BOLETO
+@ 17,56 SAY "Ì"+REPLICATE("Í",19)+"¹"
+@ 18,58 SAY "N§ de linhas :" GET LINHAS PICTURE "##"
+  READ
+
+if QUAL_BOLETO = "R"
+	IMP_LINR = LINHAS
+else
+	IMP_LIND = LINHAS
+endif
+SET CURSOR OFF
+
+Grava_Imp( NOM_TERM )
+
+RESTSCREEN(14,56,20,78,sc_prom)
+SETCOLOR(cor_ant)
+RETURN
+
+*******************
+function Mens_rerro                     && MENSAGENS DE PROBLEMAS
+*******************
+
+parameters QUAL_ERRO, QUAL_TEMPO, QUAL_COR
+private    ULT_LINHA
+
+if _type( QUAL_ERRO ) == "C"
+
+	QUAL_COR  = iif( pcount() > 2 .and. _type( QUAL_COR ) == "C" ,;
+	                 QUAL_COR, "W+/B" )
+	ULT_LINHA = savescreen( 23, 01, 23, 78 )
+	@ 23,01 say space( 78 ) color QUAL_COR
+	@ 23,01 say QUAL_ERRO   color QUAL_COR
+	if len( QUAL_ERRO ) # 0
+
+		ERRO_OCOR = .T.
+
+	endif
+	if pcount() > 1 .and. _type( QUAL_TEMPO ) == "N"
+
+	   _bell()
+		clear typeahead
+		inkey( QUAL_TEMPO )
+		restscreen( 23, 01, 23, 78, ULT_LINHA )
+		return
+
+	endif
+	if pcount() > 1 .and. QUAL_TEMPO = " "
+	
+		tone( 2000, 25 )
+		tone( 1000, 25 )
+		tone( 2000, 25 )
+		restscreen( 23, 01, 23, 78, ULT_LINHA )
+		
+	endif	
+
+endif
+
+return
+
+*
+FUNCTION mens_erro                     && MENSAGENS DE PROBLEMAS
+*
+PARAMETERS qual_erro
+*
+@ 23,01 SAY SPACE(78) COLOR "W/B"
+
+@ 23,03 SAY qual_erro COLOR "W+*/B"
+
+IF LEN(qual_erro) # 0
+	erro_ocor = .T.
+   _bell()
+ENDIF
+
+RETURN
+
+**********************                 && A fun‡„o CriticalError aqui declarada
+function CriticalError noswap          && evitar  a inclus„o da fun‡„o original
+**********************                 && da biblioteca do JOINER.
+
+set device to SCREEN
+parameters ERRO                        && C¢digo do erro ocorrido
+private AREA_VIDEO,;                   && rea de v¡deo a ser armazenada
+        QUAL_ACAO, ;                   && A‡„o a ser tomada (pelo usu rio)
+        MENSAGEM,  ;                   && Mensagem de erro
+        RETORNO                        && Valor de Retorno
+*
+* Obt‚m a mensagem correspondente ao erro.
+*
+if ERRO == 0
+
+   MENSAGEM = "Disco Protegido contra grava‡„o"
+
+elseif ERRO == 1
+
+   MENSAGEM = "Unidade Desconhecida"
+
+elseif ERRO == 2
+
+   MENSAGEM = "Drive n„o responde"
+
+elseif ERRO == 3
+
+   MENSAGEM = "Comando interno do DOS desconhecido"
+
+elseif ERRO == 4
+
+   MENSAGEM = "Erro de dados (CRC)"
+
+elseif ERRO == 5
+
+   MENSAGEM = "Tamanho da estrutura solicitada inv lido"
+
+elseif ERRO == 6
+
+   MENSAGEM = "Erro no acesso ao cilindro"
+
+elseif ERRO == 7
+
+   MENSAGEM = "Formato de Disco Desconhecido"
+
+elseif ERRO == 8
+
+   MENSAGEM = "Setor n„o encontrado"
+
+elseif ERRO == 9
+
+   MENSAGEM = "Impressora sem papel"
+
+elseif ERRO == 10
+
+   MENSAGEM = "Erro ao enviar dados para o dispositivo"
+
+elseif ERRO == 11
+
+   MENSAGEM = "Erro ao ler dados do dispositivo"
+
+elseif ERRO == 12
+
+   MENSAGEM = "Falha geral do Dispositivo"
+
+elseif ERRO == 15
+
+   MENSAGEM = "Troca de disco inv lida"
+
+elseif ERRO == 15
+
+   MENSAGEM = "Erro desconhecido. C¢digo " + str( ERRO, 3 )
+
+endif
+                                       && Salva  rea do v¡deo
+AREA_VIDEO = savescreen( 08, 18, 17, 63 )
+                                       && Monta a sombra
+at  9, 20, 17, 63 box replicate( chr( 219 ), 9 )
+explode(  8, 18, 16, 61, "D" )         && Monta a moldura
+at 12, 18 say chr( 199 ) + replicate( chr( 196 ), 42 ) + chr( 182 )
+                                       && Exibe mensagem de erro
+at  8, 20 say "Falha do Equipamento/Sistema Operacional"
+at 12, 33 say "Selecione A‡„o"
+TAMANHO = len( MENSAGEM )              && Obt‚m o tamanho da Mensagem
+                                       && Exibe mensagem descritiva do erro
+at 10, _int( ( 80 - TAMANHO ) / 2 ) say MENSAGEM
+at 14, 20 prompt " Ignorar "
+at 14, 30 prompt " Repetir "
+at 14, 40 prompt " Encerrar "
+at 14, 52 prompt " Falhar "
+menu to QUAL_ACAO                      && Aguarda sele‡„o de uma op‡„o
+                                       && Restaura a  rea de v¡deo
+restscreen(  8, 18, 17, 63, AREA_VIDEO )
+*
+* Retornar  ao controle da aplica‡„o de acordo com a op‡„o escolhida
+*
+if QUAL_ACAO == 1 .or. QUAL_ACAO == 0  && Ignorou ou Abortou
+
+   RETORNO =  0
+
+elseif QUAL_ACAO == 2                  && Tenta novamente
+
+   RETORNO =  1
+
+elseif QUAL_ACAO == 3                  && Aborta e retorna ao DOS
+
+	close all
+	set cursor ON
+	set color  to
+   RETORNO =  2
+
+else
+
+   RETORNO =  3                        && Assume o erro como Falha
+
+endif
+
+return RETORNO                         && Retorna a a‡„o a ser tomada.
+
+******************
+function Descanso                         && DESCANSO DE TELA
+******************
+
+commit                                    && PASSA MEMORIA PARA WINCHESTER
+private      DESC_LIN,  DESC_COL,   X,          ;
+             LIN_CURSOR,COL_CURSOR, TIPO_CURSOR,;
+		       DESC_TELA, ANTES_COR
+DESC_TELA  = savescreen( 00, 00, 24, 79 ) && GUARDA TELA ANTERIOR
+COL_CURSOR = col()                        && COLUNA DO CURSOR
+LIN_CURSOR = row()                        && LINHA  DO CURSOR
+ANTES_COR  = setcolor()                   && COR ANTERIOR
+TIPO_CURS  = _set( "CURSOR" )  == "ON"    && MODO DO CURSOR
+set color to
+scroll( 00, 00, 24, 79, 0 )
+*X = _memory()
+*if _file( "LOG.EXE" ) .and. _file( "LOGOTIPO.PIC" ) .and. X > 45000
+
+*   run "LOG.EXE"
+
+*endif
+set cursor OFF
+clear typeahead
+do while nextkey() = 0
+
+   for DESC_LIN = 0 to 24
+
+       for DESC_COL = 0 to 79
+
+           @ DESC_LIN,DESC_COL say "*"
+
+           if inkey() # 0
+              keyboard 27
+				  DESC_LIN = 24
+              desc_col = 79
+              exit
+           endif
+           @ DESC_LIN,DESC_COL say " "
+			  if desc_lin = 24
+               @ 24,79 say " "
+               scroll( 00, 00, 24, 79, 0 )
+				endif
+       next
+
+   next
+
+enddo
+clear typeahead
+setcolor(  ANTES_COR )
+set cursor TIPO_CURS
+poscur( LIN_CURSOR, COL_CURSOR )
+restscreen( 00, 00, 24, 79, DESC_TELA )
+
+return
+
+****************
+procedure Acesso
+****************
+
+private SC_CUR, SC_CON, SC_TELA, NUM_REG
+NUM_REG = recno()
+SC_TELA = savescreen( 00, 00, 24, 79 )
+SC_CUR  = _set( "CURSOR"  ) == "ON"
+SC_CON  = _set( "CONFIRM" ) == "ON"
+ACESSO  = "0"
+FNOME   = " "
+set cursor  OFF
+set confirm ON
+Altmenu()
+restscreen( 00, 00, 24, 79, SC_TELA )
+set cursor  SC_CUR
+set confirm SC_CON
+
+return
+
+****************
+function Altmenu
+****************
+
+close "MENU"
+select 1
+use "MENU"
+if flock( 15 )
+
+	set precedence to FIELDS
+	declare CAMPOS[ 2 ], CABEC[ 2 ], EDICAO[ 2 ], MASCAR[ 2 ]
+	CAMPOS[ 1 ] = "DESCRICAO"
+	CAMPOS[ 2 ] = "SEGURANCA"
+	CABEC [ 1 ] = "DESCRI€O"
+	CABEC [ 2 ] = "SEGURAN€A"
+	EDICAO[ 1 ] = .F.
+	EDICAO[ 2 ] = .T.
+	MASCAR[ 1 ] = "@X"
+	MASCAR[ 2 ] = "#"
+	Mens_erro( " Faixa de seguran‡a de 0 a 9  -  M¡nimo = 0  M ximo = 9" )
+	Teclaedit()
+	@ 03,02 clear to 18,37 color "W/B"
+	@ 19,04 fill  to 19,39 color "N+/N"
+	@ 04,38 fill  to 18,39 color "N+/N"
+	keyboard 9
+	browse	window	03,02,18,37;
+				frame		double;
+				color		"W+/R,N/W,W+/R,W+/R";
+				fields	CAMPOS;
+				picture	MASCAR;
+				heading	CABEC ;
+				edit		EDICAO;
+				noappend       ;
+				nodelete
+	set precedence to VARIABLES
+	unlock
+
+else
+
+	Mens_erro( " Arquivo em uso por outro terminal, tarefa n„o executada", 4, "W+*/B" )
+
+endif
+close "MENU"
+select 50
+use   "MENU"
+go    NUM_REG  
+return
+
+******************
+function Teclaedit 
+******************
+
+Quadro(03,45,20,75,"N/BG,W+/N,N,GR+/BG","N+/N")
+@ 04,46 say chr(26)+"        -Caracter a direita "
+@ 05,46 say chr(27)+"        -Caracter a esquerda"
+@ 06,46 say chr(24)+"        -Linha de cima      "
+@ 07,46 say chr(25)+"        -Linha de baixo     "
+@ 08,46 say "Tab      -Coluna da direita  "
+@ 09,46 say "Shift Tab-Coluna da esquerda "
+@ 10,46 say "Home     -Inicio da coluna   "
+@ 11,46 say "End      -Final da coluna    "
+@ 12,46 say "Ctrl-Home-Primeira coluna    "
+@ 13,46 say "Ctrl-End -Ultima coluna      "
+@ 14,46 say "PgUp     -Linhas para cima   "
+@ 15,46 say "PgDn     -Linhas para baixo  "
+@ 16,46 say "Ctrl-PgUp-Primeira linha     "
+@ 17,46 say "Ctrl-PgDn-Ultima linha       "
+@ 18,46 say "Ctrl-N   -Abre uma nova linha"
+@ 19,46 SAY "Alt-D    -Deleta uma linha   "
+return
+
+***********************
+function Pede_fecha_mes 
+***********************
+
+private SS1
+SS1 = savescreen( 05, 05, 19, 52 )
+@ 05,05 say "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»" color "W+/R"
+@ 06,05 say "º               A T E N €  O                 º" color "W+/R"
+@ 07,05 say "ÌÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹" color "W+/R"
+@ 08,05 say "º                                             º" color "W+/R"
+@ 09,05 say "º  Hoje ‚ o  primeiro  dia  de um  novo mes.  º" color "W+/R"
+@ 10,05 say "º                                             º" color "W+/R"
+@ 11,05 say "º  Por favor queira fazer o seu relat¢rio de  º" color "W+/R"
+@ 12,05 say "º                                             º" color "W+/R"
+@ 13,05 say "º  Fechamento de  mes, todas as Estatisticas  º" color "W+/R"
+@ 14,05 say "º                                             º" color "W+/R"
+@ 15,05 say "º  que achar necess rio,  e  depois  fa‡a  o  º" color "W+/R"
+@ 16,05 say "º                                             º" color "W+/R"
+@ 17,05 say "º  Encerramento do mes.   Torus Inform tica.  º" color "W+/R"
+@ 18,05 say "º                                             º" color "W+/R"
+@ 19,05 say "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼" color "W+/R"
+tone( 1308, 10 )
+tone( 1468, 10 )
+tone( 1648, 10 )
+tone( 1746, 10 )
+clear typeahead
+inkey( 0 )
+restscreen( 05, 05, 19, 52, SS1 )
+
+return
+
+****************
+function Bloqreg noswap
+****************
+
+parameters VEZES
+
+return rlock( 15 )
+*
+
+
+*********************
+function A_teclas 
+*********************
+
+set key  9 to make_tpo()        && Tab   UTILIZA TABELA PADRAO
+SET KEY 302 TO CALC_TOR()
+set key  27 to sai_enter()      	&& ESC   ABANDONA PROGRAMA
+set key  28 to ajuda()    	      && F1    HELP
+set key  -2 to pesq_enter()     	&& F3    PESQUISA
+set key  -3 to recua_enter()    	&& F4    RECUA FICHA
+set key  -4 to avanca_enter()   	&& F5    AVANCA FICHA
+set key  -7 to limpa_enter()    	&& F8    LIMPA TELA
+set key  -8 to delete_enter()   	&& F9    APAGA FICHA
+set key  -9 to grava_enter()    	&& F10   GRAVA
+
+RETURN
+*
+
+*
+FUNCTION D_TECLAS
+
+
+set key  9 to
+SET KEY 302 TO 
+set key  27 to 
+set key  28 to 
+set key  -2 to 
+set key  -3 to 
+set key  -4 to 
+set key  -7 to 
+set key  -8 to 
+set key  -9 to 
+
+
+RETURN
+

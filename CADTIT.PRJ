@@ -1,0 +1,713 @@
+PROCEDURE TELATIT_GET
+
+SET CURSOR OFF
+SET KEY -6 TO mostra_fitas()   && F7   MOSTRA FITAS DO TITULO
+SET KEY -5 TO inclui_fitas()   && F6	INCLUI FITAS NO TITULO 
+SET KEY  9 TO make_tpo()       && Tab   UTILIZA TABELA PADRAO
+
+IF DTOC(M->T_DATA_ENT) = " " 
+   T_DATA_ENT = _date()
+ENDIF
+
+IF M->T_SINOPSE = " "
+	T_SINOPSE = "N"
+ENDIF
+
+IF M->T_DUBLADO = " "
+	T_DUBLADO = "N"
+ENDIF
+
+@ 23,01 SAY "F3-Pesq F4-Ant F5-Pos F6-Ins.fita F7-Fitas "+;
+				"F8-Limpa F9-Del F10-Grava Tab-Pad" COLOR "W+/B"
+
+@ 05,03 GET T_CODIGO   PICTURE "@R 99.9999" VALID !PESQ_ENTER("X")
+@ 03,38 GET T_PORT     PICTURE "@!"
+@ 05,38 GET T_ORIGINAL PICTURE "@!"
+@ 07,12 GET T_DIRETOR  PICTURE "@!"
+@ 07,50 GET T_QUEM     PICTURE "@!"               FUNCTION MAKE_TPO()
+@ 09,12 GET T_ATOR1    PICTURE "@!"
+@ 09,35 GET T_ATOR2    PICTURE "@!"
+@ 09,58 GET T_ATOR3    PICTURE "@!"
+@ 11,19 GET T_ANO_PROD PICTURE "99"
+@ 11,44 GET T_DURACAO  PICTURE "9999"
+@ 11,68 GET T_DATA_ENT PICTURE "@E"
+@ 13,19 GET T_IDADE    PICTURE "99"
+
+@ 13,37 SAY T_COPIAS   PICTURE "9999"	COLOR "W+/N"
+
+@ 13,58 GET T_SINOPSE  PICTURE "!" VALID (T_SINOPSE$"SN")
+@ 13,77 GET T_DUBLADO  PICTURE "!" VALID (T_DUBLADO$"SN")
+
+@ 15,12 GET T_LEGENDA  PICTURE "XXXXXXXX" 				FUNCTION MAKE_TPO()
+@ 15,40 GET T_PAIS     PICTURE "XXXXXXXXXX" 				FUNCTION MAKE_TPO()
+@ 15,68 GET T_IDIOMA   PICTURE "XXXXXXXXXX" 				FUNCTION MAKE_TPO()
+@ 17,12 GET T_PREMIOS  PICTURE "XXXXXXXXXX" 				FUNCTION MAKE_TPO()
+@ 17,42 GET T_DISTRIB  PICTURE "XXXXXXXXXXXXXXXXXXXX" FUNCTION MAKE_TPO()
+@ 17,72 GET T_TIPO     PICTURE "XXXXXX" 					FUNCTION MAKE_TPO()
+@ 19,14 GET T_QUALID   PICTURE "XXXXXXXXXXXX" 			FUNCTION MAKE_TPO()
+
+CT_CLASSE = SPACE(80)
+MAKE_TPO1("T_CLASSE")
+@ 19,40 GET CT_CLASSE   PICTURE "XXXXXXXXXX" 	  FUNCTION MAKE_TPO1()
+CT_GENERO = SPACE(80)
+MAKE_TPO1("T_GENERO")
+@ 19,63 GET CT_GENERO   PICTURE "XXXXXXXXXXXXXXX" FUNCTION MAKE_TPO1()
+CT_CATEGOR = SPACE(80)
+MAKE_TPO1("T_CATEGOR")
+@ 21,14 GET CT_CATEGOR  PICTURE "XXXXXXXXXXXX" 	  FUNCTION MAKE_TPO1()
+
+IF TITULOS->T_COPIAS > 0 .AND. enter_alteracao .AND. CT_GENERO # "PRODUTOS"
+	IF TITULOS->N_COP_LOJA = 0 .AND. TITULOS->T_COPIAS > 0
+		@ 21,36 SAY SPACE(36) COLOR "W+/B"
+		@ 21,36 SAY "Fitas disponiveis em outra loja" COLOR "W+/B"
+   ELSE
+		qt_copias = TITULOS->N_COP_LOJA - TITULOS->N_COP_FORA
+		IF qt_copias = 0
+			@ 21,36 SAY SPACE(36) COLOR "W+/B"
+			@ 21,36 SAY "Todas as fitas locadas" COLOR "W+/B"
+		ELSE
+			@ 21,36 SAY SPACE(36) COLOR "W+/B"
+			@ 21,36 SAY qt_copias PICTURE "###" COLOR "W+/B"
+		meu_texto = IIF(qt_copias=1,"  Copia disponivel","  Copias disponiveis")
+			@ 21,39 SAY meu_texto+" na Loja" COLOR "W+/B"
+		ENDIF
+	ENDIF
+ELSE
+	@ 21,36 SAY SPACE(36) COLOR "W+/B"
+ENDIF
+
+	SET CURSOR ON
+	READ
+	SET CURSOR OFF
+
+SET KEY -6 TO                  && F7   MOSTRA FITAS DO TITULO
+SET KEY -5 TO                  && F6	INCLUI FITAS NO TITULO 
+SET KEY  9 TO                  && Tab   UTILIZA TABELA PADRAO
+
+RETURN
+
+**********************
+procedure Telatit_save
+**********************
+
+
+if CT_GENERO = "PRODUTOS"
+
+	Mens_erro(" Use o cadastro de PRODUTOS" )
+	return
+
+endif
+if empty( M->T_GENERO )
+
+	ERRO_OCOR = .T.
+	Mens_erro( " Titulo sem GENERO" )
+	return
+
+endif
+if empty( M->T_CLASSE )
+
+	ERRO_OCOR = .T.
+	Mens_erro( " Titulo sem CLASSE" )
+	return
+
+endif
+if empty( M->T_CATEGOR )
+
+	ERRO_OCOR = .T.
+	Mens_erro( "Titulo sem CATEGORIA" )
+	return
+
+endif
+savekey()
+if .not. ENTER_ALTERACAO
+
+	select 2
+	use "GENERO.TPO"
+	if M->T_GENERO < 2 .or. M->T_GENERO > lastrec()
+
+		Mens_erro( " Tabela de Genero c/ problema" )
+		close
+		select "TITULOS"
+		ERRO_OCOR = .T.	
+		restkey()
+		return
+
+	endif
+	go M->T_GENERO
+	BUSCA = _right( "0" + alltrim( str( recno() -1 ) ), 2 )
+	use "TITDEL"
+	flock( 15 )
+	set index to "TITDEL.K1" key _left( TITULO, 2 )
+	unlock
+	seek BUSCA
+	if found() .and. _left( TITULO, 2 ) = BUSCA
+
+		T_CODIGO = TITDEL->TITULO
+		rlock( 15 )
+		delete
+		unlock	
+		close		
+		use "GENERO.TPO"
+		go T_GENERO
+		rlock( 15 )
+		replace GENERO->TITULOS with ( GENERO->TITULOS + 1 )
+		unlock
+
+	else
+
+		select 2
+		use "GENERO.TPO"
+		if M->T_GENERO < 2 .or. M->T_GENERO > lastrec()
+
+			Mens_erro( " Tabela de Genero c/ problema" )
+			close
+			select "TITULOS"
+			ERRO_OCOR = .T.	
+			restkey()
+			return
+
+		endif
+		go M->T_GENERO
+		if ULT_NUM = 9999
+		
+			Mens_erro( " Faixa de c¢digo de titulos esgotada" )
+			ERRO_OCOR = .T.
+			close
+			select "TITULOS"
+			restkey()
+			return
+
+		endif
+		T_CODIGO = _right( "0"   + alltrim( str( recno() -1 ) ) , 2 ) + ;
+		           _right( "000" + alltrim( str( GENERO->ULT_NUM + 1 ) ), 4 ) 
+		rlock( 15 )
+		replace  GENERO->ULT_NUM with ( GENERO->ULT_NUM + 1 )	
+		replace	GENERO->TITULOS with ( GENERO->TITULOS + 1 )
+		unlock
+		close
+
+	endif
+	close
+	select "TITULOS"
+
+else
+
+	if M->T_GENERO = TITULOS->T_GENERO
+
+		T_CODIGO = TITULOS->T_CODIGO
+
+	else
+
+		*** ALTERA GENERO DO TITULO ***
+		ERRO_OCOR = .T.
+		Mens_erro( " Titulo n„o pode mudar de GENERO" )
+		restkey()
+		return
+
+	endif
+	if M->T_CLASSE # TITULOS->T_CLASSE .and. M->T_COPIAS > 0
+
+		ERRO_OCOR = .T.
+		Mens_erro( " Titulo c/ fitas n„o pode mudar de CLASSE" )
+		restkey()
+		return
+
+	endif
+
+endif
+
+* FIND DE PALAVRA
+Acha_e_tira( M->T_ATOR1   , "A" ) 
+Acha_e_tira( M->T_ATOR2   , "A" )
+Acha_e_tira( M->T_ATOR3   , "A" )
+Acha_e_tira( M->T_DIRETOR , "D" )
+Acha_e_tira( M->T_QUEM    , "R" )
+select "TITULOS"
+*testa p/ titulo T_ORIGINAL em branco
+* trava terminais da rede indice em branco
+if len(alltrim(M->T_ORIGINAL))==0
+
+   M->T_ORIGINAL = _left(M->T_PORT,1)
+
+endif
+
+
+restkey()
+
+return
+
+**********************
+procedure Telatit_edit
+**********************
+
+Acha_e_apaga()
+select "TITULOS" 
+*testa p/ titulo T_ORIGINAL em branco
+* trava terminais da rede indice em branco
+if len(alltrim(M->T_ORIGINAL))==0
+
+   M->T_ORIGINAL = _left(M->T_PORT,1)
+
+endif
+
+
+
+return
+
+************************
+procedure Telatit_delete 
+************************
+
+if CT_GENERO = "PRODUTOS"
+
+	Mens_erro( "Use o cadastro de PRODUTOS" )
+	return
+
+endif
+restkey()
+if TITULOS->T_COPIAS > 0
+
+	SSS = savescreen( 23, 01, 23, 78 )
+	@ 23,01 	say space( 78 ) color "W/B"
+	@ 23,01 	say "Vocˆ n„o pode deletar um titulo que tem fitas !"	color "W+/B"
+	_bell()
+	inkey(50)
+	restscreen( 23, 01, 23, 78, SSS )
+	ERRO_OCOR = .T.
+	restkey()
+	return
+
+endif	
+select 2 
+use "TITDEL"
+flock( 15 )
+set index to "TITDEL.K1" key _left( TITULO, 2 )
+append blank
+unlock
+rlock( 15 )
+replace TITDEL->TITULO with TITULOS->T_CODIGO
+unlock
+close "TITDEL"
+select 2
+use "TITDELCO"
+flock( 15 )
+set index to "TITDELCO.K1" key _left( TITULO, 6 )
+unlock
+seek TITULOS->T_CODIGO
+if found()
+
+	do while TITDELCO->TITULO = TITULOS->T_CODIGO .and. .not. eof()
+
+		rlock( 15 )
+		delete
+		unlock
+		skip
+
+	enddo
+
+endif
+close "TITDELCO"
+use "GENERO.TPO"
+go TITULOS->T_GENERO
+rlock( 15 )
+replace GENERO->TITULOS with ( GENERO->TITULOS - 1 )
+unlock
+close
+select "TITULOS"
+restkey()
+
+return
+
+*
+FUNCTION INCLUI_FITAS   	&& INCLUI FITAS NO TITULO ATIVO
+*
+
+IF CT_GENERO = "PRODUTOS"
+	MENS_ERRO("USE CADASTRO DE PRODUTOS")
+	RETURN
+ENDIF
+savekey()
+	IF .NOT.ENTER_ALTERACAO
+		SET KEY -5 TO inclui_fitas()   && F6	INCLUI FITAS NO TITULO 
+		restkey()
+		RETURN
+	ENDIF
+	sc_inc = SAVESCREEN(00,00,24,79)
+	n_copias = 0
+	data_compra = _date()
+	qual_loja = num_loja
+	valor_fita = 0
+	entra_selo = "N"
+	num_nf = SPACE(15)
+	nom_nf = SPACE(30)
+
+	sc_cor = SETCOLOR()
+	sc_tel = SAVESCREEN(05,01,20,78)
+	var1 = "Ì"+REPLICATE("Í",55)+"¹"
+
+	quadro(03,11,19,67,"W+/R,W+/N,N,W+/R","N+/N")
+	@ 04,30 SAY "INCLUSAO DE FITAS"
+	@ 05,11 SAY var1
+	@ 06,12 SAY "N£mero de copias     : " 	GET n_copias PICTURE "99"
+	@ 07,11 SAY var1
+	@ 08,12 SAY "Data de Cadastro     : " 	GET data_compra PICTURE "@E"
+	@ 09,11 SAY var1
+	@ 10,12 SAY "N£mero da loja       : " 	GET qual_loja PICTURE "999"
+	@ 11,11 SAY var1
+	@ 12,12 SAY "Valor das fitas      : " 	GET valor_fita PICTURE "99,999,999.99"
+	@ 13,11 SAY var1
+	@ 14,12 SAY "Entrar n§ da N.F.    : " 	GET num_nf PICTURE "@!"
+	@ 15,11 SAY var1
+	@ 16,12 SAY "Entrar nome  N.F.    : " 	GET nom_nf PICTURE "@!"
+	@ 17,11 SAY var1
+	@ 18,12 SAY "Entrar n§ sequencial : " 	GET entra_selo;
+ 													PICTURE "!";
+ 													VALID (ENTRA_SELO$"SN")
+		READ LOCAL
+
+	IF N_COPIAS = 0
+		CLEAR TYPEAHEAD
+	   RESTSCREEN(00,00,24,79,sc_inc)
+		SET KEY -5 TO inclui_fitas()   && F6	INCLUI FITAS NO TITULO 
+		restkey()
+		RETURN
+	ENDIF
+
+j_conf = _SET("CONFIRM") == "ON"
+
+SET CONFIRM OFF
+@ 23,01 SAY SPACE(78) COLOR "W/B"
+CLEAR TYPEAHEAD
+m_cnf = "N"
+@ 23,01 		SAY "Confirma a inclus„o das fitas  ( S/N )  ?   " COLOR "W+/B"
+@ 23,COL() 	GET m_cnf 	PICTURE "!";
+								COLOR "W+/B,W+*/N,N,W+/B";
+								VALID (m_cnf$"SN")
+READ LOCAL
+
+SET CONFIRM j_conf
+
+IF m_cnf # "S"
+	CLEAR TYPEAHEAD
+   RESTSCREEN(00,00,24,79,sc_inc)
+	SET COLOR TO enter_cor
+	SET KEY -5 TO inclui_fitas()   && F6	INCLUI FITAS NO TITULO 
+	restkey()
+	RETURN
+ENDIF
+
+
+	IF TITULOS->T_COPIAS+N_COPIAS > 99
+		MENS_ERRO("NUMERO DE COPIAS DO TITULO NAO PODE SER MAIOR QUE 99")
+		erro_ocor = .T.
+	   RESTSCREEN(00,00,24,79,sc_inc)
+		SET KEY -5 TO inclui_fitas()   && F6	INCLUI FITAS NO TITULO 
+		restkey()
+		RETURN
+	ENDIF
+
+	restore from "VALIND.MEM" additive
+		
+	F_COPIAS = 1
+	DO WHILE N_COPIAS >= F_COPIAS
+		SELO = SPACE(4)
+		IF ENTRA_SELO = "S"
+			var1 = "Ì"+REPLICATE("Í",23)+"¹"
+			quadro(12,30,17,54,"W+/BG,W+/N,N,W+/BG","N+/N")
+			@ 13,32 SAY "Copia n§   : "+STR(F_COPIAS,2)
+			@ 14,30 SAY var1
+*			@ 15,32 SAY "N§ sequencial : " GET selo PICTURE "@!"
+* alterado zico 23/03/2000 p/ pic "9999"
+			@ 15,32 SAY "N§ sequencial : " GET selo PICTURE "9999"
+			@ 16,32 SAY "Volume  1 "
+			  READ LOCAL
+		ENDIF
+		BUSCA = TITULOS->T_CODIGO
+		SELECT 2
+		USE "TITDELCO"
+		flock( 15 )
+		SET INDEX TO "TITDELCO.K1" KEY _left(TITULO,6)
+		unlock
+		SEEK BUSCA
+		IF FOUND() .AND. _left(TITULO,6) = 	BUSCA
+			FITA_COPIA = TITDELCO->TITULO
+			rlock( 15 )
+			DELETE
+			unlock
+			CLOSE
+			SELECT "TITULOS"
+			rlock( 15 )
+			REPLACE TITULOS->T_COPIAS WITH TITULOS->T_COPIAS+1
+			IF QUAL_LOJA = NUM_LOJA
+				REPLACE TITULOS->N_COP_LOJA WITH TITULOS->N_COP_LOJA+1
+
+				SELECT 2
+				USE "GENERO.TPO"
+				GO TITULOS->T_GENERO
+				rlock( 15 )
+				replace 	GENERO->FITAS_TOT WITH ;
+				      	GENERO->FITAS_TOT + 1
+*
+*							+(TITULOS->T_CLASSE-1)
+*
+				unlock			
+				CLOSE
+				SELECT "TITULOS"
+
+			ENDIF
+			unlock
+		ELSE
+			SELECT "TITULOS"
+			IF TITULOS->N_ULT_COP = 99
+				MENS_ERRO("QUANT DE COPIAS DO TITULO ESGOTADA")
+				erro_ocor = .T.
+			   RESTSCREEN(00,00,24,79,sc_inc)
+				SET KEY -5 TO inclui_fitas()   && F6	INCLUI FITAS NO TITULO 
+				restkey()
+				RETURN
+			ENDIF
+			FITA_COPIA = TITULOS->T_CODIGO+STR(TITULOS->N_ULT_COP+1,2,0,"0")
+			rlock( 15 )
+  			replace TITULOS->N_ULT_COP WITH TITULOS->N_ULT_COP+1
+			replace TITULOS->T_COPIAS WITH TITULOS->T_COPIAS+1
+			IF QUAL_LOJA = NUM_LOJA
+				REPLACE TITULOS->N_COP_LOJA WITH TITULOS->N_COP_LOJA+1
+
+				SELECT 2
+				USE "GENERO.TPO"
+				GO TITULOS->T_GENERO
+				rlock( 15 )
+				REPLACE 	GENERO->FITAS_TOT WITH ;
+							GENERO->FITAS_TOT + 1 
+*
+*							(TITULOS->T_CLASSE-1)
+*
+				unlock
+				CLOSE
+				SELECT "TITULOS"
+
+			ENDIF
+			unlock
+		ENDIF
+		VOLUME = TITULOS->T_CLASSE - 1
+		SELECT "FITAS"
+		FOR L1 = 1 TO VOLUME
+			IF VOLUME > 1 .AND. L1 > 1 .AND. entra_selo = "S"
+				selo = SPACE(04)
+            @ 15,32 SAY "N§ sequencial : " GET selo PICTURE "9999"
+				@ 16,32 SAY "Volume  "+STR(L1,1)
+				  READ LOCAL
+			ENDIF
+******* REAPROVEITAMENTO DE PRODUTOS DELETADOS **********
+			set deleted off
+			go bottom
+			if _deleted()
+				
+				flock( 15 )
+				recall
+				unlock
+				
+			else
+			
+				flock( 15 )
+				append blank
+				unlock
+			
+			endif
+			set deleted on
+*********************************************************
+*			APPEND BLANK
+			FITA_COP1 = FITA_COPIA+STR(L1,1)
+			CHECADIG11 = MOD11(FITA_COP1)
+  		   FITA_COP2 = FITA_COP1+CHECADIG11
+			rlock( 15 )
+			replace FITAS->CODFITA 		WITH FITA_COP2
+			replace FITAS->COD_CLI 		WITH "000000"
+			replace FITAS->LOJA 			WITH M->QUAL_LOJA
+			replace FITAS->T_CODIGO 	WITH TITULOS->T_CODIGO
+			replace FITAS->CUSTO 		WITH M->VALOR_FITA
+			replace FITAS->VALOR_IND 	WITH (M->VALOR_FITA/IND_VALOR)
+			replace FITAS->DATA_COMP 	WITH M->DATA_COMPRA
+			replace FITAS->DISPONIVEL 	WITH "S"
+			replace FITAS->SEQUENCIAL  WITH SELO
+			replace FITAS->CLI_1       with "000000"
+			replace FITAS->CLI_2       with "000000"
+			replace FITAS->CLI_3       with "000000"
+			replace FITAS->NUMNF       with NUM_NF
+			replace FITAS->NOMNF       with NOM_NF
+			replace FITAS->MARCA       with "*"
+			unlock
+
+		NEXT
+		F_COPIAS = F_COPIAS + 1
+	ENDDO
+
+	SETCOLOR(sc_cor)
+	RESTSCREEN(05,01,20,78,sc_tel)
+
+	SELECT "TITULOS"
+	T_COPIAS   = TITULOS->T_COPIAS
+	N_COP_LOJA = TITULOS->N_COP_LOJA
+  	N_ULT_COP  = TITULOS->N_ULT_COP
+   RESTSCREEN(00,00,24,79,sc_inc)
+ 	vai_get = GOTOGET()
+	KEYBOARD 21 , 21 , 3
+
+	SET KEY -5 TO inclui_fitas()   && F6	INCLUI FITAS NO TITULO 
+	restkey()
+
+RETURN
+
+
+FUNCTION MOSTRA_FITAS		&& MOSTRA FITAS DO TITULO
+
+IF .NOT. enter_alteracao .AND. CT_GENERO # "PRODUTOS"
+	RETURN
+ENDIF
+savekey()
+SELECT "FITAS"
+ord_fitas = INDEXORD()
+SET ORDER TO 1
+SEEK TITULOS->T_CODIGO
+IF .NOT. FOUND()
+	Mens_erro( "N„o existem fitas deste TITULO" )
+	INKEY(2)
+ENDIF
+IF FOUND() .AND. TITULOS->T_CODIGO = FITAS->T_CODIGO
+   SELECT "CLIENTES"
+   ord_cli =INDEXORD()
+   SET ORDER TO 3
+   SELECT "FITAS"
+	SET RELATION TO FITAS->COD_CLI INTO "CLIENTES"
+   private CAMPOS[9],CABECA[9],MASCAR[9]
+	CAMPOS[4] = "FITAS->CODFITA"
+	CAMPOS[5] = "FITAS->SEQUENCIAL"
+	CAMPOS[6] = "FITAS->COD_CLI"
+	CAMPOS[7] = "CLIENTES->NOME"
+	CAMPOS[8] = "FITAS->LOJA"
+	CAMPOS[9] = "FITAS->DATA_PREV"
+	campos[1] = "SPACE(3)+FITAS->RESERVA+SPACE(3)"
+	campos[2] = "FITAS->CLI_RESERV"
+	campos[3] = "FITAS->D_RESERVA"
+
+	CABECA[4] = "CODIGO DA FITA"
+	CABECA[5] = "N.SEQ"
+	CABECA[6] = "CODIGO"
+	CABECA[7] = "NOME DO CLIENTE"
+	CABECA[8] = "LOJA"
+	CABECA[9] = "DEVOLVER"
+	cabeca[1] = "RESERVADA"
+	cabeca[2] = "PARA"
+	cabeca[3] = "  EM "
+
+	MASCAR[4] = "@R 99.9999.99.9-9"
+	MASCAR[5] = "#####"
+	MASCAR[6] = "@R 999999"
+	MASCAR[7] = "@!"
+	MASCAR[8] = "999"
+	MASCAR[9] = "@E"
+	mascar[1] = "@!"
+	mascar[2] = "@!"
+	mascar[3] = "@E"
+
+
+	@ 23,01 SAY "Para se mover use as Setas - PgUp - PgDn - Home "+;
+					"- End - Ctrl PgUp - Ctrl PgDn " COLOR "W+/B"
+	sctit = SAVESCREEN(08,02,20,78)
+	@ 20,04 fill to 20,78   color "N+/N"
+	@ 09,77 fill to 19,78   color "N+/N"
+	browse   while 	FITAS->T_CODIGO = TITULOS->T_CODIGO;
+				window 	08,02,19,76;
+				color   	"N/BG,W+/R,W+/BG,N/BG";
+				frame    double;
+            fields   CAMPOS;
+				picture  MASCAR;
+				heading  CABECA;
+				edit 		.F.;
+				noappend;
+				nodelete
+	SET CURSOR ON
+	SET RELATION TO
+	SELECT "CLIENTES"
+	SET ORDER TO ord_cli
+	SELECT "FITAS"
+	restscreen(08,02,20,78,SCTIT)
+
+ENDIF
+SET COLOR TO enter_cor
+@ 23,01 SAY "F3-Pesq F4-Ant F5-Pos F6-Ins.fita F7-Fitas "+;
+				"F8-Limpa F9-Del F10-Grava Tab-Pad" COLOR "W+/B"
+SET ORDER TO ord_fitas
+SELECT "TITULOS"
+restkey()
+
+RETURN
+*
+
+
+
+******************** 
+function Acha_e_tira
+********************
+
+parameters STR_ORIGINAL ,;
+           QUAL_CAMPO         && A-ATOR , D-DIRETOR , R-REFERENCIA 
+  
+STR_USO = alltrim( STR_ORIGINAL ) 
+if len( STR_USO ) = 0
+    return
+endif 
+do while .t. 
+    LUGAR  = _at( " " , STR_USO )  
+    LUGAR1 = _at( "," , STR_USO )
+    if LUGAR = 1 .OR. LUGAR1 = 1
+       STR_USO = ltrim( mid( STR_USO, 2 ) ) 
+       loop 
+    elseif LUGAR = 0 .and. LUGAR1 = 0
+         LUGAR = 12 
+         STR_USO = _left( STR_USO, 11 ) 
+    elseif LUGAR1 > 0 .and. LUGAR1 < LUGAR
+         LUGAR = LUGAR1
+    elseif LUGAR = 0
+         LUGAR = LUGAR1
+    endif
+    if lugar > 11
+       USAR = _left( STR_USO, 11 )
+    else
+       USAR = _left( STR_USO, LUGAR-1 )
+    endif 
+    select "WORD" 
+	 flock( 15 )
+    APPEND BLANK
+	 unlock
+	 rlock()
+    REPLACE WORD->WORD    with QUAL_CAMPO + USAR  ,; 
+            WORD->TIT_COD with M->T_CODIGO 
+	 unlock			
+
+    if len( STR_USO ) < LUGAR + 1
+          return
+    endif
+    STR_USO = ltrim( mid( STR_USO, LUGAR + 1 ) ) 
+enddo
+
+*
+
+********************* 
+function acha_e_apaga
+*********************
+
+select "WORD"
+set order to 2
+seek TITULOS->T_CODIGO 
+do while found() 
+
+	 rlock( 15 )
+    delete
+	 unlock
+    seek TITULOS->T_CODIGO
+enddo
+set order to 1
+
+return
+*

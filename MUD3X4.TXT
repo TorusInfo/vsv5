@@ -1,0 +1,100 @@
+Mudanças p/ transferência de versão 3.0 -> 4.0
+
+
+*09/05/2000
+acertadas todas as telas display 00/00/0000
+incluido campo data_cred na tela
+alterado arquivos TAG p/ date com 10 caracteres
+fazer append dos titulos modificada estrutura campo T_QUEM  - C - 28
+apagar arquivo oprelat.mem criado pelo util4.exe/ovj
+apagar arquivos *.tel copiá-los novamente
+fazer append do arquivo genero.tpo foi acrescido campo PROMO_GENE - N - 2
+fazer append do arquivo mes.dbf foi acrescido campo PROMO_GENE - N - 2
+fazer append arquivo de clientes acrescido o campo FZ - N - 3
+fazer append arquivo de clientes acrescido o campo FZC - C - 1
+testar e incrementar FZ se cliente está com fita (arquivo de fitas)
+se cliente com fitas fazer replace FZC com caracter(254)
+alterado arquivo TITULOS.FD incluido indice 3 T_ORIGINAL - sobregravar
+verificar se T_ORIGINAL está em branco e fazer replace _left(T_PORT,1) nele se .T.
+criado arquivo fast_dev.dbf
+alterado arquivo menu.dbf incluido campo 115 - Devolução rápida - nível de acesso
+alterado arquivo menu.dbf incluido campo 120 - Sinopses
+ALTERADO ARQUIVO DE CLIENTES CEP COM 9 CASAS FAZER O STUFF DE CLIENTES->CEPRES E CEPCOM
+*STUFF(CLIENTES->CEPRES,5,1,"-")
+ALTERADO ARQUIVO MOVIMEN INCLUIDO CAMPO MOVIMEN->SEQUENCIAL
+adicionado arquivo sinopse.dbf
+adicionado arquivo telasin.tel
+adicionado arquivo telasint.tel
+alterado arquivo de t¡tulos.dbf incluidos campos T_EST_MIN - N - 5
+alterado arquivo de t¡tulos.dbf incluidos campos T_EST_MAX - N - 5
+alterado arquivo telapro.tel
+acrescido programas sin4.exe e sin4.ovj -> pesquisa em terminais da rede
+alterado arquivo movimen.dbf incluido campo T_PORT - C - 40
+alterado arquivo movimen.tag incluidos os campos p/ relatorio sequencial e t_port
+alterados arquivos ff.tpo, tpo.dbf e tpo.tag - o campo T_NOME passa a ser T_PORT
+desmembrado o util4.prj em gerador.prj e setup.prj
+
+
+
+
+Coisas a serem feitas no VSV4R.0
+
+1- Alterações no prog:
+
+-rodar em win 98/95 - ok
+-tabela de feriados - ok
+-acerto das telas (datas) ok
+-acerto das datas para 10 dígitos formato dd/mm/yyyy ok
+-extrato de conta corrente do cliente p/ saber quais as datas de locação e/ou fitas/títulos
+-descontos na locação e produtos
+-bloquear os dbf
+-melhorar a documentação
+-tela de filmes - referência verificar tamanho da tela ok
+-data da inscrição cadastro de clientes ok
+-sinopse de filmes em terminal de clientes(rede) ok
+-pesquisa de títulos em inglês ok
+-impressão de código de barras - versão rede ok
+-impressora deskjet - relatórios ok
+-retirada a senha de revalidação semestral do programa ok
+-promoção por gênero ok
+-tempo de música aniversário - ok
+-na retirada se o cliente estiver com fitas - avisar ok
+-utilização de novo sistema de backup ok
+-explicação sobre o backup e sistema operacional
+-boletos simulados ok
+- após a simulação de boleto - devolução automática (F10) ok
+-alteração nas datas de devolução do cliente ok
+-relatório de produtos ok
+-melhorar estoque de produtos - estoque minimo / máximo ok
+- mudança de data de devolução - ok
+-fluxo de caixa
+- pesquisa de título original ok
+-campo para agendar reservas -
+
+
+2- Alterações no Suporte Técnico:
+-suporte de segunda a sexta - 08:00 as 18:00
+-cobrança de R$ 30,00 / mês s/ limite de tempo para o suporte
+-inclui no suporte:
+   correção de erros advindos de utilização errônea do operador
+   correção, reparação de dados e recuperação de dados porventura perdidos
+   direito a *updates gratuitos
+   desconto de 80% em *upgrade
+   sem limite de tempo do suporte
+-cobrança de R$ 1,50 p/ minuto de atendimento caso não seja conveniado do
+sistema de suporte técnico, havendo necessidade de depósito prévio de R$ 50,00
+para iniciar-se o atendimento, sobre o qual valor será descontado os minutos utilizados
+
+-obs: não será cobrado tempo de suporte para revalidação (senha)
+-aconselhável o cliente estar ligado na internet para agilizar o suporte
+-novo telefone de contato - (19) 289-7409
+-novo e-mail de contato : torus@uol.com.br
+-nova HP de informações : www.torus.cjb.net
+
+
+
+*updates são alterações pequenas no programa
+**upgrades alterações grandes inclusive de sistemas operacionais
+
+
+

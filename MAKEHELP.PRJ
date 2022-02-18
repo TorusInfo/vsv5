@@ -1,0 +1,191 @@
+*-----------------------------------------------------------------------------*
+*                                                                             *
+*                            MAKEHELP.PRJ                                     *
+*                                                                             *
+*-----------------------------------------------------------------------------*
+
+parameters ARQ_TXT, ARQ_DBF  && recebe o nome dos arquivos de texto e dbf
+
+clear screen
+?
+? "T O R U S  Inform tica Ltda"
+?
+? "MakeHelp   Vers„o 1.00"        && imprime cabecalho do sistema
+?
+if pcount() < 2
+
+	Make_mensagem( " Use : makehelp [arq. texto] [arq. dbf] " )
+
+endif
+if .not. _file( ARQ_TXT )
+
+	Make_mensagem( "Erro - " + ARQ_TXT + " n„o encontrado" )
+
+endif
+if _at( ".", ARQ_TXT, 1 ) = 0
+
+   Make_mensagem( "Erro - " + ARQ_TXT + " sem extens„o " )
+	
+endif	
+if _at( ".", ARQ_DBF, 1 ) = 0
+
+   Make_mensagem( "Erro - " + ARQ_DBF + " sem extens„o " )
+	
+endif	
+HANDLE = _fopen( ARQ_TXT )
+if HANDLE < 0
+
+	_fclose( HANDLE )
+   Make_mensagem( "Erro - problemas com o arquivo " + ARQ_TXT )
+
+endif
+TAMANHO = _fseek( HANDLE, 0, 2 )
+declare MTIND [ 255 ],MTPOS [ 255 ], MTSEL [ 255 ], MTQTD [ 255 ]
+afill( MTIND, space( 40 ) )
+afill( MTPOS, 0 )
+afill( MTQTD, 0 )
+F_CHR  = chr( 13 ) + chr( 10 )
+QTDADE = 1
+VEZES  = round( ( TAMANHO / 10000 ) + 0.5, 0 )
+_fseek( HANDLE, 0, 0 )
+for LOOP_2 = 1 to VEZES
+
+	STRING  = ""
+	STRING  = _freadstr( HANDLE, iif( TAMANHO - ( LOOP_2 * 10000 ) > 10000, ;
+	                           10000, TAMANHO - ( ( LOOP_2 - 1 ) * 10000 ) ) )
+   P_STRING = 1
+	T_STRING = ""
+	do while .T.
+		   
+	  	POS_TTT = _at( "\&", mid( STRING, P_STRING ) )
+	  	if POS_TTT = 0
+		  
+	  	   exit
+	  
+	  	else
+		  
+   	   P_STRING += POS_TTT
+		   F_STRING  = mid( STRING, P_STRING + 1, 1 )
+			if F_STRING == "T"
+
+			  	MTIND [ QTDADE ] = Make_nome()
+				MTPOS [ QTDADE ] = 0
+				MTSEL [ QTDADE ] =.F.
+				MTQTD [ QTDADE ] = 0
+				QTDADE          += 1
+
+			elseif F_STRING == "S"
+
+			  	MTIND [ QTDADE ] = Make_nome()
+				MTPOS [ QTDADE ] = P_STRING + len( T_STRING ) + 3 + ;
+				                   ( ( LOOP_2 - 1 ) * 10000 )
+				MTSEL [ QTDADE ] = .T.
+
+			elseif F_STRING == "F"
+
+				MTQTD [ QTDADE ] = P_STRING - 4 + ( ( LOOP_2 - 1 ) * 10000 ) -;
+				                       MTPOS [ QTDADE ]
+	 			QTDADE          += 1
+				
+			endif
+						  
+		endif
+
+  	enddo		
+
+next
+_fclose( HANDLE )
+select 1
+Cria_help_dbf( ARQ_DBF )
+use ARQ_DBF
+for LOOP_3 = 1 to QTDADE - 1
+			
+	append  	blank
+	replace 	INDICES 	with	MTIND [ LOOP_3 ],;
+	        	SELECAO 	with 	MTSEL [ LOOP_3 ],;
+	        	POSICAO 	with 	MTPOS [ LOOP_3 ],;
+				QUANTOS 	with 	MTQTD [ LOOP_3 ]
+	if MTQTD [ LOOP_3 ] > 10000
+	
+		_bell()
+		?  "*---                                                             " 
+		?  "*                                                                "
+		?  "*  - Aten‡„o - O ¡ndice " 
+		?  "*                              " + MTIND [ LOOP_3 ] 
+		?  "*              tem mais de 10Kb"
+		?  "*                                                                "
+		?  "*  O programa  HELP s¢ ir  ler um texto de no m ximo de 10Kb     "
+		?  "*                                                                "
+		?  "*---                                                             " 
+		?
+		
+	endif
+
+next
+close
+?
+? "O arquivo " + ARQ_DBF + " est  preparado"
+?
+_bell()
+_bell()
+quit
+
+**********************
+function Cria_help_dbf 
+**********************
+
+parameters CRIA_ARQUIVO
+
+if _file( CRIA_ARQUIVO )
+
+	rename 	CRIA_ARQUIVO ;
+	to 		_left( CRIA_ARQUIVO, _at( ".", CRIA_ARQUIVO ) ) + "$$$"
+	
+endif
+declare MNOME [ 4 ],;
+		  MTIPO [ 4 ],;	
+		  MTAMA [ 4 ],;
+		  MDECI [ 4 ]
+MNOME [ 1 ] = "INDICES"
+MTIPO [ 1 ] = "C"
+MTAMA [ 1 ] = 40
+MDECI [ 1 ] =  0
+MNOME [ 2 ] = "SELECAO"
+MTIPO [ 2 ] = "L"
+MTAMA [ 2 ] =  1
+MDECI [ 2 ] =  0
+MNOME [ 3 ] = "POSICAO"
+MTIPO [ 3 ] = "N"
+MTAMA [ 3 ] =  9
+MDECI [ 3 ] =  0
+MNOME [ 4 ] = "QUANTOS"
+MTIPO [ 4 ] = "N"
+MTAMA [ 4 ] =  9
+MDECI [ 4 ] =  0
+
+create CRIA_ARQUIVO from MNOME, MTIPO, MTAMA, MDECI
+
+return
+
+******************
+function Make_nome 
+******************
+
+T_STRING = mid( STRING, P_STRING + 2, 80 )
+T_STRING = mid( T_STRING, 1, _at( F_CHR, T_STRING ) -1 )
+
+return T_STRING
+
+**********************
+function Make_mensagem 
+**********************
+
+parameters MENSAGEM
+
+_bell()
+?
+? MENSAGEM
+?
+quit
+
+return

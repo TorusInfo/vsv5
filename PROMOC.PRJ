@@ -1,0 +1,589 @@
+*
+PROCEDURE promocao
+*
+SCPR = savescreen(03,01,21,78)
+set color to "W+/B"
+scroll(03,01,21,78,0)
+SCPR1 = savescreen(03,01,21,78)
+private	VETPROM[10],	VETPROML[10],	VETPROMS[10],	VETALT[10]
+for A = 1 to 10
+
+   VETALT[A] = " "
+
+next    
+VETPROM[01] = "Sorteia um desconto"
+VETPROM[02] = "Desconto p/ dia da semana"
+VETPROM[03] = "aNiversariantes"
+VETPROM[04] = "Hora da devolu‡„o"
+VETPROM[05] = "aBono pelo n£mero de fitas"
+VETPROM[06] = "desconto Pessoal"
+VETPROM[07] = "devolu‡„o R pida"
+VETPROM[08] = "desconto pelo n§ de Fitas"
+VETPROM[09] = "Video clube"
+VETPROM[10] = "Gˆnero"
+
+VETPROML[01] = "S"
+VETPROML[02] = "D"
+VETPROML[03] = "N"
+VETPROML[04] = "H"
+VETPROML[05] = "B"
+VETPROML[06] = "P"
+VETPROML[07] = "R"
+VETPROML[08] = "F"
+VETPROML[09] = "V"
+VETPROML[10] = "G"
+IF _file("ARQPROM.MEM")
+
+   RESTORE FROM "arqprom.mem" ADDITIVE
+
+ELSE
+
+   promsodesc	= " "
+   promabdesc	= promsodesc	&& " "
+   promaniver	= promsodesc	&& " "
+   promhodevo	= promsodesc	&& " "
+   promnufita	= promsodesc	&& " "
+   promdescpe	= promsodesc	&& " "
+   promdevora	= promsodesc	&& " "
+   promdescfi	= promsodesc	&& " "
+   promaniv		= 000
+	promdev     = "00:00:00"      && HORARIO PARA DEVOLUCAO
+	promhrap    = promdev
+	promdrap    = promaniv
+   promdesc_1	= promaniv     && 00 % MINIMA DE DESCONTO DO CLIENTE
+   promdesc_2	= promaniv     && 00 % MAXIMA DE DESCONTO DO CLINETE
+   promdesc_3	= promaniv     && 00 % DO FATURAMENTO P/ DESCONTO
+   promdesc_4	= promaniv     && 00 % DE CHANCE DE GANHAR DESCONTO
+	promvideoclube = " "
+   promogenero = " "
+ENDIF   
+vetproms[01] = promsodesc
+vetproms[02] = promabdesc
+vetproms[03] = promaniver
+vetproms[04] = promhodevo
+vetproms[05] = promnufita
+vetproms[06] = promdescpe
+vetproms[07] = promdevora
+vetproms[08] = promdescfi
+vetproms[09] = promvideoclube
+vetproms[10] = promogenero
+quadro(03,48,10,75,"N/BG,W+/BG","N/N") && QUADRO DA LETRA A=ATIVO
+@ 04,49 SAY "þ = Promo‡”es Ativadas"
+@ 05,47 SAY "Ì"+REPLICATE("Í",27)+"¹"
+@ 06,49 SAY "  = Promo‡”es Desativadas"
+@ 07,47 SAY "Ì"+REPLICATE("Í",27)+"¹"
+@ 08,49 SAY "<ENTER> / Letra Mai£scula"
+@ 09,49 SAY "    Ativa  e  Desativa"
+quadro(03,03,15,36,"N/BG,W+/BG","N/N") && QUADRO DAS PROMOCOES
+@ 04,04 SAY "           PROMO€™ES"
+@ 05,03 SAY "Ì"+REPLICATE("Í",32)+"¹"
+@ 05,07 SAY "Ë"
+FOR a = 6 TO 15
+
+	@ a,07 SAY "º"
+
+NEXT
+@ 15,07 SAY "Ê"
+xp=1
+DO WHILE xp # 0
+
+   KEYBOARD 13
+   POPUP	WINDOW 	6,5,15,5;
+         TO 		xps;
+         OPTIONS 	vetproms;
+         HILITE 	vetproms,"N/BG";
+         POSITION	1;
+         COLOR 	"N/BG,N/BG,N,N/BG"
+   POPUP WINDOW 	6,9,15,34;
+         TO 		xp;
+         OPTIONS 	vetprom;
+         HILITE 	vetproml,"GR+/BG";
+         POSITION	1;
+         COLOR 	"N/BG,W+/BG,N,N/BG"
+   IF xp # 0
+
+      vetproms[xp] =	IIF(vetproms[xp]="þ"," ","þ")
+      vetalt[xp]	 =	"X"
+
+   ENDIF   
+
+ENDDO
+IF vetalt[1] = "X" .AND. vetproms[1] = "þ"
+
+	RESTSCREEN(03,01,21,78,scpr1)
+   quadro(12,09,20,52,"N/BG,W+/BG,,,GR+/BG","N/N")
+   SET CURSOR ON
+   @ 14,21 SAY "SORTEIO  DE  DESCONTO"
+	check_num = .T.
+	DO WHILE check_num
+
+		check_num = .F.
+  		@ 16,11 SAY "Digite a % de DESC. do Fat.  : " GET promdesc_3 PICTURE "99"
+  		@ 17,11 SAY "Digite a % de CHANCE de DESC.: " GET promdesc_4 PICTURE "999"
+	   @ 18,11 SAY "Digite a faixa de descontos  : " GET promdesc_1 PICTURE "99"
+	   @ 18,45 SAY " a " GET promdesc_2 PICTURE "999"
+   	  READ
+		IF _int(promdesc_1/5) # promdesc_1/5
+
+			check_num = .T.
+			MENS_ERRO(" % DEVE SER MULTIPLO DE 5 ")
+
+		ELSEIF _int(promdesc_1/5) # promdesc_1/5
+
+			check_num = .T.
+			MENS_ERRO(" % DEVE SER MULTIPLO DE 5 ")
+		
+		ENDIF
+
+	ENDDO
+   SET CURSOR OFF
+	RESTSCREEN(03,01,21,78,scpr1)
+
+ENDIF
+IF vetalt[2] = "X" .AND. vetproms[2] = "þ"
+
+	RESTSCREEN(03,01,21,78,scpr1)
+	if _file( "DESCSEM.MEM" )
+
+		restore from "DESCSEM.MEM" additive
+
+	else
+
+		store 0 to D1,D2,D3,D4,D5,D6,D7
+
+	endif
+	cor_ant = SETCOLOR()
+   quadro(04,03,20,19,"W+/BG","N/N") 
+	@ 05,05 SAY "DIA         %"
+	@ 06,03 SAY "Ì"+REPLICATE("Í",15)+"¹"
+	@ 06,13 SAY "Ë"
+	@ 20,13 SAY "Ê"
+	@ 07,04 SAY " DOMINGO º"
+	@ 08,03 SAY "Ì"+REPLICATE("Í",09)+"Î"+REPLICATE("Í",05)+"¹"
+	@ 09,04 SAY " SEGUNDA º"
+	@ 10,03 SAY "Ì"+REPLICATE("Í",09)+"Î"+REPLICATE("Í",05)+"¹"
+	@ 11,04 SAY " TER€A   º"
+	@ 12,03 SAY "Ì"+REPLICATE("Í",09)+"Î"+REPLICATE("Í",05)+"¹"
+	@ 13,04 SAY " QUARTA  º"
+	@ 14,03 SAY "Ì"+REPLICATE("Í",09)+"Î"+REPLICATE("Í",05)+"¹"
+	@ 15,04 SAY " QUINTA  º"
+	@ 16,03 SAY "Ì"+REPLICATE("Í",09)+"Î"+REPLICATE("Í",05)+"¹"
+	@ 17,04 SAY " SEXTA   º"
+	@ 18,03 SAY "Ì"+REPLICATE("Í",09)+"Î"+REPLICATE("Í",05)+"¹"
+	@ 19,04 SAY " SABADO  º"
+	SET COLOR TO "N/BG,W+/N,N,N/BG"
+	op = 0
+	DO WHILE op # 1
+	
+		@ 07,15 GET d1 PICTURE "999"
+		@ 09,15 GET d2 PICTURE "999"
+		@ 11,15 GET d3 PICTURE "999"
+		@ 13,15 GET d4 PICTURE "999"
+		@ 15,15 GET d5 PICTURE "999"
+		@ 17,15 GET d6 PICTURE "999"
+		@ 19,15 GET d7 PICTURE "999"
+	   READ
+		cor_ant1 = SETCOLOR()
+		SET COLOR TO "W+/B,W+*/B,N,W+/B"
+		@ 23,01 			SAY 		SPACE(78)
+		@ 23,01 			SAY 		"Estes valores est„o corretos ? " COLOR "W+/B"
+		@ 23,COL() + 3 PROMPT 	"Sim"
+		@ 23,COL() + 3	PROMPT	"N„o"
+	  	MENU TO op
+		IF op < 2
+
+			if flock( 15, "GREDE" )
+				SAVE TO "DESCSEM.MEM" ALL LIKE "d*"
+				unlock in "GREDE"
+			else
+				Mens_rerro( " Erro de espera na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+			endif
+			EXIT
+
+		ENDIF
+		@ 23,01 SAY SPACE(78) COLOR "W/B"
+		SETCOLOR(cor_ant1)
+
+	ENDDO
+	@ 23,01 say space(78) color "W/B"
+	setcolor(COR_ANT)
+	restscreen(03,01,21,78,SCPR1)
+	
+ENDIF
+IF vetalt[3] = "X" .AND. vetproms[3] = "þ"
+
+	RESTSCREEN(03,01,21,78,scpr1)
+   quadro(14,09,20,44,"N/BG,W+/BG,,,GR+/BG","N/N")
+   SET CURSOR ON
+   @ 16,12 SAY "DESCONTO PARA O ANIVERSARIANTE"
+   @ 18,11 SAY "Digite a < % > de desconto  :" GET promaniv PICTURE "99"
+   READ
+   SET CURSOR OFF
+	RESTSCREEN(03,01,21,78,scpr1)
+   
+ENDIF
+IF vetalt[4] = "X" .AND. vetproms[4] = "þ"
+
+	RESTSCREEN(03,01,21,78,scpr1)
+	cor_ant = SETCOLOR()
+	quadro(16,56,20,76,"N/BG,W+/N,N,N/BG","N/N")
+	SET CURSOR ON
+	@ 17,58 SAY "HORA P/ DEVOLU€AO"
+	@ 18,56 SAY "Ì"+REPLICATE("Í",19)+"¹"
+	@ 19,58 SAY "Hora : " GET promdev PICTURE "##:##:##"
+   READ
+	SET CURSOR OFF
+	RESTSCREEN(03,01,21,78,scpr1)
+	SETCOLOR(cor_ant)
+
+ENDIF
+IF vetalt[5] = "X" .AND. vetproms[5] = "þ"
+
+   abonofita()
+
+ENDIF
+IF vetalt[7] = "X" .AND. vetproms[7] = "þ"
+
+	RESTSCREEN(03,01,21,78,scpr1)
+	cor_ant = SETCOLOR()
+	quadro(14,56,20,76,"N/BG,W+/N,N,N/BG","N/N")
+	SET CURSOR ON
+	@ 15,58 SAY "DEVOLU€AO RAPIDA"
+	@ 16,56 SAY "Ì"+REPLICATE("Í",19)+"¹"
+	@ 17,58 SAY "Hora : " GET promhrap PICTURE "##:##:##"
+	@ 19,58 SAY "Desconto :  " GET promdrap PICTURE "###"
+   READ
+	SET CURSOR OFF
+	RESTSCREEN(03,01,21,78,scpr1)
+	SETCOLOR(cor_ant)
+
+ENDIF
+IF vetalt[8] = "X" .AND. vetproms[8] = "þ"
+
+	IF LASTKEY() = 27
+
+		KEYBOARD 13
+		INKEY(0)
+
+	ENDIF
+	RESTSCREEN(03,01,21,78,scpr1)
+	SELECT 1
+	USE "PRNFITA"
+	if flock( 15 )
+	
+		set precedence to FIELDS
+		private	CABEC[2], CAMPOS[2],	MASCAR[2], EDICAO [ 2 ]
+		CABEC [1] = "FITAS"
+		CABEC [2] = "DESC."
+		CAMPOS[1] = "QT_FITA"
+		CAMPOS[2] = "PC_DESC"
+		MASCAR[1] = "999"
+		MASCAR[2] = "999"
+		EDICAO[1] = .T.
+		EDICAO[2] = .T.
+		@ 21,29 fill to 21,41 color "N+/N"
+		@ 09,40 fill to 20,41 color "N+/N"
+		keyboard 5
+		BROWSE	WINDOW 	07,27,20,39;
+	   	    	FRAME 	DOUBLE;
+	      	 	COLOR 	"+W/R,W+/N,W+/R,W/R";
+		       	FIELDS 	CAMPOS;
+	   	    	PICTURE 	MASCAR;
+	      	 	HEADING 	CABEC;
+					EDIT     EDICAO;
+		       	NOAPPEND;
+	   	    	NODELETE
+		unlock			
+
+	endif
+	CLOSE "PRNFITA"
+	set precedence to VARIABLES
+	restscreen(03,01,21,78,SCPR1)
+
+ENDIF
+if VETALT[9] = "X" .and. VETPROMS[9] = "þ"
+
+	Clube_dia()
+
+endif
+
+
+if VETALT[10] = "X" .and. VETPROMS[10] = "þ"
+
+	prom_gen()
+
+endif
+promsodesc     = vetproms[01]
+promabdesc     = vetproms[02]
+promaniver     = vetproms[03]
+promhodevo     = vetproms[04]
+promnufita     = vetproms[05]
+promdescpe     = vetproms[06]
+promdevora     = vetproms[07]
+promdescfi     = vetproms[08]
+promvideoclube = vetproms[09]
+promogenero    = vetproms[10]
+if flock( 15, "GREDE" )
+	SAVE TO "arqprom" ALL LIKE "prom*"
+	unlock in "GREDE"
+else
+	Mens_rerro( " Erro de espera na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+endif
+RESTSCREEN(3,1,21,78,scpr)
+mens_erro("")
+RETURN
+
+*
+&& ABONO PELO NUMERO DE FITAS
+*
+PROCEDURE abonofita
+*
+SET DELETED ON
+scabo  = SAVESCREEN(03,01,21,78)
+sc_cor = SETCOLOR()
+SET COLOR TO "B/B"
+SCROLL(03,01,21,78,0)
+SET KEY 3  TO nadap()
+SET KEY 30 TO nadap()
+x2 = DOW(_date())
+DO WHILE .T.
+
+	quadro(03,07,05,63,"W+/R,W+*/R,N,W/R","B/B")
+	@ 04,08 PROMPT "DOMINGO"
+	@ 04,17 PROMPT "SEGUNDA"
+	@ 04,26 PROMPT "TERCA"
+	@ 04,33 PROMPT "QUARTA"
+	@ 04,41 PROMPT "QUINTA"
+	@ 04,49 PROMPT "SEXTA"
+	@ 04,56 PROMPT "SABADO"
+	@ 23,01 	SAY	SPACE(78) COLOR "W/B"
+	@ 23,01	SAY	" "+CHR(26)+" - "+CHR(27)+;
+						" - Para se posicionar  -  "+;
+						"<ENTER> - Confirmar altera‡„o" COLOR "W+/B"
+	MENU TO x2
+	IF x2 = 2
+
+	   arq_abono = "SEGUNDA.PRO"
+
+	ELSEIF x2 = 3
+
+	   arq_abono = "TERCA.PRO"
+
+	ELSEIF x2 = 4
+
+   	arq_abono = "QUARTA.PRO"
+
+	ELSEIF x2 = 5
+
+   	arq_abono = "QUINTA.PRO"
+
+	ELSEIF x2 = 6
+
+	   arq_abono = "SEXTA.PRO"
+
+	ELSEIF x2 = 7
+
+   	arq_abono = "SABADO.PRO"
+
+	ELSEIF x2 = 1
+
+   	arq_abono = "DOMINGO.PRO"
+
+	ELSE
+
+		RESTSCREEN(03,01,21,78,scabo)
+		@ 23,01 SAY SPACE(78) COLOR "W/B"
+		SETCOLOR(sc_cor)
+		SET KEY  3 TO
+		SET KEY 30 TO
+   	RETURN
+
+	ENDIF
+	SELECT 1
+	use ARQ_ABONO
+	if flock( 15 )
+	
+		COUNT TO num_reg
+		num_lin = IIF(num_reg >= 10 , 21 , num_reg + 11 )
+		set precedence to FIELDS
+		private CABEC[9],	CAMPOS[9],	MASCAR[9], EDICAO[9]
+		CABEC[1]="  CATEGORIA    "
+		CABEC[2]="FITA"
+		CABEC[3]="DIAS"
+		CABEC[4]=CABEC[2]    && "FITA"
+		CABEC[5]=CABEC[3]    && "DIAS"
+		CABEC[6]=CABEC[2]    && "FITA"
+		CABEC[7]=CABEC[3]    && "DIAS"
+		CABEC[8]=CABEC[2]    && "FITA"
+		CABEC[9]=CABEC[3]    && "DIAS"
+		CAMPOS[1]="DADOS"
+		CAMPOS[2]="QF_1"
+		CAMPOS[3]="AB_1"
+		CAMPOS[4]="QF_2"
+		CAMPOS[5]="AB_2"
+		CAMPOS[6]="QF_3"
+		CAMPOS[7]="AB_3"
+		CAMPOS[8]="QF_4"
+		CAMPOS[9]="AB_4"
+		MASCAR[1]="@!"
+		MASCAR[2]=" 99 "
+		MASCAR[3]=MASCAR[2]  && " 99 "
+		MASCAR[4]=MASCAR[2]  && " 99 "
+		MASCAR[5]=MASCAR[2]  && " 99 "
+		MASCAR[6]=MASCAR[2]  && " 99 "
+		MASCAR[7]=MASCAR[2]  && " 99 "
+		MASCAR[8]=MASCAR[2]  && " 99 "
+		MASCAR[9]=MASCAR[2]  && " 99 "
+		EDICAO[1]=.F.
+		EDICAO[2]=.T.
+		EDICAO[3]=.T.
+		EDICAO[4]=.T.
+		EDICAO[5]=.T.
+		EDICAO[6]=.T.
+		EDICAO[7]=.T.
+		EDICAO[8]=.T.
+		EDICAO[9]=.T.
+		SCROLL(05,07,num_lin,63,0)
+		@ 03,07 TO 07,63 DOUBLE
+		@ 05,07 SAY "ÌÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÍÍ¹"
+		@ 06,08 SAY "  CASOS"
+		@ 06,23 SAY "º ABONO 1 º ABONO 2 º ABONO 3 º ABONO 4 "
+		@ 07,23 SAY "Ê"
+		@ 07,33 SAY "Ê"
+		@ 07,43 SAY "Ê"
+		@ 07,53 SAY "Ê"
+		@ 23,01 	SAY 	SPACE(78) COLOR "W/B"
+		@ 23,01	SAY	"Tab - Shift Tab - "+CHR(24)+" - "+CHR(25)+;
+							" - Para se posicionar  -  "+;
+							"<ENTER> - Confirmar altera‡„o" COLOR "W+/B"
+		SET KEY 27 TO saibro()
+		GO 1
+		KEYBOARD 9
+		BROWSE	WINDOW 	08,07,num_lin,63;
+	   	    	FRAME 	DOUBLE;
+	      	 	COLOR 	"+W/R,W+/N,W+/R,W/R";
+		       	FIELDS 	CAMPOS;
+	   	    	PICTURE 	MASCAR;
+	      	 	HEADING 	CABEC;
+					EDIT		EDICAO;
+		       	NOAPPEND;
+	   	    	NODELETE
+		unlock
+
+
+	else
+
+		Mens_rerro( " Arquivo em uso por outro terminal, tarefa n„o efetuada", 4, "W+*/B" )
+
+	endif
+	CLOSE
+	SET COLOR TO "W/B"
+	SCROLL(03,01,21,78,0)
+	@ 23,01 SAY SPACE(78) COLOR "W/B"
+	set precedence to VARIABLES
+	
+enddo
+RESTSCREEN(03,01,21,78,scabo)
+SETCOLOR(sc_cor)
+SET KEY  3 TO
+SET KEY 30 TO
+
+RETURN
+*
+
+*
+FUNCTION nadap
+*
+RETURN
+*
+
+*
+FUNCTION saibro
+
+SET KEY 27 TO
+
+KEYBOARD 13, 27
+
+RETURN
+*
+******************
+function Clube_dia
+******************
+
+restscreen( 03, 01, 21, 78, SCPR1 )
+if _file( "CLUBE.MEM" )
+
+	restore from "CLUBE.MEM" additive
+
+else
+
+	store 0 to CLUBE1, CLUBE2, CLUBE3, CLUBE4, CLUBE5, CLUBE6, CLUBE7
+	
+endif
+COR_ANT = setcolor()
+Quadro(04,03,20,19,"W+/BG","N/N") 
+@ 05,05 say "DIA     FITAS"
+@ 06,03 say "Ì"+replicate("Í",15)+"¹"
+@ 06,13 say "Ë"
+@ 20,13 say "Ê"
+@ 07,04 say " DOMINGO º"
+@ 08,03 say "Ì"+replicate("Í",09)+"Î"+replicate("Í",05)+"¹"
+@ 09,04 say " SEGUNDA º"
+@ 10,03 say "Ì"+replicate("Í",09)+"Î"+replicate("Í",05)+"¹"
+@ 11,04 say " TER€A   º"
+@ 12,03 say "Ì"+replicate("Í",09)+"Î"+replicate("Í",05)+"¹"
+@ 13,04 say " QUARTA  º"
+@ 14,03 say "Ì"+replicate("Í",09)+"Î"+replicate("Í",05)+"¹"
+@ 15,04 say " QUINTA  º"
+@ 16,03 say "Ì"+replicate("Í",09)+"Î"+replicate("Í",05)+"¹"
+@ 17,04 say " SEXTA   º"
+@ 18,03 say "Ì"+replicate("Í",09)+"Î"+replicate("Í",05)+"¹"
+@ 19,04 say " SABADO  º"
+set color to "N/BG,W+/N,N,N/BG"
+OP = 0
+do while OP # 1
+	
+	@ 07,16 get CLUBE1 picture "99"
+	@ 09,16 get CLUBE2 picture "99"
+	@ 11,16 get CLUBE3 picture "99"
+	@ 13,16 get CLUBE4 picture "99"
+	@ 15,16 get CLUBE5 picture "99"
+	@ 17,16 get CLUBE6 picture "99"
+	@ 19,16 get CLUBE7 picture "99"
+   read
+	COR_ANT1 = setcolor()
+	set color to "W+/B,W+*/B,N,W+/B"
+	@ 23,01 			say 		space(78)
+	@ 23,01 			say 		"Estes valores est„o corretos ? " color "W+/B"
+	@ 23,col() + 3 prompt 	"Sim"
+	@ 23,col() + 3	prompt	"N„o"
+  	menu to OP
+	if OP < 2
+
+		if flock( 15, "GREDE" )
+			save to "CLUBE.MEM" all like "CLUBE*"
+			unlock in "GREDE"
+		else
+			Mens_rerro( " Erro de espera na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+		endif
+		exit
+
+	endif
+	@ 23,01 say space(78) color "W/B"
+	setcolor(COR_ANT1)
+
+enddo
+@ 23,01 say space(78) color "W/B"
+setcolor(COR_ANT)
+restscreen(03,01,21,78,SCPR1)
+
+
+***********************
+procedure promon_gen
+***********************
+
+@ 23,01 say "cheguei"
+inkey(0)
+
+
+

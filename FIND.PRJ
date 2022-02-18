@@ -1,0 +1,277 @@
+*****************
+function Pesqator
+*****************
+
+private ESTA_TELA, OPCAO, ESTA_PESQ, AREA_ANT, MATOP[ 3 ], TIPO_CUR
+AREA_ANT    = _select()
+ESTA_TELA   = savescreen( 00, 00, 24, 79 )
+TIPO_CUR    = _set( "CURSOR" ) == "ON"
+MATOP [ 1 ] = "Ator      "
+MATOP [ 2 ] = "Diretor   "
+MATOP [ 3 ] = "Referˆncia"
+Quadro( 16, 15, 20, 28, "W+/R, N/W, N, W+/R", "N+/N" )
+OPCAO = 1
+mens_erro("Selecione qual a pesquisa ")
+@ 17,17 prompt MATOP [ 1 ]
+@ 18,17 prompt MATOP [ 2 ] 
+@ 19,17 prompt MATOP [ 3 ]
+menu to OPCAO
+if OPCAO > 0 .and. OPCAO < 4
+mens_erro("Digite a palavra pela qual vocˆ quer a pesquisa")      
+	ESTA_PESQ = space( 11 )
+	Quadro( 15 + OPCAO, 31, 17 + OPCAO, 45, "W+/R, N/W, N, W+/R", "N+/N" )
+	@ 16 + OPCAO, 33 get ESTA_PESQ picture "@!" color "W+/R, N/W, N, W+/R"
+	set cursor ON
+	read
+	set cursor OFF
+	ESTA_PESQ = alltrim( ESTA_PESQ )
+
+endif
+if OPCAO < 1 .or. OPCAO > 4 .or. empty( ESTA_PESQ )
+
+	restscreen( 00, 00, 24, 79, ESTA_TELA )
+	return
+
+else
+
+	ESTA_PESQ = _left( MATOP [ OPCAO ], 1 )  + ESTA_PESQ
+	
+endif
+set cursor OFF
+select "TITULOS"
+set order to 1
+select "WORD"
+seek ESTA_PESQ
+if _left( WORD->WORD, len( ESTA_PESQ ) ) == ESTA_PESQ
+
+	Mostra_ator()
+	
+else
+
+	Mens_erro( MATOP [ OPCAO ] + " n„o localizado " )
+		
+endif
+restscreen( 00, 00, 24, 79, ESTA_TELA )
+_select( AREA_ANT )
+set cursor TIPO_CUR
+return
+
+********************
+function Mostra_ator
+********************
+
+Poe_tela()
+do while .T.
+	
+	select "TITULOS"
+	seek    WORD->TIT_COD
+	if found()
+
+		Poe_dados()
+		
+	endif
+	select "WORD"
+	do while .T.
+
+		clear typeahead
+		inkey( 0 )
+		if lastkey() = -3
+		
+			if .not. bof()
+			
+            skip -1
+            if _left( WORD->WORD, len( ESTA_PESQ ) ) # ESTA_PESQ
+	
+*               @ 23,01 say space( 78 ) color "W+/B"
+               Mens_rerro( "Primeira ficha com a sua palavra chave de busca",  20, "W+*/B" )
+*               mens_rerro("Primeira ficha com a sua palavra chave de busca") color "W+*/B"
+*               _bell()
+*               _bell()
+*               inkey( 20 )
+               skip 1
+	
+            endif
+
+
+            exit
+				
+			endif	
+	
+		elseif lastkey() = -4
+		
+			if .not. eof()
+			
+				skip 1
+            if _left( WORD->WORD, len( ESTA_PESQ ) ) # ESTA_PESQ
+               Mens_rerro( "N„o h  mais fichas com a sua palavra chave de busca",  20, "W+*/B" ) 
+               skip -1
+             endif
+             exit
+				
+			endif	
+	
+		elseif lastkey() = 27
+		
+			exit
+				
+		endif	
+
+	enddo	
+	if lastkey() = 27
+	
+		exit
+
+	endif
+	
+enddo	
+return
+
+*****************
+function Poe_tela
+*****************
+
+restore from "TELATIT.TEL" additive
+restscreen( 00, 00, 24, 79, TELA1 )
+@ 23,01 say space( 78 ) color "W+/B"
+@ 23,02 say "<F4> - Ficha anterior    <F5> - Pr¢xima ficha" color "W+/B"
+release TELA1
+
+******************
+function Poe_dados
+******************
+
+@ 05,03 SAY TITULOS->T_CODIGO   PICTURE "@R 99.9999"	COLOR "W+/N"
+@ 03,38 SAY TITULOS->T_PORT     PICTURE "@!"				COLOR "W+/N"
+@ 05,38 SAY TITULOS->T_ORIGINAL PICTURE "@!"				COLOR "W+/N"
+@ 07,12 SAY TITULOS->T_DIRETOR  PICTURE "@!"				COLOR "W+/N"
+@ 07,50 SAY TITULOS->T_QUEM     PICTURE "@!"				COLOR "W+/N"
+@ 09,12 SAY TITULOS->T_ATOR1    PICTURE "@!"				COLOR "W+/N"
+@ 09,35 SAY TITULOS->T_ATOR2    PICTURE "@!"				COLOR "W+/N"
+@ 09,58 SAY TITULOS->T_ATOR3    PICTURE "@!"				COLOR "W+/N"
+@ 11,19 SAY TITULOS->T_ANO_PROD PICTURE "99"				COLOR "W+/N"
+@ 11,44 SAY TITULOS->T_DURACAO  PICTURE "9999"			COLOR "W+/N"
+@ 11,68 SAY TITULOS->T_DATA_ENT PICTURE "@E"          COLOR "W+/N"
+@ 13,19 SAY TITULOS->T_IDADE    PICTURE "99"				COLOR "W+/N"
+@ 13,37 SAY TITULOS->T_COPIAS   PICTURE "9999"			COLOR "W+/N"
+@ 13,58 SAY TITULOS->T_SINOPSE  PICTURE "A" 				COLOR "W+/N"
+@ 13,77 SAY TITULOS->T_DUBLADO  PICTURE "A"				COLOR "W+/N"
+@ 15,12 SAY TITULOS->T_LEGENDA  PICTURE "@!"				COLOR "W+/N"
+@ 15,40 SAY TITULOS->T_PAIS     PICTURE "@!"				COLOR "W+/N"
+@ 15,68 SAY TITULOS->T_IDIOMA   PICTURE "@!"				COLOR "W+/N"
+@ 17,12 SAY TITULOS->T_PREMIOS  PICTURE "@!"				COLOR "W+/N"
+@ 17,42 SAY TITULOS->T_DISTRIB  PICTURE "@!"				COLOR "W+/N"
+@ 17,72 SAY TITULOS->T_TIPO     PICTURE "@!"				COLOR "W+/N"
+@ 19,14 SAY TITULOS->T_QUALID   PICTURE "@!"				COLOR "W+/N"
+T_CLASSE = TITULOS->T_CLASSE
+CT_CLASSE = SPACE(80)
+MAKE_TPO1("T_CLASSE")
+@ 19,40 SAY CT_CLASSE   PICTURE "@!"				COLOR "W+/N"
+T_GENERO = TITULOS->T_GENERO
+CT_GENERO = SPACE(80)
+MAKE_TPO1("T_GENERO")
+@ 19,63 SAY CT_GENERO   PICTURE "@!"				COLOR "W+/N"
+T_CATEGOR = TITULOS->T_CATEGOR
+CT_CATEGOR = SPACE(80)
+MAKE_TPO1("T_CATEGOR")
+@ 21,14 SAY CT_CATEGOR  PICTURE "@!"				COLOR "W+/N"
+if TITULOS->N_COP_LOJA = 0 .and. TITULOS->T_COPIAS > 0
+
+	@ 21,36 say space( 36 ) color "W+/B"
+	@ 21,36 say "Fitas disponiveis em outra loja" color "W+/B"
+
+else
+
+	QT_COPIAS = TITULOS->N_COP_LOJA - TITULOS->N_COP_FORA
+	if QT_COPIAS = 0
+
+		@ 21,36 say space( 36 ) color "W+/B"
+		@ 21,36 say "Todas as fitas locadas" color "W+/B"
+
+	else
+
+		@ 21,36 say space( 36 ) color "W+/B"
+		@ 21,36 say QT_COPIAS picture "###" color "W+/B"
+		MEU_TEXTO = iif( QT_COPIAS = 1, "  C¢pia disponivel",;
+		                                "  C¢pias disponiveis" )
+		@ 21,39 SAY meu_texto + " na Loja" color "W+/B"
+
+	endif
+
+endif
+
+***************** 
+function Findword
+*****************
+
+seek PALAVRA in "WORD" 
+if PALAVRA # WORD->WORD
+
+    return
+
+endif
+set order to 1
+seek WORD->TIT_COD
+if WORD->TIT_COD # TITULOS->T_CODIGO
+
+    return
+
+endif
+@ 01,01 say TITULOS->T_CODIGO
+@ 02,01 say TITULOS->T_PORT
+@ 03,01 say "ATORES   " + TITULOS->T_ATOR1
+@ 04,01 say "         " + TITULOS->T_ATOR2 
+@ 05,01 say "         " + TITULOS->T_ATOR3 
+@ 06,01 say " DIRETOR " + TITULOS->T_DIRETOR 
+@ 07,01 say " REF.    " + TITULOS->T_QUEM 
+return
+
+************************ 
+function Findword_avanca 
+************************ 
+
+if  eof()
+    mens_rerro("Ultima ficha da pesquisa")
+    skip -1
+    return
+endif
+skip 1 in "WORD" 
+set order to 1
+seek WORD->TIT_COD
+if WORD->TIT_COD # TITULOS->T_CODIGO
+*   return
+endif
+@ 01,01 say TITULOS->T_CODIGO
+@ 02,01 say TITULOS->T_PORT
+@ 03,01 say "ATORES   " + TITULOS->T_ATOR1
+@ 04,01 say "         " + TITULOS->T_ATOR2 
+@ 05,01 say "         " + TITULOS->T_ATOR3 
+@ 06,01 say " DIRETOR " + TITULOS->T_DIRETOR 
+@ 07,01 say " REF.    " + TITULOS->T_QUEM 
+
+return
+ 
+*********************** 
+function Findword_volta 
+*********************** 
+
+if  bof()
+    mens_rerro("Primeira ficha da pesquisa")
+    skip 1
+    return
+endif
+skip -1 in "WORD" 
+set order to 1
+seek WORD->TIT_COD
+if WORD->TIT_COD # TITULOS->T_CODIGO
+
+   return
+
+endif
+@ 01,01 say TITULOS->T_CODIGO
+@ 02,01 say TITULOS->T_PORT
+@ 03,01 say "ATORES   " + TITULOS->T_ATOR1
+@ 04,01 say "         " + TITULOS->T_ATOR2 
+@ 05,01 say "         " + TITULOS->T_ATOR3 
+@ 06,01 say " DIRETOR " + TITULOS->T_DIRETOR 
+@ 07,01 say " REF.    " + TITULOS->T_QUEM 
+return

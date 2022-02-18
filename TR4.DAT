@@ -1,0 +1,36 @@
+window 00,00,24,79 bright white  on blue
+window 03,02,16,44 bright white on red shadow
+rowcol 01,01 "    VSV 4R.0   º                 Menu Inicial                 º    Torus    " bright white
+rowcol 00,16 "Ë" bright white
+rowcol 00,63 "Ë" bright white
+rowcol 02,00"ÌÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹" bright white
+rowcol 02,16 "Ê" bright white
+rowcol 02,63 "Ê" bright white
+rowcol 22,00"ÌÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹" bright white
+rowcol 04,04 "Loca‡„o / atendimento  Torus - VSV 4R.0 " bright white
+rowcol 05,04 "Cadastros e configura‡”es gerais        " bright white
+rowcol 06,04 "Indexa‡„o e acerto de arquivos          " bright white
+rowcol 07,04 "Gerador de relat¢rios                   " bright white
+rowcol 08,04 "Seguran‡a - c¢pias de arquivos em disco " bright white
+rowcol 09,04 "A - formata discos no drive A:          " bright white
+rowcol 10,04 "B - formata discos no drive B:          " bright white
+rowcol 11,04 "Reinstala‡„o ou senha                   " bright white
+rowcol 12,04 "impress„o do Manual                     " bright white
+rowcol 13,04 "cOnsultas em terminais da rede          " bright white
+rowcol 14,04 "Desligar o computador                   " bright white
+rowcol 15,04 "Terminar o programa -> DOS              " bright white
+rowcol 04,04 "L" bright yellow
+rowcol 05,04 "C" bright yellow
+rowcol 06,04 "I" bright yellow
+rowcol 07,04 "G" bright yellow
+rowcol 08,04 "S" bright yellow
+rowcol 09,04 "A" bright yellow
+rowcol 10,04 "B" bright yellow
+rowcol 11,04 "R" bright yellow
+rowcol 12,17 "M" bright yellow
+rowcol 13,05 "O" bright yellow
+rowcol 14,04 "D" bright yellow
+rowcol 15,04 "T" bright yellow
+rowcol 23,02 "Pressione a letra mai£scula em destaque amarelo para o programa... " bright white
+
+

@@ -1,0 +1,10 @@
+parameters ARQ_TXT
+if pcount() < 1
+
+	quit
+
+endif
+TEXTO_HELP = memoread( ARQ_TXT )
+TEXTO_HELP = hardcr( TEXTO_HELP )
+memowrit( ARQ_TXT, TEXTO_HELP )
+

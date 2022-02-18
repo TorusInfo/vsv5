@@ -1,0 +1,160 @@
+set deleted  ON
+set softseek ON
+set date     "DMY"
+set century on
+select 5
+use "TITULOS.DBF"
+set index to "TITULOS.K1" key TITULOS->T_CODIGO  ,;
+	          "TITULOS.K2" key TITULOS->T_PORT    ,;
+				 "TITULOS.K3" key TITULOS->T_ORIGINAL,;
+				 "TITULOS.K4" key TITULOS->T_IDIOMA + TITULOS->T_PORT    ,;
+				 "TITULOS.K5" key _descend( dtos(TITULOS->T_DATA_ENT) +   ;
+                                             TITULOS->T_CODIGO )
+set color to "W+/B,N/W,,W+/B"
+clear
+@ 00,00 to 24,79 double
+@ 02,00 say "Ì" + replicate( "Í", 78 ) + "¹"
+@ 01,26 say "Inclus„o Externa de T¡tulos"
+@ 22,00 say "Ì" + replicate( "Í", 78 ) + "¹"
+mCod = space( 06 )
+mPor = space( 31 )
+mGen = 1
+mCla = 1
+mCat = 1
+do while lastkey() # 27
+
+   @ 10,05 say  "Digite o c¢digo do t¡tulo:    "    ;
+           get   mCod picture "999999"              ; 
+           valid Testa_cod()
+   @ 12,05 say  "Digite o t¡tulo em portugues: "    ;
+           get   mPor picture "@!"                  ;
+   @ 14,05 say  "Digite a classe do t¡tulo:    "    ;
+           get   mNom picture "@!"
+   @ 14,05 say  "Digite a categoria do t¡tulo: "    ;
+           get   mNom picture "@!"
+   read
+   if lastkey() = 27
+
+      exit
+
+   endif   
+   if Confirma( "Confirma a inclus„o ? " , 1 )
+
+      Inclui_Cliente()
+
+   endif
+
+enddo
+set color to
+clear
+quit
+
+***********************
+function Inclui_cliente
+***********************
+
+* ---------------------------------------------  Inclui o cliente
+select "TITULOS"
+append blank
+replace TITULOS->T_CODIGO   with mCod    ;
+        TITULOS->T_PORT     with mPor    ;
+        TITULOS->T_GENERO   with mNom    ;
+        TITULOS->T_CATEGOR  with "A"     ;
+        TITULOS->T_CLASSE   with "A"     ;
+        TITULOS->DATA_ENT   with _date()
+* ---------------------------------------------  Altera o codcliv
+select "CODCLIV"
+go 2
+replace CODCLIV->COD_CLI with str((val(CODCLIV->COD_CLI)+1),6,0,"0")
+select "CLIENTES"
+return .T.
+
+******************
+function Testa_cod
+******************
+
+if len( alltrim( mCod ) ) < 6
+
+   Confirma( "O c¢digo do t¡tulo  tem que ter 6 digitos", 2 )
+   return .F.
+
+endif
+set order to 1
+seek mCod
+if found() .and. TITULOS->T_CODIGO = mCod
+
+   Confirma( "J  existe um t¡tulo com este c¢digo", 2 )
+   return .F.
+
+endif
+return .T.
+
+******************
+function Testa_cpf
+******************
+      
+set order to 2
+seek mPor
+if found() .and. CLIENTES->CPF_CLI = mPor
+
+   Confirma( "J  existe um cliente com este CPF", 2 )
+   return .F.
+
+endif
+if .not. cpf( mPor )
+
+   Confirma( "Este n„o ‚ um CPF valido", 2 )
+   return .F.
+
+endif
+return .T.
+
+*****************
+function Confirma
+*****************
+
+parameters DE_ONDE, XPADRAO
+private    DE_ONDE, COR, ANT_TELA, XTAMANHO
+if pcount() = 0
+
+	DE_ONDE = ""
+	
+endif	
+if pcount() < 2
+
+	XPADRAO = 1
+	
+endif
+XTAMANHO = iif( len( DE_ONDE ) < 18, 54, 72 - len( DE_ONDE ) )
+ANT_TELA = savescreen( 17, XTAMANHO, 21, 77 )
+Janela( 17, XTAMANHO, 20, 75, "GR+/R", "N+/N" )
+@ 18,XTAMANHO + 2 say DE_ONDE             color "GR+/R"
+if XPADRAO = 1
+
+	@ 19,XTAMANHO + 2 say "Confirma ( S/N ) " color "GR+/R"
+	
+else	
+
+	@ 19,XTAMANHO + 2 say "Tecle algo" color "GR+/R"
+
+endif
+tone( 1000,2 )
+clear typeahead
+inkey( 0 )
+restscreen( 17, XTAMANHO, 21, 77, ANT_TELA )
+if chr( lastkey() ) = "S" .or. chr( lastkey() ) = "s"
+
+	return .T.
+	
+endif	 
+return .F.
+
+***************
+function Janela
+***************
+
+parameters LI, CI, LF, CF, CORBOX, CORSOMBRA
+@ LI + 1,CI + 2 fill  to LF + 1,CF + 2 color CORSOMBRA
+@ LI,CI         clear to LF,CF         color CORBOX
+@ LI,CI               to LF,CF  double color CORBOX
+return

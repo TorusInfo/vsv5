@@ -1,0 +1,307 @@
+FUNCTION OPEN
+PARAMETERS arq_nome
+
+IF arq_nome = "CLIENTES"
+   if demo = .t.
+      SELECT 4
+      USE "CLIENTES.DBF" 
+      if flock(15)
+         SET INDEX TO "CLIENTES.K1" KEY CLIENTES->NOME,;
+                      "CLIENTES.K2" KEY CLIENTES->CPF_CLI ,;
+                      "CLIENTES.K3" KEY CLIENTES->COD_CLI 
+
+         arq_demo=select()
+         nrec=reccount(arq_demo)
+         if nrec>20
+            trava()
+            dele all for recno()>20
+            dtrava()
+            er_pack=ferror()
+            if er_pack # 0
+               pack nobackup
+               unlock
+            endif
+         endif
+      else
+         Mens_rerro( "Erro de acesso na rede, opera‡„o cancelada", 4, "W+*/B" )
+         close all
+         quit 
+      endif
+   endif
+      SELECT 4
+      USE "CLIENTES.DBF"
+
+	if flock( 15 )
+
+		SET INDEX TO "CLIENTES.K1" KEY CLIENTES->NOME,;
+   		          "CLIENTES.K2" KEY CLIENTES->CPF_CLI ,;
+      		       "CLIENTES.K3" KEY CLIENTES->COD_CLI 
+      unlock
+		set autolock on
+	else
+
+		Mens_rerro( "Erro de acesso na rede, opera‡„o cancelada", 4, "W+*/B" )
+		close all
+		quit 
+
+	endif
+				 
+ELSEIF arq_nome = "TITULOS"
+   if demo = .t.
+      SELECT 5
+      USE "TITULOS.DBF"
+      if flock( 15 )
+
+		SET INDEX TO "TITULOS.K1" KEY TITULOS->T_CODIGO  ,;
+   		          "TITULOS.K2" KEY TITULOS->T_PORT    ,;
+						 "TITULOS.K3" KEY TITULOS->T_ORIGINAL,;
+						 "TITULOS.K4" KEY TITULOS->T_IDIOMA + TITULOS->T_PORT    ,;
+						 "TITULOS.K5" KEY _descend( dtos(TITULOS->T_DATA_ENT) + TITULOS->T_CODIGO )
+         arq_demo=select()
+         nrec=reccount(arq_demo)
+         if nrec>20
+            trava()
+            dele all for recno()>20
+            dtrava()
+            er_pack=ferror()
+            if er_pack # 0
+               pack nobackup
+               unlock
+            endif
+         endif
+      else
+         Mens_rerro( "Erro de acesso na rede, opera‡„o cancelada", 4, "W+*/B" )
+         close all
+         quit 
+      endif
+   endif
+   SELECT 5
+	USE "TITULOS.DBF"
+	if flock( 15 )
+
+		SET INDEX TO "TITULOS.K1" KEY TITULOS->T_CODIGO  ,;
+   		          "TITULOS.K2" KEY TITULOS->T_PORT    ,;
+						 "TITULOS.K3" KEY TITULOS->T_ORIGINAL,;
+						 "TITULOS.K4" KEY TITULOS->T_IDIOMA + TITULOS->T_PORT    ,;
+						 "TITULOS.K5" KEY _descend( dtos(TITULOS->T_DATA_ENT) + TITULOS->T_CODIGO )
+		unlock
+		set autolock on
+
+	else
+
+		Mens_rerro( "Erro de acesso na rede, opera‡„o cancelada", 4, "W+*/B" )
+		close all
+		quit 
+
+	endif
+	
+	SELECT 16
+	USE "WORD.DBF"
+	if flock( 15 )
+
+		SET INDEX TO "WORD.K1" KEY WORD->WORD ,;
+   		          "WORD.K2" KEY WORD->TIT_COD 
+		unlock
+		set autolock on
+
+	else
+
+		Mens_rerro( "Erro de acesso na rede, opera‡„o cancelada", 4, "W+*/B" )
+		close all
+		quit 
+
+	endif
+				 
+ELSEIF arq_nome = "FITAS"
+   if demo = .t.
+      SELECT 6
+      USE "FITAS.DBF"
+      if flock( 15 )
+
+		SET INDEX TO "FITAS.K1" KEY FITAS->CODFITA,;
+		             "FITAS.K2" KEY FITAS->COD_CLI + FITAS->CODFITA,;
+						 "FITAS.K3" KEY FITAS->SEQUENCIAL
+
+         arq_demo=select()
+         nrec=reccount(arq_demo)
+         if nrec>20
+            trava()
+            dele all for recno()>20
+            dtrava()
+            er_pack=ferror()
+            if er_pack # 0
+               pack nobackup
+               unlock
+            endif
+         endif
+      else
+         Mens_rerro( "Erro de acesso na rede, opera‡„o cancelada", 4, "W+*/B" )
+         close all
+         quit 
+      endif
+   endif
+
+
+
+	SELECT 6
+	USE "FITAS.DBF"
+	if flock( 15 )
+
+		SET INDEX TO "FITAS.K1" KEY FITAS->CODFITA,;
+		             "FITAS.K2" KEY FITAS->COD_CLI + FITAS->CODFITA,;
+						 "FITAS.K3" KEY FITAS->SEQUENCIAL
+		unlock
+		set autolock on
+
+	else
+
+		Mens_rerro( "Erro de acesso na rede, opera‡„o cancelada", 4, "W+*/B" )
+		close all
+		quit 
+
+	endif
+
+ELSEIF arq_nome = "MOVIMEN"
+
+	SELECT 7
+	USE "MOVIMEN.DBF"
+	
+ELSEIF arq_nome = "FUNCION"
+
+	SELECT 11
+	USE "FUNCION.DBF"
+	if flock( 15 )
+
+		SET INDEX TO "FUNCION.K1" KEY FUNCION->F_CODIGO
+		unlock
+		set autolock on
+
+	else
+
+		Mens_rerro( "Erro de acesso na rede, opera‡„o cancelada", 4, "W+*/B" )
+		close all
+		quit 
+
+	endif
+	
+ELSEIF arq_nome = "CAIXA"
+
+	select 13
+	use "CAIXA.DBF"
+	if flock( 15 )
+
+		set index to "CAIXA.K1" key CAIXA->OPERACAO + "X"
+		unlock
+		set autolock on
+
+	else
+
+		Mens_rerro( "Erro de acesso na rede, opera‡„o cancelada", 4, "W+*/B" )
+		close all
+		quit 
+
+	endif
+   	
+ELSEIF arq_nome = "RESERVA"
+
+	SELECT 17
+	USE "RESERVA.DBF"
+	if flock( 15 )
+
+      SET INDEX TO "RESERVA.K1" KEY RESERVA->CODFITA+DTOS(RESERVA->D_RESERVA),;
+                   "RESERVA.K2" KEY RESERVA->COD_CLI,;
+						 "RESERVA.K3" KEY RESERVA->D_RESERVA
+		unlock
+		set autolock on
+
+	else
+
+		Mens_rerro( "Erro de acesso na rede, opera‡„o cancelada", 4, "W+*/B" )
+		close all
+		quit 
+
+	endif
+
+ELSEIF arq_nome = "FCLI"
+
+   SELECT 18
+   USE "FCLI.DBF"
+	if flock( 15 )
+
+      SET INDEX TO "FCLI.K1" KEY FCLI->CODFITA
+		unlock
+		set autolock on
+	else
+
+		Mens_rerro( "Erro de acesso na rede, opera‡„o cancelada", 4, "W+*/B" )
+		close all
+		quit 
+
+	endif
+
+
+ELSEIF arq_nome = "FERIADOS"
+   select 10
+   use "FERIADOS"
+   if flock( 15 )
+	set index to "FERIADOS.K1" key FERIADOS->DATA_FER
+        
+	unlock
+   else
+	Mens_rerro( "Erro na rede, opera‡„o n„o efetuada", 3, "W+*/B" )
+	return		
+   endif
+
+*ELSEIF arq_nome = "EXTRATO"
+
+*	SELECT 18
+*	USE "EXTRATO.DBF"
+*	if flock( 15 )
+
+*		SET INDEX TO "EXTRATO.K1" KEY EXTRATO->COD_CLI
+*		unlock
+*		set autolock on
+
+*	else
+
+*		Mens_rerro( "Erro de acesso na rede, opera‡„o cancelada", 4, "W+*/B" )
+*		close all
+*		quit 
+
+*	endif
+	
+ELSEIF arq_nome = "REDE"
+
+	SELECT 19
+	USE "REDE.DBF"
+	
+ELSEIF arq_nome = "GREDE"
+
+	SELECT 21
+	USE "GREDE.DBF"
+
+ELSEIF arq_nome = "SINOPSE"
+
+   SELECT 22
+   USE "SINOPSE.DBF"
+	if flock( 15 )
+
+      SET INDEX TO "SINOPSE.K1" KEY SINOPSE->T_CODIGO  ,;
+                   "SINOPSE.K2" KEY SINOPSE->T_PORT    ,;
+                   "SINOPSE.K3" KEY SINOPSE->T_ORIGINAL
+		unlock
+		set autolock on
+
+	else
+
+		Mens_rerro( "Erro de acesso na rede, opera‡„o cancelada", 4, "W+*/B" )
+		close all
+		quit 
+
+	endif
+	
+
+ENDIF
+
+return
+ 

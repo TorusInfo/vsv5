@@ -1,0 +1,51 @@
+FUNCTION ZERA_VSV
+
+clear
+@ 10,10 say "Aguarde ... ZERANDO os arquivos" color"w+*/n"
+set cursor off
+
+SELECT 1
+USE "CLIENTES.DBF" 
+ZAP
+SELECT 1
+USE "TITULOS.DBF"
+ZAP
+SELECT 1
+USE "WORD.DBF"
+ZAP
+SELECT 1
+USE "FITAS.DBF"
+ZAP
+SELECT 1
+USE "MOVIMEN.DBF"
+ZAP
+SELECT 1
+USE "FUNCION.DBF"
+ZAP
+SELECT 1
+use "CAIXA.DBF"
+ZAP
+SELECT 1
+USE "RESERVA.DBF"
+zap
+SELECT 1
+USE "FCLI.DBF"
+zap
+SELECT 1
+USE "SINOPSE.DBF"
+zap
+RUN "DEL *.K*"
+clear
+OPEN("CLIENTES")
+OPEN("TITULOS")
+OPEN("FITAS")
+OPEN("MOVIMEN")
+OPEN("CAIXA")
+OPEN("RESERVA")
+OPEN("FCLI")
+OPEN("SINOPSE")
+OPEN("FUNCION")
+@ 10,10 say "Aguarde ... criando os indices dos arquivos" color"w+*/n"
+set cursor off
+
+QUIT

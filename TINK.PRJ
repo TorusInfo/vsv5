@@ -1,0 +1,13 @@
+CLEAR
+
+TR = 0
+
+DO WHILE TR # 27
+
+	@ 20,10
+	STORE INKEY(0) TO TR
+	@ 10,10 SAY TR PICTURE "####"
+
+ENDDO
+
+QUIT

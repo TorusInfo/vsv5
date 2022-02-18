@@ -1,0 +1,11 @@
+set date "DMY"
+set century on
+d_t=_date() &&"01/01/1985"
+clear
+@ 10,10 say str(year(d_t))
+quit
+*Teste de Editor de programas
+use "fcli.dbf"
+      SET INDEX TO "FCLI.K1" KEY FCLI->CODFITA
+browse
+quit

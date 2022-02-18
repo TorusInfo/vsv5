@@ -1,0 +1,26 @@
+
+              CONTRATO DE LICENÄA DE USO
+              
+AVISO:
+A TORUS INFORMµTICA LTDA. LICENCIA ESTE PROGRAMA PARA SEU USO COM A CONDIÄ«O QUE VOC“ ACEITE TODOS OS TERMOS DESTE CONTRATO. POR FAVOR LEIA CUIDADOSAMENTE TODAS AS CLµUSULAS DESTE CONTRATO. SE VOC“ N«O CONCORDAR COM ESTE CONTRATO, A TORUS INFORMµTICA LTDA. N«O ESTARµ LICENCIANDO O USO DO PROGRAMA PARA VOC“, E VOC“ DEVERµ ABORTAR A INSTALAÄ«O, N«O USAR O PROGRAMA E DESINSTALµ-LO DE SEU COMPUTADOR. AO INSTALµ-LO, VOC“ ESTARµ EXPLICITAMENTE CONCORDANDO COM TODOS OS TERMOS DESTE CONTRATO. 
+LICENÄA:
+O programa que acompanha esta licenáa (denominado "VSV-Torus vers∆o 4R.0") Ç propriedade da TORUS INFORMµTICA LTDA. ou de seus licenciados, e Ç protegido por leis de copyright. A TORUS INFORMµTICA LTDA. continua a ter a propriedade do Programa, e vocà passa a ter determinados direitos de utilizaá∆o do mesmo.
+
+Os seus direitos e obrigaá‰es com respeito ao Programa s∆o os seguintes:
+VOC“ PODE:
+(i) usar uma £nica c¢pia do Programa em um £nico computador;
+(ii) fazer uma c¢pia de seguranáa do Programa, ou copiar o programa para o disco r°gido de seu computador e manter os discos originais como c¢pia de seguranáa.
+VOC“ N«O PODE:
+(i) copiar a documentaá∆o que acompanha o Programa;
+(ii) sub-licenciar, alugar ou arrendar qualquer parte do Programa;
+(iii) praticar engenharia reversa, descompilar, desassemblar, modificar, traduzir, efetuar qualquer tentativa para descobrir o c¢digo fonte do Programa ou criar trabalhos derivados do Programa.
+GARANTIA LIMITADA:
+A TORUS INFORMµTICA LTDA.  O PROGRAMA ê FORNECIDO DESTA FORMA, SEM GARANTIAS EXPRESSAS NEM IMPL÷CITAS, INCLUINDO GARANTIAS IMPL÷CITAS DE COMERCIALIZ«O, DE ADEQUAÄ«O PARA UM FIM ESPEC÷FICO E DE N«O INFRINGIMENTO. A TORUS INFORMµTICA LTDA. N«O SERµ RESPONSµVEL, SOB QUALQUER ALEGAÄ«O, POR QUAISQUER DANOS SOFRIDOS POR VOC“ OU POR QUALQUER USUµRIO DO PROGRAMA. A TORUS INFORMµTICA LTDA. N«O OFERECE SUPORTE TêCNICO A ESTE PROGRAMA GRATUITAMENTE E N«O ATUALIZARµ ESTE PROGRAMA TAMBêM GRATUITAMENTE.
+RENÈNCIA DE PREJU÷ZOS:
+INDEPENDENTE DE QUALQUER PROVID“NCIA PREVISTA NESTE CONTRATO N«O ATINGIR O SEU PROP‡SITO, EM NENHUM CASO A TORUS INFORMµTICA LTDA. SERµ RESPONSµVEL POR QUALQUER PROBLEMA OU PREJU÷ZO, SEJA ELE ESPECIAL, CONSEQUENTE, INDIRETO OU SIMILAR, INCLUINDO LUCROS CESSANTES E PERDA DE DADOS DECORRENTES DA UTILIZAÄ«O DO PROGRAMA OU DA INABILIDADE NA UTILIZAÄ«O DO PROGRAMA, MESMO QUE A TORUS INFORMµTICA LTDA. TENHA SIDO ALERTADA DA POSSIBILIDADE DE TAIS PREJU÷ZOS.
+CUMPRIMENTO DAS LEIS APLICµVEIS: 
+Vocà concorda em se submeter Ö lei de direitos autorais (copyright) e todas as outras leis do Brasil, incluindo, mas n∆o se limitando, a leis de controle de exportaá‰es. Vocà reconhece que o Programa na forma de c¢digo fonte Ç um segredo comercial confidencial da TORUS INFORMµTICA LTDA. e/ou seus fornecedores e aceita n∆o tentar modificar, decifrar, descompilar, desassemblar ou praticar engenharia reversa no Programa.
+TêRMINO: 
+A TORUS INFORMµTICA LTDA. pode revogar seu direito de usar o Programa atravÇs de um aviso (que pode ser distribu°do atravÇs dos mesmos meios eletrìnicos que este Programa Ç distribu°do), e vocà pode terminar este contrato a qualquer momento destruindo ou apagando sua c¢pia do Programa. A TORUS INFORMµTICA LTDA. se reserva o direito de eliminar o suporte do Programa e de modificar preáos, recursos, especificaá‰es, capacidades, funá‰es, termos de licenciamento, datas de lanáamento, disponibilidade e quaisquer outras caracter°sticas do Programa sem aviso. 
+GERAL:
+Este contrato Ç regulamentado pelas leis brasileiras de sofware. Este contrato somente pode ser modificado por um documento escrito que esteja assinado por vocà e pela TORUS INFORMµTICA LTDA.

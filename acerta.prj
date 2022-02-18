@@ -1,0 +1,19 @@
+clear
+@ 10,10 say "Localizando e apagando c¢digo = 099597"
+run "C:  >NUL"
+run "CD\vsv >NUL"
+select 1
+use "clientes.dbf"
+mc="099597"
+locate for clientes->cod_cli=mc
+do while .not. eof()
+   if clientes->cod_cli==mc
+      dele
+   endif
+   continue
+enddo
+pack nobackup
+run "del clientes.k* >nul"
+clear
+quit
+

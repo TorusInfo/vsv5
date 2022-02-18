@@ -1,0 +1,18 @@
+set century on
+a="Remetente:"
+b="Jos‚ Henrique Saueia Hjort"
+c="R. Benedito Alves Aranha, 160 s. 20/21"
+d="Campinas - SP"
+e="CEP 13085-220"
+*set print on
+l=1
+for l=1 to 20
+lprint a
+lprint b
+lprint c
+lprint d
+lprint e
+lprint
+next
+cancel
+

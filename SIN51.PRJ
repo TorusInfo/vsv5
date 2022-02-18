@@ -1,0 +1,422 @@
+*****************
+function sin5_MAIN
+*****************
+set century on
+set date "ddmmyyyy"
+set key -10 to Mostraqt()
+set key 302 to Calc_tor()
+set key 276 to Calend()
+set cursor    OFF
+set color to "W+/B"
+@ 00,00 to 24,79 double
+scroll( 01, 01, 23, 78, 0 )
+if network()
+	NOME_NET =alltrim(netname())
+	set exclusive off
+        @ 23,02 SAY "MultiUser "+ "Terminal = > "+ NOME_NET 
+else
+	set exclusive on
+endif
+
+@ 02,00 say "Ì" + replicate( "Í", 78 ) + "¹"
+@ 01,01 say "VSV 5.0 - Torusº   M¢dulo de Consulta em Terminais de Rede    º ESC - Retorna"
+@ 00,16 say "Ë"
+@ 02,16 say "Ê"
+@ 00,63 say "Ë"
+@ 02,63 say "Ê"
+@ 22,00 say "Ì" + replicate( "Í", 78 ) + "¹"
+if network()
+
+	set exclusive off
+	Quadro( 07, 14, 11, 31, "N/BG,W+/BG,N,W+/N", "N+/N" )
+	@ 09,17 say "REDE ATIVADA" color "W+*/BG"
+*   @ 23,02 say "Tecle <Enter>                                       " color "W+/B"
+	FOR a = 1500 TO 0 STEP -500
+		TONE(a,6)
+	NEXT
+	FOR a = 2500 TO 0 STEP -500
+		TONE(a,6)
+	NEXT
+	FOR a = 3500 TO 1000 STEP -500
+		TONE(a,5)
+	NEXT
+	FOR a = 1000 TO 3500 STEP 500
+		TONE(a,5)
+	NEXT
+*   INKEY(0)
+
+else
+
+	set exclusive on
+
+endif
+set precedence to VARIABLES
+set codearea   to 8
+public SCMEN,MZT,ARQ_TXT,ARQ_DBF, SAIDA_NORMAL,TDATA
+public FCODFUNC,FNOME,ACESSO,rzico,dev_fast
+rzico=.F.
+FCODFUNC = "  "
+FNOME    = "       "
+SET COLOR TO 'W+/B'
+Acerta_data()
+@ 03,01 clear to 21,78  color "W/B"
+SAIDA_NORMAL = .F.
+checa_geral()
+
+
+******************
+RESTORE FROM "DADLOC.MEM"
+ACESSO   = "0"
+rCHECK_NOM = 0
+FOR L1 = 1 TO LEN(NOM_LOC)
+	rCHECK_NOM = rCHECK_NOM +300-ASC(MID(NOM_LOC,L1,1))
+NEXT
+checa_ok1 = iif(check_nom = rcheck_nom ,.T.,.F.)
+rCHECK_SERIE = 0
+FOR L1 = 1 TO LEN(NUM_SERIE)
+	rCHECK_SERIE = rCHECK_SERIE +300-ASC(MID(NUM_SERIE,L1,1))
+NEXT
+checa_ok2 = iif(check_serie = rcheck_serie ,.T.,.F.)
+rCHECK_DATA = _int(_sqrt((YEAR(VAL_DATA)*10000)+(MONTH(VAL_DATA)*100)+DAY(VAL_DATA)))
+checa_ok3 = iif(check_data = rcheck_data ,.T.,.F.)
+IF checa_ok3 .and. checa_ok2 .and. checa_ok1 .and. _file("\dos\ramboot.com") ;
+        .and. _date() > stod( "19930801" ) .and. _date() < stod( "21050301" )
+	
+*	if _date() < VAL_DATA
+
+		@ 16,02 SAY NOM_LOC 									COLOR "GR+/B"
+		@ 18,02 SAY "Loja : "+NUM_LOJA					COLOR "GR+/B"	
+		@ 20,02 SAY "N§ de S‚rie : "+NUM_SERIE			COLOR "GR+/B"
+		@ 08,10 SAY NOM_SISTEMA								COLOR "W+/B"
+		@ 08,COL()+2 SAY NOM_SIS_DATA                COLOR "W+/B"
+		@ 10,10 SAY "Aguarde ..."							COLOR "W+*/B"
+*		if VAL_DATA - _date() < 6
+		
+*			@ 23,02 say "Senha de prote‡„o do usu rio valida por mais "  +;
+*		               transform( VAL_DATA - _date(), "##" ) + "  dias " +;
+*							" - Contate suporte"  color "W+*/B"	
+*			for ASENHA = 1 to 10
+*			
+*				tone( 2000, 25 )
+				
+*			next
+*			inkey( 30 )
+					
+*		endif		            			
+
+*	else
+	
+*		@ 23,02 say "Senha de prote‡„o do usu rio vencida - Contate suporte" color "W+*/B"	
+*		for ASENHA = 1 to 10
+			
+*			tone( 2000, 25 )
+				
+*		next
+*		inkey( 30 )
+*		quit
+
+*	endif
+
+else
+
+	clear
+	@ 16,02 SAY NOM_LOC 									COLOR "GR+/B"
+	@ 18,02 SAY "Loja : "+NUM_LOJA					COLOR "GR+/B"	
+	@ 20,02 SAY "N§ de S‚rie : "+NUM_SERIE			COLOR "GR+/B"
+	@ 08,10 SAY NOM_SISTEMA								COLOR "W+/B"
+	@ 08,COL()+2 SAY NOM_SIS_DATA                COLOR "W+/B"
+	@ 10,10 SAY "NET BETA ERROR                        "	COLOR "W+/B"
+	@ 12,10 SAY "CONTATE  O SUPORTE TECNICO"					COLOR "W+*/B"
+	INKEY(50)
+*        QUIT
+
+ENDIF
+***************************************************************
+ARQ_TXT  = "HELPVSV.TED"
+ARQ_DBF  = "HELPVSV.DBF"
+SAIDA_NORMAL = .F.
+set key 28 to Ajuda()
+IF _file( "MENSAGEM.MEM" )
+
+   restore from "MENSAGEM" additive
+
+else
+
+   MEN_L01  = space(40)
+   MEN_L02  = space(40)
+   MEN_L03  = space(40)
+   MEN_L04  = space(40)
+   MEN_L05  = space(40)
+   MEN_L06  = space(40)
+   MEN_L07  = space(40)
+   MEN_L08  = space(40)
+   MEN_L09  = space(40)
+   MEN_L10  = space(40)
+	MEN_LRET = "S"
+	MEN_LDEV = "S"
+	if flock( 15, "GREDE" )
+	   save to "MENSAGEM.MEM" all like "MEN_L*"
+		unlock in "GREDE"
+	else
+		Mens_rerro( " Erro de espera na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+		INKEY(0)
+		QUIT
+	endif
+endif
+Apresentacao()
+* restscreen( 03, 01, 21, 78, SCMEN )
+@ 08,01 say space( 77 ) COLOR "W+/B"
+@ 10,01 say space( 77 ) COLOR "W+/B"
+public COL_CURSOR, LIN_CURSOR, ANTES_COR,;
+		 TIPO_CURS, TIPO_CONF, TIPO_SEEK,;
+		 TIPO_DELE, QUAL_AREA, QUAL_ORDEM
+public ERRO_OCOR, TDATA
+restore from "TELAMOV.TEL"  additive
+restore from "TELATEND.TEL" additive
+restore from "BOLO.TEL"     additive
+restore from "DESCONTO.TEL" additive
+restore from "IMPRESS.TEL"  additive
+ERRO_OCOR = .F.
+select "FITAS"
+set order to 2
+set order to 1
+select "CLIENTES"
+set order to 2
+set order to 1
+select "TITULOS"
+set order to 2
+set order to 1
+public REGISTRO_PRODUTO
+select 8
+use "GENERO.TPO"
+locate for GENERO->DADOS = "PRODUTOS"
+if found()
+
+	REGISTRO_PRODUTO = recno()
+	
+else
+   * fazer append blank
+
+   if flock(15)
+      append blank
+      replace genero->dados with "PRODUTOS"
+      replace genero->letra with "P"
+   	REGISTRO_PRODUTO = recno()
+   else
+		Mens_rerro( " Erro de espera na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+   	REGISTRO_PRODUTO = 99
+   endif	
+endif	
+close "GENERO"
+
+Imp_Term()
+
+if _file("SYSFILE.MEM")
+
+	restore from "SYSFILE" additive
+	Abrir_Imp( NOM_TERM )
+
+else
+
+	IMP_NF     = "N"
+   IMP_COMP   = 15                        && Ativa    caracteres comprimidos 
+   IMP_C_COMP = 18								&& Desativa caracteres comprimidos
+   IMP_EXPA   = 14								&& Ativa    caracteres expandidos
+   IMP_C_EXPA = 20                        && Desativa caracteres expandidos 
+   IMP_EJETA  = "N"                       && Decide se na £ltima p gina 
+   IMP_TOP    =  3                        && Margem Superior 
+   IMP_BOT    =  5                        && Margem Inferior  
+   IMP_LEFT   =  0                        && Margem Esquerda 
+	IMP_LARG   = 80
+   IMP_LEN    = 66                        && Largura do Texto 
+   IMP_COL    = 80                        && Largura da impressora 80 ou 132 
+   IMP_MICRO  =  1
+   IMP_TIPO   =  1
+	IMP_FEC    = 1                         && TIPO DE FECHAMENTO 1 SEM O ARQ. TOTAL
+                                          && 2 COM O ARQ. FTO.DBF
+	IMP_CONT   = 1                         && tipo do contrato 1 (s/ficha) 2(c/ficha)
+
+	IMP_CPF    = "S"                       && checagem o do numero do CPF
+	IMP_FILMEJ = "S"								&& avisar filmes ja assistidos
+	IMP_FILMET = "N"
+
+	if flock( 15 , "GREDE" )
+		save to "SYSFILE.MEM" all like "IMP_*"
+		unlock in "GREDE"
+	else
+		Mens_rerro( " Erro de espera na rede, opera‡„o n„o efetuada",  3, "W+*/B" )
+		inkey(0)
+		quit
+	endif
+
+endif
+select 50
+use "MENU"
+clear typeahead
+set color to "W+/B"
+@ 23,01 say "Data :"
+@ 23,08 say _date()
+@ 23,col() + 2 say "Hora :"
+@ 23,25 say _left( _time(), 5 )
+@ 23,COL()+5 SAY "MultiUser "+ "Terminal = > "+ NOME_NET 
+clear typeahead
+select "MENU"
+*if day( _date() ) = 1
+
+*	Pede_fecha_mes()
+
+*endif
+do while .T.
+
+   pmenu( "120" ) 
+   encerra()
+
+enddo
+quit
+
+function Mostraqt
+
+@ 23,01 say _memory() picture "@B 9,999,999"
+@ 23,25 say (137000 - _memory()) picture "@B 9,999,999"
+inkey (0)
+@ 23,01 SAY SPACE (78) COLOR "W/B"
+
+return
+
+
+********************
+function checa_geral
+********************
+private arq_nome, arq_tam, no_arq, mascara, zerado, ju, arq_tam, arq_data, arq_atrib
+ju=.F.
+arq_nome = space(20)
+arq_tam=0
+mascara="*.*"
+no_arq = adir (mascara)
+declare arq_nome[no_arq],;
+        arq_tam[no_arq]
+adir (mascara, arq_nome, arq_tam, arq_data, arq_hora,arq_atrib)
+zerado = 0
+for i = 1 to no_arq
+        if arq_tam [ i ] = zerado
+           if arq_nome [ i ] = "ULT_BOL.MEM"
+              DELETE FILE "ULT_BOL.MEM"
+              exit
+           endif
+        elseif arq_tam [ i ] = zerado .and. arq_atrib [ i ]  # "D"
+           ju = .T.
+           set color to "W+/N"
+           clear
+           explode ( 00, 00, 09 , 79, "D", "W+/R")
+           @ 1,32 say "Torus Inform tica" color "W+/R"
+           @ 3,20 say "***********  ERRO de HARDWARE  ************" color "W+*/R"
+           linha = 05
+           _bell()
+           _bell()
+           _bell()
+           _bell()
+           _bell()
+           _bell()
+           _bell()
+           @ linha, 09 say " Aten‡„o o arquivo "  color "W+/R"
+           @ linha, col()+1 say arq_nome[i] picture "@!" color "RG+*/R"
+           @ linha, col()+4  say "est  danificado " color "W+/R"
+           @ linha+2,10  say "Anote esta informa‡„o e passe para o Suporte T‚cnico " color "W+/R"
+           inkey (0)
+        endif
+
+next
+if ju = .T.
+        ?
+        ?
+        ?
+        ?
+        ?
+        ?
+        ?
+        ?
+
+        quit
+
+
+endif
+
+
+return
+
+
+
+**************
+FUNCTION TRAVA noswap
+**************
+
+
+area_rede = _select()
+
+if network() &&.AND. !NETERR()
+
+	if used(area_rede)
+
+*		FLOCK(area_rede)
+		
+		rlock(area_rede)
+
+		RZICO = .T.
+
+	endif
+
+	if !rlock()
+		mens_erro("Este registro est† sendo acessado por outro usu†rio - n„o gravado ",10,"w+*/b")
+		RZICO = .F.
+	endif
+
+
+*else 
+
+*		mens_erro(" Erro registro/arquivo esta sendo acessado por outro usuario ")
+
+*		RZICO = .F.
+
+endif
+
+
+
+return  RZICO
+
+*
+***************
+FUNCTION DTRAVA noswap
+***************
+
+
+area_rede = _select()
+
+if network() && .AND. !neterr()
+
+	if used(area_rede)
+
+
+		unlock
+
+		
+		RZICO = .T.
+
+	endif
+
+	if neterr()
+		mens_erro(" Erro registro/arquivo esta sendo acessado por outro usuario ")
+		RZICO = .F.
+	endif
+*ELSE
+
+*	mens_erro(" Erro registro/arquivo esta sendo acessado por outro usuario ")
+
+*		RZICO = .F.
+
+endif
+
+commit
+
+
+return  RZICO
+*

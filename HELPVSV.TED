@@ -1,0 +1,899 @@
+\&TTORUS Inform tica - VSV Torus - V4R.0 
+\&S VSV Torus 4R.0  - Apresenta‡„o Geral
+   O  VSV Torus - para V¡deo Locadoras foi especialmente   desenvolvido para
+aqueles que acham que  o  computador  ‚  uma ferramenta de trabalho, e que,
+por tal, deva ser £til, r pido,preciso e de f cil manuseio.   O VSV Torus 
+4R.0 - tem portanto a maleabilidade que  hoje ‚ necess ria no dia a  dia de 
+uma video locadora que deseja fazer frente ao mercado.        
+   Ele ‚ fruto da incessante pesquisa e aprimoramento da  Torus  Inform tica
+sempre com o intuito de ser:
+      F cil o seu manuseio
+         Simples a sua opera‡„o
+            e Preciso nas informa‡”es 
+                     ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»  
+                     º Torus Inform tica Ltda.         º 
+                     º Campinas - SP                   º
+                     ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼  
+\&F
+\&S Torus Inform tica - Licen‡a de uso 
+   A Torus Inform tica Ltda. concede a licen‡a de uso de software …  empresa
+ou pessoa f¡sica cadastrada como usu rio do produto VSV Torus, garantido-se 
+esta o suporte  t‚cnico  no  que tange somente ao produto,n„o se
+responsabilizando por qualquer treinamento adicional para utiliza‡„o do
+mesmo.
+   Todos os direitos sobre o VSV Torus s„o reservados … Torus, sendo a c¢pia
+de uso exclusivo do licenciado, o qual n„o pode sob qualquer t¡tulo  vender,
+transferir, ou ceder a terceiros responsabilizando-se civil e  criminalmente
+nas penas cominadas por lei.  
+    facultado ao licenciado fazer  uma  c¢pia  de seguran‡a do produto para
+salvaguardar-se da mesma, por‚m o uso do VSV Torus ‚ permitido em  uma £nica
+m quina (micro-computador). 
+   Para prote‡„o do usu rio com rela‡„o a c¢pias desautorizadas ‚ fornecido
+no ato de instala‡„o uma senha, a qual ser  revalidada a cada 180 dias.    
+                                          Torus Inform tica Ltda.
+\&F
+\&TAJUDA - Manual Eletr“nico 
+\&S Ajuda 
+   Sempre que vocˆ precisar de informa‡”es,em qualquer parte do sistema,bas-
+ta  teclar  <F1> e vem … tela a op‡„o de ajuda para que vocˆ selecione  pela
+barra de sele‡„o, qual a rotina para a qual vocˆ quer as informa‡”es.
+   O manual do sistema est  todo incluso dentro deste m¢dulo sendo  portanto
+de f cil acesso e manuseio pelo operador, evitando a pesquisa dentro de ma-/
+nuais impressos e  complicados, com folhas que se soltam, sem lugar para co-
+loc -lo  junto  ao  micro  e nem sempre … m„o do operador na hora em que ele
+mais vai usar.
+    ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»    
+    º   O manual eletr“nico ‚ pois, de enorme vantagem e utilidade.  º  
+    ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼  
+   Use e abuse deste ...
+                                         Torus Inform tica Ltda. 
+\&F
+\&TSOFTWARE - HARDWARE 
+\&S Software - Hardware 
+   O VSV Torus 4R.0  necessita para "rodar" :
+     SISTEMA OPERACIONAL MDOS 4.01 ou posterior
+     Para utiliza‡„o do VSV Torus 4R.0  o sistema operacional deve estar
+configurado p/ 
+     Files = 40
+     Buffers = 32 
+     HARDWARE 
+     Micro-computador IBM/PC XT/AT/386 com pelo menos 640 Kbytes de mem¢ria
+     c/ 1 drive de disco flex¡vel de 5 e ¬ " 
+     c/ 1 Winchester(disco r¡gido) de 20 Megabytes (m¡nimo)
+     c/ 1 impressora (serial ou paralela) de 80 ou 132 colunas
+\&F
+\&TTECLAS VSV Torus 4R.0 
+\&S Teclas de edi‡„o - movimenta‡„o
+P. O que s„o ? 
+R. S„o  teclas  especialmente  programadas dentro do VSV Torus 4R.0  para
+utiliza‡„o na entrada e edi‡„o de dados do sistema.
+P. O que fazem ?
+R. Dependendo do ponto do sistema  onde se esteja elas executam tarefas pr‚-
+-determinadas e fixas sejam de movimenta‡„o ou de edi‡„o.  
+   S„o fixas : 
+ÉÍÍÍ» 
+ºINSº INSERE CARACTERES    - pode estar ativada ou n„o - teclando-a  uma vez
+ÈÍÍÍ¼                        ativa o modo de inser‡„o na posi‡„o  do  cursor 
+                             teclando-a novamente desativa
+ÉÍÍÍ»
+ºDELº APAGA CARACTERES    - apaga, quando teclada o caracter sob o cursor
+ÈÍÍÍ¼ 
+ÉÍÍÍÍÍÍÍÍÍÍÍ»
+º<-BACKSPACEº RETROCESSO   -  retorna o cursor dentro de um campo  de edi‡„o
+ÈÍÍÍÍÍÍÍÍÍÍÍ¼                 apagando os caracteres
+ÉÍÍÍÍÍ»
+ºSETASº SETA(Dir/Esq/Sup/Inf) - movimenta‡„o do cursor pelos campos  
+ÈÍÍÍÍÍ¼
+ÉÍÍÍÍ» ÉÍ»
+ºCTRLº ºYº CONTROL Y       - apaga a linha de edi‡„o do cursor at‚ o extremo
+ÈÍÍÍÍ¼ ÈÍ¼                   do campo
+ÉÍÍÍÍ» ÉÍÍÍÍ» 
+ºCTRLº ºPgUpº CONTROL PgUp - nas telas de listagem  posiciona o cursor/barra
+ÈÍÍÍÍ¼ ÈÍÍÍÍ¼                no £ltimo registro(ficha) do arquivo
+ÉÍÍÍÍ» ÉÍÍÍÍ» 
+ºCTRLº ºPgDnº CONTROL PgDn - nas telas de listagem  posiciona o cursor/barra
+ÈÍÍÍÍ¼ ÈÍÍÍÍ¼                no £ltimo registro(ficha) do arquivo
+ÉÍÍÍÍ» 
+ºPgUpº PgUp - nas telas de listagem  posiciona o cursor/barra no primeiro  
+ÈÍÍÍÍ¼                                                     
+ÉÍÍÍÍ» 
+ºPgDnº PgDn - nas telas de listagem  posiciona o cursor/barra no £ltimo  
+ÈÍÍÍÍ¼                                                      
+ÉÍÍÍÍÍÍÍÍÍÍÍ»
+º°°°°°°°°°°°º BARRA DE SELE€O + SETAS - posiciona a barra sobre uma sele‡„o
+ÈÍÍÍÍÍÍÍÍÍÍÍ¼                            e vai para a mesma com ENTER 
+ÉÍÍÍÍÍÍ» 
+º      º 
+ºENTER³º ENTER(Carriage Return) - finaliza uma entrada  de caracteres ou se-
+º   <ÄÙº                          leciona uma op‡„o sobre a barra de sele‡„o
+ÈÍÍÍÍÍÍ¼ 
+ÉÍÍÍ»
+ºESCº ESCAPE - associe … esta tecla o verbo  "ESC"apar, ou seja,  caso  vocˆ
+ÈÍÍÍ¼          queira sair, abandonar uma tarefa, basta tecla-la  que o VSV
+Torus                volta ao n¡vel anterior do programa.
+
+OBS : Nos Menus, op‡”es de escolha, sempre temos ou a letra da op‡„o DEFAULT 
+     em MAIUSCULA ou PISCANTE , bastando para a  sele‡„o  desejada tecl -la
+      apenas ou com as setas e ENTER selecionar outra.
+\&F
+\&TTECLAS ESPECIAIS  
+\&S Teclas especiais - cadastros
+P. O que s„o ?
+R. S„o  teclas  especialmente  programadas dentro do VSV Torus 4R.0  para
+utiliza‡„o em rotinas ditas padr”es.
+P. O que fazem ?
+R.Dependendo da tecla executam tarefas espec¡ficas tais como   pesquisa, al-
+tera‡„o, exclus„o, grava‡„o, escapar(encerrar), ajuda, etc...
+   S„o elas :
+ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ» 
+º ÉÍÍ»                            ³ ÉÍÍ»                                  º 
+º ºF1ºTELA DE AJUDA               ³ ºF2ºDESCANSO DO VIDEO - ativa em todasº 
+º ÈÍÍ¼                            ³ ÈÍÍ¼ as telas do sistema              º 
+º                                 ³                                       º 
+º ÉÍÍ»                            ³ ÉÍÍ»                                  º 
+º ºF3ºPESQUISA - nos campos demar-³ ºF4ºFICHA ANTERIOR - volta … ficha an-º 
+º ÈÍÍ¼ cados "¯" - digitando-se a ³ ÈÍÍ¼ terior do arquivo de dados       º 
+º      chave de busca + tecla vem ³                                       º 
+º      … tela a ficha pesquisada  ³                                       º 
+º ÉÍÍ»                            ³ ÉÍÍ»                                  º 
+º ºF5ºFICHA POSTERIOR - avan‡a pa-³ ºF6ºdefinida conforme a rotina do VSV º 
+º ÈÍÍ¼ ra a pr¢xima ficha         ³ ÈÍÍ¼ Torus                            º 
+º ÉÍÍ»                            ³ ÉÍÍ»                                  º 
+º ºF7ºdefinida conforme a rotina  ³ ºF8ºLIMPA A TELA - branqueia os camposº 
+º ÈÍÍ¼ do VSV Torus idem … F6     ³ ÈÍÍ¼ da tela  deixando-a  pronta  paraº 
+º                                 ³      nova edi‡„o/pesquisa/inclus„o    º 
+º ÉÍÍ»                            ³ ÉÍÍÍ»                                 º 
+º ºF9ºAPAGA A FICHA - remove a fi-³ ºF10ºGRAVA A FICHA -grava a ficha edi-º 
+º ÈÍÍ¼ cha editada PERMANENTEMENTE³ ÈÍÍÍ¼ tada no disco **ATEN€O** se vo-º 
+º      do arquivo **CUIDADO**     ³       cˆ alterar qq. campo grave  paraº 
+º                                 ³       n„o perder as altera‡”es feitas º ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼
+\&F
+\&TTECLAS - GERADOR DE RELATORIOS 
+\&S Teclas - Gerador de Relat¢rios
+ÉÍÍÍÍÍÍ» 
+º      º 
+ºENTER³º ENTER(Carriage Return) - finaliza uma entrada  de caracteres ou se-
+º   <ÄÙº leca uma  op‡„o sobre a barra de sele‡„o marcando ou desmarcando um
+ÈÍÍÍÍÍÍ¼ item  seja  ele para  filtro, ordena‡„o ou campos a serem impressos 
+ÉÍÍÍ»
+ºESCº ESCAPE - esta tecla tanto faz o retorno … sele‡„o de op‡„o do  arquivo
+ÈÍÍÍ¼          a ser listado quanto o retorno ao MENU anterior  do VSV Torus
+ÉÍÍ»
+ºF4º  RETORNO - esta tecla faz o retorno … op‡„o ou … tela anterior do gera-
+ÈÍÍ¼            dor de relat¢rios. 
+ÉÍÍ»
+ºF5º  AVAN€A  - esta tecla faz o avan‡o … op‡„o ou … tela posterior do gera-
+ÈÍÍ¼            dor de relat¢rios. 
+ÉÍÍÍÍÍ» 
+º TAB º TABULA€O - no gerador, na op‡„o de montagem dos campos a serem  im-
+ÈÍÍÍÍÍ¼             pressos, permite a visualiza‡„o dos mesmos.
+ÉÍÍÍ»
+ºESCº  ESC - sa¡da do gerador
+ÈÍÍÍ¼
+\&F
+\&TATIVA -OPERADOR
+\&S Ativa - operador <CTRL> <F1>
+P. O que ‚ ?
+R.  a rotina do sistema que "diz" ao micro quem est  operando  o  sistema e
+lhe abre as rotinas permitidas dependendo n¡vel de acesso do operador. 
+P. Como cadastrar um operador ?
+R. A partir do Menu Principal selecione a op‡„o cOnfigura‡„o/util, para tan-
+to  basta  posicionar-se  sobre a mesma com as setas e a barra de sele‡„o ou
+teclar-se a letra <O>.
+   Vai se abrir outro Menu qual seja de CONFIGURA€O  e neste temos a  op‡„o
+Operadores - selecionando esta abre-se uma janela contendo os operadores  j 
+cadastrados no sistema e pronto para se cadastrar um novo, alterar um que l 
+esteja ou mesmo excluir.
+   Sendo a primeira vez que vocˆ utiliza o programa verifique no envelope a-
+nexo aos diskettes que acompanham o sistema a senha de valida‡„o do operador
+de  c¢digo VSV Torus 4R.0  nome TORUS INFORM†TICA  que j  est  cadastrado e
+confi- gurado como tendo o n¡vel de acesso m ximo que ‚ <9>.
+quem est  ao teclado e qual o n¡vel de acesso.
+P. Como desativar um operador e ativar outro ?
+R. Teclando <CTRL> <F1> e <ENTER> em branco no c¢digo do operador o  sistema
+autom ticamente  desabilita  o  operador que estava ativo. Para ativar outro
+operador basta digitar-se ao inv‚ns de <ENTER> em branco o c¢digo do novo o-
+perador e a sua senha e pronto, este j  ‚ o novo operador ativo.
+                  ****  IMPORTANTE  **** 
+OBS: N„o precisa teclar <ENTER> ao final do c¢digo e da senha
+     Observe que se vocˆ cadastrou a senha com os caracteres mai£sculos de-/ 
+    ver  estar ativada a tecla <CAPSLOCK> - letras mai£sculas do teclado 
+\&F
+\&TATENDIMENTO
+\&S Atendimento 
+    a rotina  mais  utilizada dentro do VSV Torus, pois dentro dela ‚ que se
+vai fazer  o  atendimento ao cliente, retirada de fitas, movimenta‡”es de
+caixa, venda de produtos, de v¡deo-cheques e at‚ mesmo o cadastro de 
+t¡tulos/fitas e clientes.
+                      Atendimento - Retirada  
+   Para a retirada de fitas p/ loca‡„o ou venda de produtos em estoque basta
+digitar-se o CODIGO do cliente, ou o seu CPF, ou ainda caso n„o se saiba ne-
+nhum destes  fazer- se a PESQUISA r pida teclando-se "C" e a inicial do nome
+do cliente que vem neste caso  …  tela uma lista de clientes cadastrados que
+satisfa‡am a chave de pesquisa por exemplo: teclando-se "C" e na pesquisa de
+cliente  digitando-se "JOSE",  ser„o  listados  todos os JOSEs do arquivo de
+clientes .
+   Selecione com as setas e:
+      teclando-se <F7> - s„o mostradas as fitas que est„o com o cliente 
+      teclando <ENTER> o cliente ‚  autom ticamente  colocado na  tela  para
+retirada de fitas/produtos.
+      teclando <ALT><Z> - temos  um  ZOOM da ficha cadastral do cliente para
+conferˆncia dos seus dados e tamb‚m caso se queira selecion -lo p/  retirada
+basta teclar <ENTER>, ou ainda teclando-se <F7> pode-se ver as fitas que es-
+tiverem com ele
+   Estando na tela de retirada basta digitar-se o c¢digo da fita seja e  au-
+tom ticamente ‚ montado o boleto de retirada de fitas para o cliente.
+   Teclando-se <ENTER> em branco no c¢digo da fita o VSV Torus deixa vocˆ nas
+seguintes op‡”es:
+   Encerra - finaliza  o  boleto,  pede o c¢digo do funcion rio e vai para a
+impress„o 
+   Acrescenta - deixa vocˆ incluir mais fitas
+   Limpa - retorna sem nada fazer
+   OBS: caso vocˆ trabalhe com pagamento tanto na retirada quanto na devolu-
+‡„o o VSV Torus vai ainda perguntar se o pagamento ser  antecipado ou n„o.
+   Ainda na retirada caso vocˆ estja com qq. das diversas promo‡”es do  VSV
+Torus ativadas, por exemplo anivers rio, o VSV Torus mostrar  em Tela um bolo
+de aniver s rio e tocar  o "PARABENS A VOCE" para o seu cliente, ou ainda,
+mostrar  em tela o desconto promocional caso ele o tenha.
+   No boleto  de  retirada  j   est   impressa  a data em que o cliente deva
+fazer a devolu‡„o da(s) fita(s) inclusive contando com abono em  di rias  se
+houverem.  
+                   Atendimento - devolu‡„o 
+   Para a  devolu‡„o  de fitas que estejam locadas basta digitar-se o c¢digo
+da fita e o VSV Torus j  "SABE" qual o cliente que a  locou,  quando, j 
+estipula a cobran‡a de di rias extras pelo atraso, se o cliente tem cr‚dito
+de v¡deo- cheque faz a baixa autom tica do n£mero de v¡deo-cheques
+necess rios para  aloca‡„o, se faltar ele cobra em dinheiro, tudo de forma
+simples e pr tica.
+   Note que vocˆ, caso trabalhe com n£mero sequencial,  pode  utilizar  este
+tanto para a retirada quanto a devolu‡…o de fitas, a £nica restri‡„o ‚  a de
+que ao se optar por um n„o se pode no meio da opera‡„o utilizar-se do c¢digo
+de 10 n£meros gerados pelo VSV Torus .
+\&F
+\&TOUTRAS FUN€™ES - ATENDIMENTO 
+\&S Atendimento - Hora e data do sistema
+   Mostra na linha de "status" o dia e hora da opera‡„o
+\&F
+\&S Retira d‚bito de Cliente
+   Dentro do atendimento vocˆ pode alterar d‚bito de cliente,  pois,  sempre
+que houver ele ser  impresso no boleto de devolu‡„o.
+   Suponha que o cliente fa‡a uma compra, por  exemplo  uma  capa de v¡deo e
+como bom cliente que ‚ vocˆ queira deixar ele pagar depois...
+   Basta dentro do atendimento teclar-se <R> e ‚ pedido o c¢digo do cliente,
+o valor,o funcion rio que efetua a opera‡„o e vocˆ DEBITA o cliente do mesmo
+   Supondo-se o inverso, que o cliente esteja em d‚bito com a loja e ele ve-
+nha a pagar este vocˆ efetua a opera‡„o  inversa,  ou seja CREDITA o cliente
+do valor.
+   Note que em todas as opera‡”es de caixa ‚ pedido o  c¢digo do funcion rio
+que efetuou a opera‡„o, justamente para o controle do mesmo.
+\&F\&S Autenticar boletos 
+   A autentica‡„o ‚ feita quando o cliente ao devolver as fitas n„o efetua o
+pagamento das loca‡”es, ou seja, "PINDURA", neste caso ao  ser autenticado o
+boleto, o valor deste ‚ autom ticamente colocado como em d‚bito para a conta
+do cliente e feito o lan‡amento no caixa como autentica‡„o.
+   Para sua garantia sempre que se autenticar o boleto, carimbe este com uma
+data e a assinatura do cliente para evitar transtornos futuros, caso o 
+cliente ESQUE€A do d‚bito.
+\&F
+\&S Impressoras sele‡„o
+   Dentro do  pr¢prio  atendimento  vocˆ pode redirecionar a configura‡„o de
+impressoras sejam elas de devolu‡„o, retirada ou de relat¢rios.
+   Teclando-se <I> vˆem … tela as modalidades de impress„o : Retirada, Devo-
+lu‡„o ou Relat¢rios e vocˆ redireciona quem para quem  somente com as setas,
+e <ESC>.
+\&F
+\&S Vales e despesas
+   Dentro do atendimento vocˆ pode lan‡ar valores a debitar o seu caixa, co-
+mo por exemplo pagamento da faxineira, etc. teclando-se <D>. 
+    pedido o hist¢rico do lan‡amento, o valor e o funcion rio que efetua a
+opera‡„o, sendo impresso um recibo do mesmo.
+\&F
+\&S V¡deo Cheques
+   O VSV Torus permite a venda antecipada de loca‡”es por  meio de  v¡deo
+cheques os quais s„o v lidos somente para o cliente que os adquiriu  e  por
+um tempo limite que vocˆ estipule.
+    pedido o c¢digo do cliente para o qual vocˆ est  vendendo os v¡deo-che-
+ques, o n£mero de v¡deo-cheques, o valor unit rio, ou global, e um n£mero de
+dias para a validade dos mesmos, o c¢digo do funcion rio que efetua a opera-
+‡„o e ‚ impresso um boleto de v¡deo-cheques.
+   Note que este valor j  ‚ automaticamente lan‡ado no seu caixa e que a ca-
+da RETIRADA ou DEVOLU€O ‚ impresso para o cliente um v¡deo-extrato mostran-
+do quantos v¡deo-cheques foram utlizados e quantos ainda restam.
+\&F  
+\&S Reimpress„o de Boletos
+   Pode acontecer que, numa sexta-feira, v‚spera de feriado, no ritmo de v -
+rias loca‡”es, vocˆ manda imprimir um boleto  e  pronto... Acabou o papel da
+impressora e o boleto n„o foi impresso.
+   Basta teclar-se <B> e o VSV Torus pede o n£mero do boleto e faz a 
+reimpress„o do mesmo, sem qq. problema. 
+\&F
+\&S Resumo do dia
+   Mostra em tela e depois caso vocˆ queira imprimir,  o  movimento de caixa
+em loca‡”es, vendas, at‚ o momento.
+   Dado ser uma rotina de SIGILO, ‚ necess rio ter-se  n¡vel  de  acesso "9"
+pois o VSV Torus ir  pedir o c¢digo do funcion rio e a sua senha individual 
+para liberar esta rotina, caso contr rio n„o.
+\&F
+\&S Descanso de tela <F2> 
+   Aqui como em qq. parte do VSV Torus vocˆ d  uma tr‚gua  para  o seu
+monitor de v¡deo bastando teclar-se <F2> e entramos no modo DESCANSO.
+\&F
+\&S Cadastro de clientes <F4> - Atendimento 
+   Mesmo dentro do atendimento, o VSV Torus permite a vocˆ com <F4> entrar no
+ca- dastro de clientes,com todas as fun‡”es a ele pertinentes tais como:
+pesqui- sa, altera‡„o, inclus„o, exclus„o, etc. Basta teclar-se <F4> e
+estamos nele.
+   Isto tudo ‚ feito com o intuito de agilizar ao m ximo o atendimento,  sem
+a complica‡„o usual do VAI DAQUI PR† LA, VEM DE LA PRA CA em Menus intrinca-
+dos que entram por um lado, d„o a volta por cima e NO saem por baixo.
+   O VSV Torus como d  para notar ‚ de fac¡lima utiliza‡„o.
+\&F\&S Cadastro de t¡tulos <F5> - atendimento 
+   Tamb‚m dentro do pr¢prio atendimento vocˆ pode cadastrar um filme que a-
+caba de chegar …s suas m„os, inserir as fitas, enfim, acessar o cadastro de
+T¡tulos, bastando teclar-se <F5> e pronto, estamos no cadastro  de  t¡tulos
+no qual ‚ poss¡vel pesquisar, alterar, inserir, qq. dos seus t¡tulos.
+   F cil e simples.
+\&F
+\&S Venda de produtos 
+   O VSV Torus 4R.0 permite a vocˆ "VENDER" e controlar de forma simples e
+ gil o estoque de sua locadora, colocando-os com c¢digo de barras e fazendo a
+ sua  venda autom tica dentro do pr¢prio atendimento. Na realidade um
+CONTROLE DE ESTOQUES associado ao sistema de v¡deo-loca‡„o.
+   Para a venda de produtos, basta que se digite, ou passe na leitora ¢ptica
+de c¢digo de barras o produto, ou os produtos que  o  VSV Torus faz a
+totaliza‡„o da venda, a baixa autom tica dos mesmos no estoque e  a 
+impress„o do boleto de venda.
+\&F
+\&S Clientes pesquisa r pida
+   Esta rotina faz a pesquisa de clientes dentro do atendimento, abrindo  ao
+teclar-se <C> um campo na linha de "status" para a digita‡„o : ou do  CODIGO
+DO CLIENTE, ou do CPF DO CLIENTE, em ambos o VSV Torus vai direto … sua
+ficha, ou ainda,  caso  n„o  se saiba nem um nem outro, pelo menos o in¡cio
+do NOME do CLIENTE,  e  desta forma ser„o listados todos os que se
+aproximarem da chave de busca . Por exemplo digitando-se MARIA, ser„o
+listadas todas as MARIAS do seu arquivo de clientes, bastando posicionar
+sobre a escolhida com as  setas e a barra de sele‡„o.
+   Neste caso vocˆ com <ALT><Z> pode dar um  ZOOM  na  ficha  do cliente, ou
+com <F7> verificar quais as fitas est„o com o cliente e  a  data prevista de
+devolu‡„o.
+\&F
+\&S T¡tulos pesquisa r pida
+   Dentro do atendimento n¢s colocamos uma rotina que  tem  sido muito usada
+por todos os nossos clientes, que ‚ a pesquisa r pida de t¡tulos.
+   Suponha que no meio do atendimento vem um cliente e pergunta se tal  fita
+est  ou n„o na locadora. Num toque de teclas vocˆ tem a resposta, se est  ou
+n„o, ou caso negativo quando est  prevista a sua devolu‡„o.
+   Basta, o atendimento teclar-se <T>, abre-se um campo na linha de "status"
+para ser digitado o NOME DO T‹TULO, ou caso vocˆ saiba o seu c¢digo.
+   Fornecendo uma chave de pesquisa para o VSV Torus, por exemplo "DESEJO
+DE", ‚  feita uma pesquisa no arquivo de t¡tulos e s„o listados os que
+satisfizerem esta. Com as setas vocˆ pode selecionar qq. um deles e teclar:
+   <ALT><Z> - ZOOM da ficha do t¡tulo fornecendo ao cliente  todos  os dados
+do mesmo tais como : diretor, ator, n£mero de fitas dispon¡veis, etc.
+   <F7> - mostra as fitas do t¡tulo, se estiverem com o cliente "000000" que
+‚ a loja est„o dispon¡veis para loca‡„o, caso contr rio mostra o cliente que
+est  com as fitas, e a data prevista de devolu‡„o de cada uma delas.
+\&F
+\&SPesquisa p/ Ator/Diretor/Referˆncia
+      Para se pesquisar por qualquer destes campos basta no atendimento
+teclar <E>, em seguida qual a letra do item a ser pesquisado e a palavra ou
+peda‡o dela pela qual voce quer pesquisar.
+      Por exemplo para pesquisar o Ator Paul Newman 
+      Pode-se fazˆ-lo teclando-se <E>
+      a seguir <A> de ator
+      digitar PAUL e pronto ... o VSV torus vai fazer a pesquisa
+autom ticamente na base de dados pela chave de busca 
+      O mesmo vale p/ diretor e para o item referˆncia.
+\&F
+\&SBoleto Simulado
+      Por vezes um cliente liga para vocˆ querendo saber quanto $$$ ele deve 
+para mandar algu‚m com o dinheiro para devolver as fitas e para pagar, esta 
+rotina na realidade faz a simula‡„o na tela do total devido pelo cliente,
+sendo que ‚ dado a possibilidade inclusive de se verificar o total devido, j 
+incluindo as promo‡”es havidas, descontos, di rias extras, etc.
+     Vocˆ pode finalizar o boleto com <F10> sem precisar digitar ou ler as
+fitas uma a uma.
+\&F
+\&TCLIENTES
+\&S Cadastro de Clientes 
+   Nesta op‡„o vocˆ cadastra os seus clientes preenchendo os campos da tela
+com os dados do seu cliente, … exce‡„o do CODIGO(gerado pelo VSV Torus). As
+te- clas de edi‡„o seguem o padr„o e temos as teclas especiais de cadastro.
+     Nesta tela como em todas as outras do sistema que tenham como
+caracter¡s- tica o CADASTRO, as teclas FUN€O s„o b sicamente as mesmas.
+ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ» 
+º ÉÍÍ»                            ³ ÉÍÍ»                                  º 
+º ºF1ºTELA DE AJUDA               ³ ºF2ºDESCANSO DO VIDEO - ativa em todasº 
+º ÈÍÍ¼                            ³ ÈÍÍ¼ as telas do sistema              º 
+º ÉÍÍ»                            ³ ÉÍÍ»                                  º 
+º ºF3ºPESQUISA - nos campos demar-³ ºF4ºFICHA ANTERIOR - volta … ficha an-º 
+º ÈÍÍ¼ cados "¯" - digitando-se a ³ ÈÍÍ¼ terior do arquivo de dados       º 
+º      chave de busca + tecla vem ³                                       º 
+º      … tela a ficha pesquisada  ³                                       º 
+º ÉÍÍ»                            ³ ÉÍÍ»                                  º 
+º ºF5ºFICHA POSTERIOR - avan‡a pa-³ ºF6ºFICHA COMPLEMENTAR - abre na  telaº 
+º ÈÍÍ¼ ra a pr¢xima ficha         ³ ÈÍÍ¼ uma ficha de complemento da fichaº 
+º                                 ³      em edi‡„o                        º 
+º ÉÍÍ»                            ³ ÉÍÍ»                                  º 
+º ºF7ºSELE€O - marca a ficha edi-³ ºF8ºLIMPA A TELA - branqueia os camposº 
+º ÈÍÍ¼ tada na tela com "S"elecio-³ ÈÍÍ¼ da tela  deixando-a  pronta  paraº 
+º      nada - £til para relat¢rios³      nova edi‡„o/pesquisa/inclus„o    º 
+º ÉÍÍ»                            ³ ÉÍÍÍ»                                 º 
+º ºF9ºAPAGA A FICHA - remove a fi-³ ºF10ºGRAVA A FICHA -grava a ficha edi-º 
+º ÈÍÍ¼ cha editada PERMANENTEMENTE³ ÈÍÍÍ¼ tada no disco **ATEN€O** se vo-º 
+º      do arquivo **CUIDADO**     ³       cˆ alterar qq. campo grave  paraº 
+º                                 ³       n„o perder as altera‡”es feitas º ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼
+   Al‚m destas temos:
+ÉÍÍÍ» ÉÍ» 
+ºALTº ºOº CONTRATO - impress„o do contrato de loca‡„o do cliente 
+ÈÍÍÍ¼ ÈÍ¼ 
+ÉÍÍÍ» ÉÍ»
+ºALTº ºAº IMPRIME A FICHA - impress„o da ficha cadastral do cliente 
+ÈÍÍÍ¼ ÈÍ¼                   
+ÉÍÍÍ» ÉÍ»
+ºALTº ºBº IMPRIME CARTEIRA - impress„o  da  carteira com c¢digo de barras
+ÈÍÍÍ¼ ÈÍ¼                    do cliente
+ÉÍÍÍÍÍ» ÉÍÍ» Abre-se na tela uma janela mostrando os 120  £ltimos  filmes
+ºSHIFTº ºF7º assistidos pelo cliente da tela, podendo inclusive list -los 
+ÈÍÍÍÍÍ¼ ÈÍÍ¼ na impressora. 
+OBS: a impress„o ‚ feita na impressora selecionada para relat¢rios 
+  Alguns campos tem acesso restrito apenas …os OPERADORES com n¡vel de aces-
+so "9" tais como : Desc.Pes.(desconto pessoal),  V.ch.( n£mero de v¡deo-che-
+ques), sendo que para alter -los ou inclu¡-los ‚ necess rio estar ativado um
+operador com este n¡vel.
+   O campo TIPO tem os caracteres abaixo como reservados:
+   I -isento de pagamento e X - exclu¡do (impedido de retirar fitas)
+\&F
+\&S Carteira de cliente
+   Faz a  impress„o  em  lotes  de carteira/etiqueta em c¢digo de barras dos
+clientes podendo a mesma ser feita para os novos ou marcando-se os  clientes
+para os quais se queira a impress„o.
+\&F
+\&S Filmes j  assistidos
+   Lista em Tela ou na Impressora de relat¢rios os 120 £ltimos filmes assis-
+tidos pelo cliente pesquisado.
+   Na configura‡„o pode-se parametrizar o VSV para avisar ou n„o durante o
+   atendimento se o cliente j  assistiu ou n…o o filme - dentro destes 120. 
+\&F
+\&S Formul rio de clientes
+   Faz a impress„o de uma ficha cadastral  do  cliente com os campos do VSV
+Torus  para serem preenchidas manualmente e a posteriore serem cadastrados no
+computador.
+    pedido o n£mero de fichas a serem impressas de 1 a 99
+\&F
+\&TGERADOR DE RELATORIOS
+\&S Gerador de relat¢rios - Torus
+   Esta  ‚ uma das mais potentes ferramentas do VSV Torus 4R.0 , por meio dele
+vo- cˆ pode definir o relat¢rio da forma que mais lhe convier, n„o se 
+importan- do  com quais campos , por qual ordem.
+   Vocˆ monta o seu relat¢rio … sua vontade e s„o MILH™ES as possibilidades. 
+   Ao entrar nesta op‡„o vocˆ tem na tela as bases de dados do VSV Torus 4R.0
+ e  pode a¡ escolher qual a ser usada.
+   A partir daqui o gerador abre uma s‚rie de op‡”es de FILTROS, ou seja,  a
+escolha, ou sele‡„o a ser feita nesta base de dados, podendo ser maior,menor
+igual, maior igual, menor igual, todos ou ainda diferente da chave de  busca
+do campo selecionado. 
+   Note que vocˆ pode "filtrar" a sua base de dados por quantos campos dese-
+jar, ou por nenhum, neste £ltimo caso sub-entende-se que  vocˆ  queira o ar-
+quivo todo.
+   A pr¢xima op‡„o avan‡ando com a tecla <F5> ‚ a de   ORDENA€O,  ou  seja,
+qual a sequˆncia a ser listada, ser ordem alfab‚tica por c¢digo,  por  nome,
+etc. 
+   Na sequˆncia com <F5> vocˆ define a sa¡da do relat¢rio, se para  arquivo,
+tela ou impressora. Caso vocˆ selecione arquivo o relat¢rio ser  enviado pa-
+ra "RELATOR.PRN" .
+   O pr¢ximo passo ‚ a defini‡…o dos campos a serem impressos pelo  gerador,
+bastando-se selecion -los com <ENTER>, vocˆ pode aqui formatar as colunas  a
+serem impressas da maneira que vocˆ bem entender.
+   Avan‡ando novamente com <F5> voce d  o cabe‡alho para o seu  relat¢rio  e
+pronto, o VSV Torus 4R.0  inicia a execu‡„o do mesmo.
+   Obs: se antes do cabe‡alho vocˆ quiser mudar algum item do relat¢rio  vo-
+cˆ pode retroceder ao mesmo com a tecla <F4>.
+\&F
+\&TRELATORIOS PR-FORMATADOS
+\&S Estat¡stica
+   Este tamb‚m ‚ uma das ferramentas do VSV Torus, pois faz  o  relat¢rio
+seja em Tela ou na Impressora, de estat¡stica tanto das suas fitas, as mais
+locadas, as menos locadas, por n£mero de retiradas, por t¡tulos ¡ndice que ‚
+uma com- posi‡„o seguindo f¢rmula matem tica para o n£mero de retiradas em 
+fun‡„o do n£mero de c¢pias do t¡tulo. 
+   Sendo que tamb‚m o faz para os clientes, os que mais retiraram fitas num
+per¡odo, os que menos locaram.
+\&F
+\&S Fitas locadas
+   Este ‚ tam‚m um relat¢rio pr‚-formatado, como o chamamos, que faz a lista
+gem na impressora de todas as fitas que est„o fora, os clientes, quais os bo
+letos de retirada, data de retirada, data de devolu‡„o, valores, etc. 
+\&F
+\&S confere Acervo
+   Relat¢rio tanto em Tela quanto na Impressora de todo o seu  acervo, se-
+parados por gˆnero para uma conferˆncia mais ami£de.
+   Basta selecionar a rotina e o gˆnero para o qual vocˆ quer a listagem e
+pronto o VSV Torus executa.
+\&F\&S fOrmul rio de t¡tulos 
+    uma ficha impressa com todos os campos do cadastro de t¡tulos para  o
+preenchimento manual e posteriormente serem cadastrados os t¡tulos no com- 
+putador. A quantidade varia de 1 a 99.
+\&F
+\&S Relat¢rio de D‚bitos
+      Relat¢rio pr‚-formatado  no qual ‚ listada a totaliza‡…o de d‚bitos e
+cr‚ditos dos clientes.
+\&F
+\&SQuantidade de fitas para devolu‡„o
+      Informa a qualquer hora do dia, durante a movimenta‡„o qual a
+quantidade de fitas est  ainda a serem devolvidas.
+      Pode ser feita para o dia corrente ou para uma data espec¡fica, a data
+‚ pedida para o usu rio antes da totaliza‡„o.
+\&F
+\&F
+\&S Etiquetas de palavras
+   Faz  a impress„o em formul rio ou em etiqueta auto-adesiva de uma palavra
+de at‚ 14 letras no formato expandido. Util para se colocar informa‡”es
+adicionais na capa da fita tal como idade de restri‡„o, etc. use a sua imagi-
+na‡„o e invente a sua utilidade.
+\&F
+\&TCONFIGURA€O 
+\&S Data e hora
+   Acerta a DATA e a Hora do Sistema Operacional.
+   Caso o seu equipamento n„o disponha de rel¢gio interno,vocˆ pode acert -
+lo por meio desta rotina.
+   O formato da data ‚ DD/MM/AAAAA
+   e o da hora ‚ HH:MMSS
+\&F
+\&SCheca CPF
+      O VSV pode ou n„o dependendo da vontade co usu rio checar o CPF para
+verificar se ‚ um n£mero v lido
+\&F
+\&STipo do Encerra
+      Pode-se acumular as saidas de fitas, para tanto basta configurar o tipo
+de encerrar com o n£mero 2 , caso contr rio com o tipo 1 o sistema ir  zerar
+as sa¡das, mantrendo-se somente os totais internos para fins de estat¡stica.
+      O tipo 2 pode ser £til para aqueles usu rios que querem fornecer a seus
+clientes uma lista de todos os filmes por eles assistidos e em quais datas,
+isto pelo gerador de relat¢rios.
+      A observa‡„o que cabe ‚ a de que o tipo 2 faz com que o encerramento do
+dia torne-se um pouco mais lento que no tipo 1, e tamb‚m o espa‡o em disco
+tem que ser maior para comportar os dados ali gravados.
+\&F
+\&S Nota fiscal
+    uma configura‡„o geral do VSV Torus que permite a vocˆ que o boleto saia
+si- milar a uma nota fiscal, contendo os dados de registro da sua firma.
+   Algumas cidades, j  fizeram a aprova‡„o desta modalidade mecanogr fica de
+emiss„o simplificada de nota fiscal de servi‡o.
+\&F
+\&S Mensagem
+   O VSV Torus permite a vocˆ configurar dois tipos de mensagens, uma que ir 
+ser impressa ao final do boleto de RETIRADA e outra que ser  impressa  no
+boleto de DEVOLU€O, caso queira.
+   Nesta rotina vocˆ digita a(s) mensagem(ns).
+\&F
+\&S Indexador
+   Neste vocˆ d  entrada a um valor de sua vontade como indexador para o que
+o VSV Torus reajuste autom ticamente os valores recebidos pelas loca‡”es da
+fita.
+   Basta digitar a data, sendo "default" a corrente e o valor.
+\&F
+\&TFINAN€AS - CONFIGURA€O 
+\&S Finan‡as 
+   Aqui s„o configuradas todas as rotinas que tˆem a ver diretamente com  o
+setor financeiro da sua loja, tais como pre‡os, abonos, forma de pagamento,
+feriados, dias n„o trabalhados, etc.
+\&F
+\&S Pre‡os e Categorias
+   Nesta op‡„o vocˆ estabelece o pre‡o da loca‡„o di ria de suas fitas,dis-
+tribu¡ndo-as conforme a sua vontade pelas diversas categorias, sejam elas :
+lan‡amentos, super-lan‡amento, cat logo, verde, azul, etc.
+\&F
+\&S Promo‡”es      
+   Nesta op‡„o vocˆ pode ativar e  parametrizar  qualquer  das promo‡”es do 
+VSV Torus, quais sejam:
+   SORTEIA UM DESCONTO -quando do encerramento de um boleto  de  retirada o
+VSV Torus, sorteia para o cliente um desconto  dentro  da  faixa estipulada
+pelo usu rio que vai de 1 a 100% .
+   Ap¢s a ativa‡„o desta ‚ pedido:
+   1- a  porcentagem  de  desconto sobre o faturamento - ‚ o teto m ximo de
+desconto sorteado em rela‡„o ao  faturamento do dia, ou seja, o montante de
+descontos sorteados nunca ser  superior … porcentagem do faturado.     
+   2-porcentagem de chances de se ganhar desconto - quanto em %  de  chance 
+do cliente  receber  desconto.  quanto  maior, maior ser  a probabilidade do
+cliente obter descontos.
+   3- faixa da porcentagem de descontos - ‚ o limite  percentual de desconto
+para o cliente, vari vel de 0 a 100 %.
+   ABONO EM DESCONTO - aqui ‚ ativado um desconto para cada dia da semana em
+numero % ex. segunda 10%, ter‡a 15%, etc.
+   ANIVERSARIANTES - ativada esta rotina, quando da retirada de  fitas  e em
+se tratando da data de anivers rio do cliente,o VSV Torus abre um bolo de
+aniver- s rio na  tela do atendimento, toca PAR†BENS  e d  o desconto
+fornecido pelo  usu rio.
+   HORA DE DEVOLU€O - esta  rotina  tem  por base cobrar uma di ria a mais,
+caso a devolu‡„o ocorra ap¢s uma determinada hora estabelecida, ‚ um descon-
+to ao inverso.
+   DESCONTO PESSOAL - ativa ou desativa o desconto pessoal do cliente
+   DEVOLU€O R†PIDA - quando ativada, se o cliente devolve as fitas  locadas
+em data anterior … prevista ele tem um desconto que varia de 1 a 100% segun-
+do o estipulado pelo usu rio.
+   DESCONTO PELO N–MERO DE FITAS - quando ativada, ‚ dado um desconto em X %
+para um determinado n£mero de fitas.
+   OBS: todos os descontos em porcentagem dever„o ser feitos baseados em n£-
+meros percentuais inteiros ou fra‡”es de 5 em 5% Ex. 5,10,15,20,25 % , etc.
+   PROMO€O POR GÒNERO - ‚ dado um desconto de x% para determinado gˆnero.
+   Para ativar qq. uma das promo‡•es, na tela das mesmas basta teclar  a le-
+tra mai£scula correspondente da promo‡„o ou selecion -la com as  setas e te-
+clar <ENTER>.
+   Isto serve tanto para tivar uma promo‡„o quanto desativ -la.   \&F
+   VIDEO-CLUBE - permite que o cliente retire N filmes, quantidade esta
+determinada na pr¢pria ficha do cliente pelo usu rio, sem que esses filmes
+sejam cobrados a primeira di ria. Pode-se colocar tamb‚m um acr‚scimo de fita
+por dia da semana. 
+\&S Tabela de abonos
+   Nesta rotina ‚ parametrizado o abono dir rio pelo n£mero de fitas, quando
+se entra na rotina observe que o dia da semana piscante ‚ o corrente.
+   Teclando-se <ENTER> abre-se na tela todas as categorias da sua loja e po-
+de-se fazer ent„o a configura‡„o de at‚ quatro  possibilidades  de  abono em
+di rias pelo n£mero de fitas retiradas.
+   Quando da montagem fa‡a-as ficarem de maneira crescente do abono 1 -> 4
+\&F
+\&S Dia n„o cobrado
+    normalmente utilizada esta rotina para as v¡deo-locadoras que  n„o  tra-
+balham aos DOMINGOS, por‚m serve para qq. dia da  semana,  selecionando se o
+dia com as setas e a seguir <ENTER> ‚ marcado o Dia com o caracter "ş", isto
+significa que o VSV Torus n„o levar  em conta este dia para cobran‡a de
+dir rias, para o abono em dias, multas.
+\&F
+\&S Feriados
+   Vocˆ cadastra aqui os feriados, ou seja os dias em que a loja  estar  fe-
+chada e por conseguinte n„o ser  cobrada a dir ria dos clientes .
+   Basta digitar a data no formato DD/MM/AAAA e a descri‡„o da mesma.
+\&F
+\&S Desconto em d‚bitos
+   Nesta op‡„o vocˆ pode definir se o VSV Torus mant‚m ou n„o o  desconto 
+promocional, para o cliente que deixe autenticado um d‚bito. O "default" ‚
+perder bastando teclar-se <M> ou <P> para a sele‡„o.
+\&F
+\&S Forma de pagamento
+   Aqui vocˆ coloca o pagamento definindo-o como sendo na RETIRADA, na DEVO-
+LU€O ou em ambos. Use as setas para escolher e tecle <ENTER> .
+\&F
+\&TTABELA DE PADR™ES
+\&S Tabela de padr”es
+   No intuito de agilizar a digita‡„o, facilitar ao  m ximo  o cadastramento
+de T¡tulos, e tamb‚m para uniformizar as bases de  dados dos clientes o VSV
+Torus foi preparado com tabelas que pr‚viamente cont‚m os dados a serem
+digitados, de maneira que o usu rio digite uma vez apenas e depois se utilize
+desta.
+   Assim sendo temos nas tabelas de padr”es os campos :
+   CATEGORIA - grupo de pre‡os
+   CLASSE - indica quantas fitas de cada t¡tulo, em uma (simples), em  duas 
+(duplo), etc.
+   DISTRIBUIDORA - nome das distribuidoras
+   GENERO - tema do t¡tulo ex. com‚dia, drama, aventura, etc.
+   IDIOMA - idioma falado no filme
+   LEGENDA - cor da legenda
+   PA‹S -  pa¡s de origem do filme
+   PREMIOS - premios que o filme tenha recebido
+   QUALIDADE - caso a fita seja Hi-Fi, St‚reo, Mono, etc.
+   TIPO DA FITA - sistema na qual ela esta gravada VHS, BETA, etc.
+\&F
+\&TFUNCIONARIOS 
+\&S Funcion rios cadastro
+   Neste m¢dulo ‚ feita o cadastramento dos operadores do VSV Torus 4R.0 , e
+s„o utili- zadas as teclas fun‡„o : <F6>, <CTRL> <N> e <F9> 
+   Ap¢s a inclus„o de um novo operador, pois ele ‚  inclu¡do  com  n¡vel  de
+acesso = 0 e senha = 0000, caso vocˆ queira alterar-lhe a senha  e/ou  n¡vel
+de acesso basta selecion -lo e teclar <F6> .
+  O VSV Torus 4R.0  deixa que seja alterado o c¢digo, o nome e a  seguir 
+pergunta   se  quer alterar a senha, teclando-se "S" ele pede a senha
+anterior, a senha no- va e a confirma‡„o desta £ltima. Se o operador ativo
+tiver n¡vel = 9, o VSV Torus 4R.0 ir  perguntar se este deseja alterar tamb‚m
+o n¡vel  de  acesso, teclando-se "S" ‚ s¢ colocar o n¡vel de acesso desejado
+para o operador.
+\&F
+\&S Carteira de funcion rio
+    utilizada esta rotina para emiss„o da carteira de funcion rio com o c¢-
+digo de barras para leitora ¢ptica, agilizando desta forma o atendimento.
+   Basta selecionar o funcion rio para o(s) qual(is) se queira as  carteiras
+e quantas carteiras imprimir.
+\&F
+\&TTITULOS / FITAS
+\&S Cadastro de T¡tulos
+   Nesta op‡„o vocˆ pode fazer o cadastramento dos seus t¡tulos(filmes),  no
+cadastro a edi‡„o, pesquisa, altera‡„o e exclus„o seguem o padr„o j   adota-
+do anteriormente no cadastro de clientes sendo esta rotina operada da  mesma
+maneira pelas teclas fun‡„o : 
+ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ» 
+º ÉÍÍ»                            ³ ÉÍÍ»                                  º 
+º ºF1ºTELA DE AJUDA               ³ ºF2ºDESCANSO DO VIDEO - ativa em todasº 
+º ÈÍÍ¼                            ³ ÈÍÍ¼ as telas do sistema              º 
+º                                 ³                                       º 
+º ÉÍÍ»                            ³ ÉÍÍ»                                  º 
+º ºF3ºPESQUISA - nos campos demar-³ ºF4ºFICHA ANTERIOR - volta … ficha an-º 
+º ÈÍÍ¼ cados "¯" - digitando-se a ³ ÈÍÍ¼ terior do arquivo de dados       º 
+º      chave de busca + tecla vem ³                                       º 
+º      … tela a ficha pesquisada  ³                                       º 
+º ÉÍÍ»                            ³ ÉÍÍ»                                  º 
+º ºF5ºFICHA POSTERIOR - avan‡a pa-³ ºF6º insere fitas para o t¡tulo       º 
+º ÈÍÍ¼ ra a pr¢xima ficha         ³ ÈÍÍ¼                                  º 
+º ÉÍÍ»                            ³ ÉÍÍ»                                  º 
+º ºF7º mostra as fitas do t¡tulo  ³ ºF8ºLIMPA A TELA - branqueia os camposº 
+º ÈÍÍ¼                            ³ ÈÍÍ¼ da tela  deixando-a  pronta  paraº 
+º                                 ³      nova edi‡„o/pesquisa/inclus„o    º 
+º ÉÍÍ»                            ³ ÉÍÍÍ»                                 º 
+º ºF9ºAPAGA A FICHA - remove a fi-³ ºF10ºGRAVA A FICHA -grava a ficha edi-º 
+º ÈÍÍ¼ cha editada PERMANENTEMENTE³ ÈÍÍÍ¼ tada no disco **ATEN€O** se vo-º 
+º      do arquivo **CUIDADO**     ³       cˆ alterar qq. campo grave  paraº 
+º                                 ³       n„o perder as altera‡”es feitas º ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼
+   Note que o c¢digo to t¡tulo ‚ gerado autom ticamente pelo  VSV Torus, 
+basea- do no gˆnero do mesmo, inclusive as fitas seguem o mesmo c¢digo quanto
+ aos  seis primeiros d¡gitos, diferenciando-se nos quatro restantes.
+   Ap¢s a inclus„o do t¡tulo( digita‡„o dos dados e teclar-se <F10> )  vocˆ
+faz a inclus„o de tantas quantas forem as fitas do mesmo bastando teclar-se
+<F6>, ‚ pedido o n£mero de c¢pias, a Loja, sendo "Default" a loja corrente,
+n£mero da N.fiscal de compra, o nome do vendedor (distribuidor) e caso se
+vocˆ quer digitar o n£mero do selo de cada uma delas e o c¢digo sequencial.
+   O c¢digo sequencial ‚ um n£mero, caso vocˆ utilize o  esquema de armaze-
+ne as fitas numerando-as em sequˆncia na prateleira.
+\&F
+\&TCADASTRO DE FITAS
+\&S Cadastro de Fitas
+
+   As fitas que s„o inseridas pelo cadastro de t¡tulos podem ser  acessadas
+individualmente dentro do cadstro de fitas que segue o padr„o em termos das
+fun‡”es de pesquisa, altera‡„o, e exclus„o. Somente n„o ‚ feita aqui a  in-
+clus„o.
+   Aqui temos os dados acerca da fita, n£mero total de loca‡”es, ¡ndice  de
+retiradas total, valor de compra, valor de compra pelo indexador, total re-  
+cebido pelo indexador e os trˆs £ltimos clientes que a locaram, dando a da-
+ta de retirada, c¢digo dos clientes e seus  telefones  para contato caso se
+tenha qq. problema com a mesma e n„o se saiba quem a locou por £ltimo.
+   As teclas fun‡”es seguem o j  descrito anteriormente:
+
+ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+º ÉÍÍ»                            ³ ÉÍÍ»                                  º 
+º ºF1ºTELA DE AJUDA               ³ ºF2ºDESCANSO DO VIDEO - ativa em todasº 
+º ÈÍÍ¼                            ³ ÈÍÍ¼ as telas do sistema              º 
+º ÉÍÍ»                            ³ ÉÍÍ»                                  º 
+º ºF3ºPESQUISA - nos campos demar-³ ºF4ºFICHA ANTERIOR - volta … ficha an-º 
+º ÈÍÍ¼ cados "¯" - digitando-se a ³ ÈÍÍ¼ terior do arquivo de dados       º 
+º      chave de busca + tecla vem ³                                       º 
+º      … tela a ficha pesquisada  ³                                       º 
+º ÉÍÍ»                            ³ ÉÍÍ»                                  º 
+º ºF5ºFICHA POSTERIOR - avan‡a pa-³ ºF6º n„o dispon¡vel                   º 
+º ÈÍÍ¼ ra a pr¢xima ficha         ³ ÈÍÍ¼                                  º 
+º ÉÍÍ»                            ³ ÉÍÍ»                                  º 
+º ºF7º mostra os trˆs £ltimos     ³ ºF8ºLIMPA A TELA - branqueia os camposº 
+º ÈÍÍ¼ clientes que retiraram     ³ ÈÍÍ¼ da tela  deixando-a  pronta  paraº 
+º      esta fita                  ³      nova edi‡„o/pesquisa/inclus„o    º 
+º ÉÍÍ»                            ³ ÉÍÍÍ»                                 º 
+º ºF9ºAPAGA A FICHA - remove a fi-³ ºF10ºGRAVA A FICHA -grava a ficha edi-º 
+º ÈÍÍ¼ cha editada PERMANENTEMENTE³ ÈÍÍÍ¼ tada no disco **ATEN€O** se vo-º 
+º      do arquivo **CUIDADO**     ³       cˆ alterar qq. campo grave  paraº 
+º                                 ³       n„o perder as altera‡”es feitas º ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼
+\&F
+\&S Etiquetas c¢digo de barras
+   Faz a impress„o do c¢digo de barras das fitas para a leitora ¢ptica .
+\&F
+\&TCADASTRO DE PRODUTOS
+\&S Cadastro de Produtos
+   Nesta rotina ‚ que vocˆ cadastra os produtos do seu estoque, seguindo o j 
+padr„o Torus de cadastro, com as teclas fun‡”es:
+ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ» 
+º ÉÍÍ»                            ³ ÉÍÍ»                                  º 
+º ºF1ºTELA DE AJUDA               ³ ºF2ºDESCANSO DO VIDEO - ativa em todasº 
+º ÈÍÍ¼                            ³ ÈÍÍ¼ as telas do sistema              º 
+º ÉÍÍ»                            ³ ÉÍÍ»                                  º 
+º ºF3ºPESQUISA - nos campos demar-³ ºF4ºFICHA ANTERIOR - volta … ficha an-º 
+º ÈÍÍ¼ cados "¯" - digitando-se a ³ ÈÍÍ¼ terior do arquivo de dados       º 
+º      chave de busca + tecla vem ³                                       º 
+º      … tela a ficha pesquisada  ³                                       º 
+º ÉÍÍ»                            ³ ÉÍÍ»                                  º 
+º ºF5ºFICHA POSTERIOR - avan‡a pa-³ ºF6º insere produtos (quantidades)    º 
+º ÈÍÍ¼ ra a pr¢xima ficha         ³ ÈÍÍ¼                                  º 
+º ÉÍÍ»                            ³ ÉÍÍ»                                  º 
+º ºF7º n„o dispon¡vel             ³ ºF8ºLIMPA A TELA - branqueia os camposº 
+º ÈÍÍ¼                            ³ ÈÍÍ¼ da tela  deixando-a  pronta  paraº 
+º                                 ³      nova edi‡„o/pesquisa/inclus„o    º 
+º ÉÍÍ»                            ³ ÉÍÍÍ»                                 º 
+º ºF9ºAPAGA A FICHA - remove a fi-³ ºF10ºGRAVA A FICHA -grava a ficha edi-º 
+º ÈÍÍ¼ cha editada PERMANENTEMENTE³ ÈÍÍÍ¼ tada no disco **ATEN€O** se vo-º 
+º      do arquivo **CUIDADO**     ³       cˆ alterar qq. campo grave  paraº 
+º                                 ³       n„o perder as altera‡”es feitas º ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼
+   Aqui tamb‚m o c¢digo ‚ autom ticamente gerado pelo sistema,  por‚m assu-
+mindo sempre o prefixo "14" e o sufixo "00".
+\&F
+\&TABRE O CAIXA
+\&S Abre o caixa
+   Faz a abertura do caixa para um novo dia de atendimento com o VSV Torus .
+   Sempre que se iniciar um novo dia de opera‡„o do VSV Torus, entre nesta 
+op‡„o para fazer a abertura do caixa e possibilitar a verifica‡„o do resumo
+de movimenta‡„o do dia .
+\&F
+\&TFECHAMENTOS
+\&S Fechamentos
+   S„o tarefas pr‚-definidas no VSV Torus que fazem a consolida‡„o da 
+movimenta-
+‡„o di ria. Algumas de car ter obrigat¢rio como por exemplo  o  encerramento
+do dia, do mes.
+\&F
+\&TTORUS CALC
+\&S TORUS - CALCULADORA 
+    uma calculadora que em qualquer ponto do VSV ao teclar-se
+
+ÉÍÍÍ» ÉÍ»
+ºALTº ºCº Torus Calc - aparece a calculadora com as opera‡”es matem ticas  e
+ÈÍÍÍ¼ ÈÍ¼              ajuda pr¢prios com a tecla <A>.
+\&F
+\&TDIVERSOS - UTILITARIOS 
+\&S Impressoras sa¡das
+   Aqui  vocˆ configura qual a sa¡da para a sua impressora dispondo de seis
+op‡”es  de sa¡da : sejam elas paralelas, seriais, p/ arquivo em disco ou no
+pr¢prio console (monitor de v¡deo).
+   Basta selecionar a sa¡da e teclar ENTER OU ESC, que h  o redirecionamen-
+to autom tico da mesma.
+\&F
+\&S Impressora / micro configura‡„o
+   Nesta  rotina  vocˆ faz a configura‡„o de caracteres especiais da impre- 
+ssor, os quais  s„o utilizados  pelo VSV Torus 4R.0 , a configura‡„o DEFAULT ‚
+IBM padr„o qual seja:
+   Ativa modo comprimido    : 15
+   Desativa modo comprimido : 18  
+   Ativa   modo expandido   : 14
+   Desativa modo expandido  : 20
+   Pode se configurar tamb‚m a eje‡„o ou n„o da folha ap¢s o t‚rmino de uma
+listagem , basta digitar "S" p/ sim ou "N" para n„o .
+   A margem superior = n£mero de linhas no topo do papel para iniciar a im-
+press„o, e a margem inferior ‚ o mesmo s¢ que ao final da listagem.
+   Margem esquerda = n£mero de espa‡os … esquerda para tabula‡„o impressa.
+   N£mero  de linhas do papel = linhas por folha, sendo o DEFAULT 66 no pa- 
+dr„o de formul rio cont¡nuo normal.
+   Impressora =  diz  respeito ao modelo da impressora seja ela de 80 ou de
+132 colunas .
+   Tipo da impressora = padr„o 1 - impressora disp”e do BACKSPACE l¢gico ou
+seja do caracter 08
+                        padr„o 2 - impressora sem BACKSPACE l¢gico
+   Esta configura‡„o ‚ v lida para a acentua‡„o de textos pelo Torus Editor
+   O  £ltimo item a ser configurado  ‚ o do tipo  de micro, diz respeito ao
+tempo de espera nas mensagens de tela sendo que o padr„o ‚ :
+         1 - para AT/386/486
+         2 - para Pentium 100 / Pentium II
+         3 - para Pentium III
+\&F
+\&TNIVEL DE ACESSO 
+\&S N¡vel de acesso 
+   Este m¢dulo faz a configura‡„o dos n¡veis de acesso a todos os demais m¢-
+dulos do VSV Torus 4R.0 , sendo de utilidade quando a detrminadas fun‡”es ou 
+ro-  tinas, se queira dar sigilo.
+     Para acessar  os  n¡veis de acesso e configur -los e/ou alter -los h  a
+necessidade pr‚via de ser um operador com n¡vel de acesso = 9, sem o que n„o
+‚ aberta a rotina. 
+   Basta ent„o, no Menu , ativar-se o operador com <CTRL> <F1>, fornececer o
+seu c¢digo e senha e pronto o VSV Torus 4R.0  abre uma janela contendo todas
+as  op‡”es de menu e configur -las, dando-lhes o n£mero do n¡vel necess rio
+para o acesso.
+   Na tela al‚m das entradas dos Menus tˆm-se um outra  janela  contendo  os
+modos de movimenta‡„o e alter‡„o dos mesmos.
+   Para sair basta <ESC> e pronto o VSV Torus 4R.0  estr  totalmente
+configurado.     Para cadastrar um novo operador basta teclar-se <CTRL> <N> e
+o sistema j  pede o c¢digo e o nome do operador. Preenchidos estes campos o
+operador est  autom ticamente cadastrado com o n¡vel de acesso <0> e com a
+senha 0000.
+P. Como alterar senha de um operador ?
+R. Basta  que na  op‡„o  Operadores, vocˆ selecione um operador e tecle <F6>
+o sistema abre uma janela EDITANDO o c¢digo e o nome do operador (eles  tam-
+b‚m  podem ser aqui alterados) e a seguir o sistema pergunta se altera a se-
+nha , teclando-se <S> basta digitar a senha anterior, digitar a nova senha e
+novamente a nova senha como confirma‡„o da altera‡„o - igual aos bancos.
+OBS: Caso a senha anterior esteja errada ou n„o se confirme certo a nova se-
+nha o sistema n„o alterar  a anterior.
+P. Como alterar o n¡vel de acesso de um operador ?
+R. Basta que antes  de  se entrar na op‡„o Operadores ative um operador cujo
+n¡vel de acesso seja <9> com <CRTL> <F1>. A seguir entre na op‡„o Operadores
+e selecione o operador a ser alterado, pode-se at‚ inclui-lo inicialmente  e
+depois alterar. Quando da alterara‡„o do operador ap¢s o sistema "perguntar"
+se altera a senha , ele vai perguntar se altera o acesso, teclando-se <S>  ‚
+s¢ digitar-se um n£mero de 0 a 9 para o n¡vel de acesso deste operador.
+P. Como dizer ao sistema quem est  operando ao teclado ?
+R. Basta que nos Menus se tecle <CTRL> <F1> , o sistema abre uma janela na /
+qual ‚ pedido o c¢digo e a senha do operador, a partir da¡ o sistema  "sabe"
+quem est  operando o sistema e abre-lhe as rotinas para as quais o seu n¡vel
+de acesso permita.
+\&F
